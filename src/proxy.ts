@@ -81,7 +81,7 @@ function shouldBypass(pathname: string): boolean {
  */
 async function verifyTokenWithBackend(accessToken: string): Promise<VerifiedUser | null> {
     try {
-        const response = await fetch(`${BACKEND_URL}/api/v1/auth/verify`, {
+        const response = await fetch(`${BACKEND_URL}/auth/verify`, {
             method: 'GET',
             headers: {
                 'Cookie': `access_token=${accessToken}`,
