@@ -1,144 +1,87 @@
-# Scire Frontend
+# Scire | Intelligent Viva Platform
 
-<div align="center">
-  <img src="public/logo.png" alt="Scire Logo" width="128" height="128" style="border-radius: 20%;" />
-  <h1>Scire: AI-Powered Intelligent Viva System</h1>
-  <p>
-    A Next.js 16 application for conducting automated, AI-driven viva assessments.
-    <br />
-    <a href="#getting-started"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://scire.in">View Demo</a>
-    ·
-    <a href="https://github.com/scira/frontend/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/scira/frontend/issues">Request Feature</a>
-  </p>
-</div>
+**Scire** is an enterprise-grade, multi-tenant evaluation platform that automates oral examinations (vivas) using advanced artificial intelligence. Designed for educational institutions and corporate training environments, Scire delivers unbiased, scalable, and secure assessments through a high-performance frontend interface.
 
-## 🚀 Overview
-
-Scire is an advanced educational platform designed to automate oral examinations (vivas). It leverages AI to conduct realistic, interactive interview sessions with students, assess their responses in real-time, and provide comprehensive feedback to instructors.
-
-This repository contains the **Frontend** application, built with modern web technologies to ensure a seamless, high-performance, and accessible user experience.
-
-## ✨ Key Features
-
-- **🎭 Role-Based Dashboards**: Tailored experiences for Students, Instructors, and Administrators.
-- **🤖 Artificial Intelligence Orb**: A visual, interactive AI agent that conducts the viva, complete with real-time audio visualization.
-- **🎙️ Real-time Audio Processing**: Low-latency audio streaming for natural conversation flow.
-- **🛡️ Exam Integrity**: Automated proctoring features including face detection and focus monitoring.
-- **📊 Comprehensive Analytics**: Detailed performance reports, confidence scores, and transcript history.
-- **🎨 Modern UI/UX**: Valid, accessible, and responsive design using Shadcn UI and Tailwind CSS v4.
-
-## 🛠️ Tech Stack
-
-### Core Framework
-- **[Next.js 16](https://nextjs.org/)**: React framework with Turbopack for lightning-fast builds.
-- **[React 19](https://react.dev/)**: The library for web and native user interfaces.
-- **[TypeScript](https://www.typescriptlang.org/)**: Typed superset of JavaScript for code safety.
-
-### Styling & Animation
-- **[Tailwind CSS v4](https://tailwindcss.com/)**: Utility-first CSS framework.
-- **[Shadcn UI](https://ui.shadcn.com/)**: Reusable components built with Radix UI.
-- **[Framer Motion](https://www.framer.com/motion/)**: Production-ready motion library for React.
-- **[GSAP](https://gsap.com/)**: High-performance animations for the AI Orb.
-
-### State & Data Management
-- **[Zustand](https://zustand-demo.pmnd.rs/)**: Small, fast, and scalable bearbones state management.
-- **[TanStack Query](https://tanstack.com/query/latest)**: Powerful asynchronous state management.
-- **[Zod](https://zod.dev/)**: TypeScript-first schema declaration and validation.
-- **[React Hook Form](https://react-hook-form.com/)**: Performant, flexible and extensible forms.
-
-## ⚙️ Prerequisites
-
-Ensure you have the following installed on your machine:
-- **Node.js**: v20.0.0 or higher
-- **npm**: v10.0.0 or higher
-
-## 📥 Getting Started
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/scira/frontend.git
-    cd scira-frontend
-    ```
-
-2.  **Install dependencies**
-    ```bash
-    npm install
-    # or
-    yarn install
-    # or
-    pnpm install
-    ```
-
-3.  **Configure Environment Variables**
-    Create a `.env` file in the root directory. You can start by copying the example (if available) or ensuring the following variables are set:
-
-    ```env
-    # .env
-    NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-    NEXT_PUBLIC_WS_URL=ws://localhost:8000/api/v1/ws/session
-    ```
-
-4.  **Run the Development Server**
-    ```bash
-    npm run dev
-    ```
-
-    Open [https://localhost:3000](https://localhost:3000) in your browser.
-
-## 📜 Scripts
-
-| Script | Description |
-| :--- | :--- |
-| `npm run dev` | Starts the development server with Turbopack. |
-| `npm run build` | Builds the application for production. |
-| `npm run start` | Runs the built production application. |
-| `npm run lint` | Runs ESLint to identify code issues. |
-| `npm run lint:fix` | Automatically fixes fixable ESLint errors. |
-
-## 📂 Project Structure
-
-```text
-scira-frontend/
-├── public/              # Static assets (images, fonts)
-├── src/
-│   ├── app/             # Next.js App Router pages and layouts
-│   │   ├── (dashboard)/ # Authenticated dashboard routes
-│   │   └── page.tsx     # Landing page
-│   ├── components/      # Reusable React components
-│   │   ├── layout/      # Sidebar, Header, etc.
-│   │   ├── ui/          # Shadcn UI primitives
-│   │   ├── visuals/     # Complex visual components (AIOrb, Backgrounds)
-│   │   └── viva/        # Viva orchestration components (Phases, Player)
-│   ├── hooks/           # Custom React hooks (useAudioStream, useAuth)
-│   ├── lib/             # Utilities, API clients, Stores
-│   └── types/           # TypeScript type definitions
-├── .env                 # Environment variables
-├── next.config.ts       # Next.js configuration
-├── package.json         # Dependencies and scripts
-└── tailwind.config.ts   # Tailwind CSS configuration
-```
-
-## 🤝 Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+[**Request Access**](https://scire.in) | [**System Architecture**](#system-architecture) | [**Source Code**](https://github.com/anand-mukul/Scire)
 
 ---
 
-<div align="center">
-  <p>Built with ❤️ by the Scire Team</p>
-</div>
+## Platform Overview
+
+Scire transforms the traditional oral assessment model by deploying autonomous AI agents capable of conducting human-like interviews. The platform guarantees strict multi-tenancy, ensuring data isolation and customized experiences for every organization.
+
+- **Domain**: [scire.in](https://scire.in)
+- **Status**: Production / Enterprise Ready
+- **Security**: SOC 2 Compliance Ready (Architecture Design)
+
+---
+
+## System Architecture
+
+The frontend operates as a sophisticated, real-time client designed for high availability and low latency. It interfaces with the **Scire Core** (FastAPI) to manage complex session states and secure data transmission.
+
+### 1. Enterprise Multi-Tenancy
+The architecture enforces strict data isolation at the application layer.
+-   **Tenant Resolution**: Dynamic tenant identification via subdomain (`tenant.scire.in`) or custom domain mapping.
+-   **JWT Claims-Based Access**: interactions are secured using JSON Web Tokens (JWT) with embedded `tenant_id` and `role` scopes, preventing horizontal privilege escalation.
+-   **Context-Aware Middleware**: Next.js Middleware automatically enforces tenant contexts on all routes, ensuring users interact only with authorized resources.
+
+### 2. The Viva Engine (Real-Time Audio Pipeline)
+The core examination experience utilizes a custom-built low-latency audio pipeline.
+-   **WebSocket Telemetry**: Persistent, bi-directional connections (`wss://api.scire.in/ws/session`) manage the session lifecycle.
+-   **Binary Stream Processing**: Raw audio is captured (PCM 16-bit, 16kHz) and streamed as binary blobs for immediate server-side Voice Activity Detection (VAD) and ASR processing.
+-   **Finite State Machine (FSM)**: The client implements a robust FSM to synchronize UI states (Listening, Thinking, Speaking) with the backend's cognitive cycle, ensuring sub-500ms interaction latency.
+
+### 3. Integrated Payment & Subscription
+-   **Server-Side Pricing**: Tamper-proof subscription management.
+-   **Quota Enforcement**: Real-time validation of exam and user limits based on active subscription tiers (Free, Pro, Enterprise).
+-   **Secure Handshake**: Razorpay integration with HMAC-SHA256 signature verification for subscription upgrades.
+
+---
+
+## Technical Specifications
+
+### Core Framework
+-   **Next.js 16**: Utilizing React Server Components (RSC) for optimized initial load and SEO.
+-   **TypeScript**: Strictly typed infrastructure for maintainability and scale.
+-   **TanStack Query**: Enterprise-grade server state management and caching strategies.
+
+### Interface & Experience
+-   **Tailwind CSS v4**: High-performance, compile-time styling engine.
+-   **Shadcn UI**: Accessible, WAI-ARIA compliant component architecture.
+-   **GSAP & Framer Motion**: GPU-accelerated visualizations for the AI Agent interface.
+
+### Client-Side Telemetry
+-   **Focus Integrity**: Heuristic monitoring of tab switching and window focus loss.
+-   **Environmental Checks**: Real-time analysis of ambient noise levels and audio hardware integrity.
+
+---
+
+## Project Structure
+
+The codebase follows a modular, domain-driven structure optimized for scalability.
+
+```text
+scire-frontend/
+├── src/
+│   ├── app/                # App Router (Multi-tenant Routing)
+│   │   ├── (auth)/         # Secure Authentication Flows
+│   │   ├── (dashboard)/    # Role-Based Workspaces
+│   │   └── api/            # Edge API Handlers
+│   ├── components/
+│   │   ├── ui/             # Design System Primitives
+│   │   └── viva/           # Viva Engine Components
+│   ├── lib/                # Shared Utilities & Clients
+│   └── store/              # Global State (Zustand)
+└── public/                 # Static Assets
+```
+
+---
+
+## Access & Licensing
+
+Scire is available as a cloud-hosted SaaS service.
+
+-   **Cloud Access**: [scire.in](https://scire.in)
+-   **Enterprise Inquiries**: Contact our sales team for on-premise deployment options.
+-   **Copyright**: © 2026 Scire. All rights reserved.

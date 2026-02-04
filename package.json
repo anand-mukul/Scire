@@ -1,5 +1,6 @@
 {
-  "name": "scira-frontend",
+  "name": "scire",
+  "description": "Enterprise-grade AI Viva Platform Frontend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
