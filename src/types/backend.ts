@@ -1,0 +1,139 @@
+/**
+ * Backend Type Definitions
+ * Mirrors SQLAlchemy models in app/models/
+ */
+
+export enum UserRole {
+    STUDENT = 'STUDENT',
+    INSTRUCTOR = 'INSTRUCTOR',
+    ADMIN = 'ADMIN',
+    REVIEWER = 'REVIEWER',
+    PLATFORM_ADMIN = 'PLATFORM_ADMIN' // Added to match backend
+}
+
+export enum ExamStatus {
+    DRAFT = 'DRAFT',
+    PUBLISHED = 'PUBLISHED',
+    ACTIVE = 'ACTIVE',
+    COMPLETED = 'COMPLETED',
+    ARCHIVED = 'ARCHIVED'
+}
+
+export enum SessionStatus {
+    PENDING = 'PENDING',
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+    TERMINATED = 'TERMINATED',
+    ABANDONED = 'ABANDONED'
+}
+
+export enum ReviewStatus {
+    PENDING = 'PENDING',
+    APPROVED = 'APPROVED',
+    FLAGGED = 'FLAGGED',
+    UNDER_REVIEW = 'UNDER_REVIEW',
+    REJECTED = 'REJECTED'
+}
+
+export enum TranscriptSpeaker {
+    AI = 'AI',
+    STUDENT = 'STUDENT',
+    SYSTEM = 'SYSTEM'
+}
+
+export interface User {
+    id: string; // UUID
+    email: string;
+    full_name: string;
+    role: UserRole;
+    is_active: boolean;
+    is_anonymized: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Rubric {
+    id: string;
+    exam_id: string;
+    criterion: string;
+    weight: string;
+    constraints?: Record<string, unknown>;
+    is_mandatory: boolean;
+    order_index: number;
+}
+
+export interface ExamSettings {
+    duration_minutes: number;
+    strict_mode: boolean;
+    number_of_questions?: number;
+}
+
+export interface Exam {
+    id: string;
+    title: string;
+    created_by: string;
+    status: ExamStatus;
+    exam_code: string;
+    settings?: ExamSettings;
+    syllabus_url?: string;
+    max_attempts: number;
+    created_at: string;
+    candidates_count?: number;
+}
+
+export interface VivaSession {
+    id: string;
+    exam_id: string;
+    student_id: string;
+    attempt_number: number;
+    status: SessionStatus;
+    onboarding_accepted: boolean;
+    snapshot_url?: string;
+    result_token?: string;
+    final_score?: number;
+    confidence_score?: number;
+    integrity_flag: boolean;
+    review_status: ReviewStatus;
+    created_at: string;
+    updated_at?: string;
+    start_time?: string;
+    end_time?: string;
+    student?: User;
+    exam?: Exam;
+    transcripts?: Transcript[];
+    integrity_report?: {
+        flagged_count: number;
+        total_snapshots: number;
+        reasons: string[];
+        is_clean: boolean;
+    };
+}
+
+export interface Transcript {
+    id: string;
+    session_id: string;
+    turn_index: number;
+    speaker: TranscriptSpeaker;
+    text_content: string;
+    audio_url?: string;
+    latency_ms?: number;
+    is_final: boolean;
+    created_at: string;
+}
+
+export interface GradingDetail {
+    id: string;
+    session_id: string;
+    rubric_id: string;
+    score_awarded: number;
+    passed: boolean;
+    ai_reasoning: string;
+    confidence: number;
+    evaluated_at: string;
+}
+
+export interface ReviewRequest {
+    status: string;
+    notes?: string;
+    final_score_override?: number;
+}
