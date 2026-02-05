@@ -39,7 +39,7 @@ export const useExamIntegrity = (sessionId: string | null) => {
 
         // Notify Backend of "Warning"
         vivaWebSocket.send({
-            type: 'integrity_alert',
+            type: 'integrity_snapshot',
             data: {
                 reason: reason,
                 severity: 'medium', // Warning level

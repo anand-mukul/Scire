@@ -11,8 +11,8 @@ import { api } from '@/lib/network/api';
 
 type OnboardingStep = 'tnc' | 'media_setup' | 'snapshot' | 'ready';
 
-const CountDown30 = () => {
-    const [seconds, setSeconds] = useState(30);
+const CountDown45 = () => {
+    const [seconds, setSeconds] = useState(45);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -263,7 +263,7 @@ export const CalibrationPhase = ({ stream }: { stream: MediaStream | null }) => 
                         className="flex flex-col items-center justify-center p-4 space-y-6 w-full"
                     >
                         <div className="space-y-4 text-center">
-                            <CountDown30 />
+                            <CountDown45 />
                             <p className="text-2xl font-light text-foreground">
                                 &quot;Count from 1 to 5&quot;
                             </p>

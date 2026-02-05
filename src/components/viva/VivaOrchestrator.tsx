@@ -158,12 +158,6 @@ export const VivaOrchestrator: React.FC = () => {
         document.addEventListener('fullscreenchange', checkFullscreen);
         window.addEventListener('viva:voice_unavailable', handleVoiceUnavailable);
 
-        // Auto-fullscreen on mount if requirements met
-        if (connectionState === 'CONNECTED' && examSettings.strict_mode && !document.fullscreenElement) {
-            // Try once, might fail
-            requestFullscreen().catch(() => { });
-        }
-
         // Strict Mode interval check
         const integrityInterval = setInterval(() => {
             if (examSettings.strict_mode && connectionState === 'CONNECTED' && !document.fullscreenElement) {
