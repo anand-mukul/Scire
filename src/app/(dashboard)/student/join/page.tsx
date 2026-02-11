@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { Input } from '@/components/ui/input';
