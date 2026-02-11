@@ -59,7 +59,7 @@ export interface TranscriptMessage extends BaseMessage {
     type: MessageType.TRANSCRIPT;
     text: string;
     is_final: boolean;
-    role: "student" | "assistant";
+    role: "STUDENT" | "ASSISTANT";
 }
 
 export interface AgentSpeakingMessage extends BaseMessage {

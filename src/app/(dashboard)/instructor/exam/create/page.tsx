@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Upload, FileText, X, Loader2, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, FileText, X, Loader2, ArrowLeft, ShieldAlert, Globe, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '@/lib/network/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -17,11 +18,20 @@ import { PremiumCard } from '@/components/ui/premium-card';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { cn } from '@/lib/utils';
 
+interface SubjectOption {
+    id: string;
+    name: string;
+    code: string;
+}
+
 export default function CreateExamPage() {
     const [title, setTitle] = useState('');
     const [duration, setDuration] = useState(30);
     const [numberOfQuestions, setNumberOfQuestions] = useState(5);
+    const [maxAttempts, setMaxAttempts] = useState(1);
     const [strictMode, setStrictMode] = useState(false);
+    const [isPublic, setIsPublic] = useState(false);
+    const [subjectId, setSubjectId] = useState<string | undefined>(undefined);
     const [file, setFile] = useState<File | null>(null);
     const [startTime, setStartTime] = useState<Date | undefined>(undefined);
     const [endTime, setEndTime] = useState<Date | undefined>(undefined);
@@ -29,19 +39,48 @@ export default function CreateExamPage() {
     const queryClient = useQueryClient();
     const router = useRouter();
 
+    // Fetch subjects for the dropdown — fails gracefully if tenant has none
+    const { data: subjects = [] } = useQuery<SubjectOption[]>({
+        queryKey: ['subjects'],
+        queryFn: async () => {
+            try {
+                const data = await api.tenant.listSubjects();
+                return (data as SubjectOption[]) || [];
+            } catch {
+                // Tenant may not have subjects configured — that's fine
+                return [];
+            }
+        },
+        staleTime: 5 * 60 * 1000,
+    });
+
     const createMutation = useMutation({
         mutationFn: async () => {
+            if (!title.trim()) throw new Error("Exam title is required");
             if (!file) throw new Error("Syllabus file is required");
 
+            // Validate schedule logic
+            if (startTime && endTime && startTime >= endTime) {
+                throw new Error("End time must be after start time");
+            }
+
+            // Clamp values for safety (defense in depth — backend validates too)
+            const safeDuration = Math.max(5, Math.min(180, duration));
+            const safeQuestions = Math.max(1, Math.min(50, numberOfQuestions));
+            const safeAttempts = Math.max(1, Math.min(5, maxAttempts));
+
             const exam = await api.exams.create({
-                title,
+                title: title.trim(),
                 settings: {
-                    duration_minutes: duration,
+                    duration_minutes: safeDuration,
                     strict_mode: strictMode,
-                    number_of_questions: numberOfQuestions,
+                    number_of_questions: safeQuestions,
                 },
+                max_attempts: safeAttempts,
                 start_time: startTime ? startTime.toISOString() : undefined,
-                end_time: endTime ? endTime.toISOString() : undefined
+                end_time: endTime ? endTime.toISOString() : undefined,
+                subject_id: subjectId || undefined,
+                is_public: isPublic,
             });
 
             if (!exam || !exam.id) {
@@ -142,6 +181,33 @@ export default function CreateExamPage() {
                                             autoFocus
                                         />
                                     </div>
+
+                                    {/* Subject Dropdown — only rendered if tenant has subjects */}
+                                    {subjects.length > 0 && (
+                                        <div className="space-y-2">
+                                            <Label className="flex items-center gap-2">
+                                                <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                                                Subject
+                                                <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+                                            </Label>
+                                            <Select
+                                                value={subjectId ?? "none"}
+                                                onValueChange={(val) => setSubjectId(val === "none" ? undefined : val)}
+                                            >
+                                                <SelectTrigger className="w-full h-11 bg-background/50">
+                                                    <SelectValue placeholder="Select a subject" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">No Subject</SelectItem>
+                                                    {subjects.map((subject) => (
+                                                        <SelectItem key={subject.id} value={subject.id}>
+                                                            {subject.code} — {subject.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
                                 </div>
                             </PremiumCard>
                         </motion.div>
@@ -284,12 +350,43 @@ export default function CreateExamPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between pt-2">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-sm font-medium">Strict Mode</Label>
-                                        <p className="text-xs text-muted-foreground">Enforce fullscreen</p>
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Max Attempts</Label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        max="5"
+                                        className="bg-background/50 h-10"
+                                        value={maxAttempts}
+                                        onChange={(e) => setMaxAttempts(parseInt(e.target.value) || 1)}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        How many times a student can attempt this exam
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-medium flex items-center gap-2">
+                                                <ShieldAlert className="w-3.5 h-3.5" />
+                                                Strict Mode
+                                            </Label>
+                                            <p className="text-xs text-muted-foreground">Enforce fullscreen & flag tab switches</p>
+                                        </div>
+                                        <Switch checked={strictMode} onCheckedChange={setStrictMode} />
                                     </div>
-                                    <Switch checked={strictMode} onCheckedChange={setStrictMode} />
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-medium flex items-center gap-2">
+                                                <Globe className="w-3.5 h-3.5" />
+                                                Allow Guest Access
+                                            </Label>
+                                            <p className="text-xs text-muted-foreground">Students outside your organization can join</p>
+                                        </div>
+                                        <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                                    </div>
                                 </div>
                             </PremiumCard>
                         </motion.div>
@@ -297,7 +394,7 @@ export default function CreateExamPage() {
                         <Button
                             size="lg"
                             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-2"
-                            disabled={!title || !file || createMutation.isPending}
+                            disabled={!title.trim() || !file || createMutation.isPending}
                             onClick={() => createMutation.mutate()}
                         >
                             {createMutation.isPending ? (

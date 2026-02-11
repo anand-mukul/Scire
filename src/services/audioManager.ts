@@ -117,6 +117,7 @@ export class AudioManager {
     }
 
     async startRecording() {
+        if (this.isRecording) return; // Prevent duplicate starts
         await this.initialize();
         if (!this.audioContext) return;
 
@@ -160,24 +161,33 @@ export class AudioManager {
     }
 
     stopRecording() {
-        if (this.mediaStream) {
-            this.mediaStream.getTracks().forEach(t => t.stop());
-            this.mediaStream = null;
-        }
+        // DO NOT stop MediaStream tracks here — MediaManager owns the stream lifecycle.
+        // Only disconnect the worklet to stop sending audio data.
 
         if (this.workletNode) {
-            this.workletNode.port.onmessage = null; // Remove listener
+            this.workletNode.port.onmessage = null;
             this.workletNode.disconnect();
             this.workletNode = null;
         }
 
-        if (this.audioContext && this.audioContext.state !== 'closed') {
-            // Optional: Suspend to save battery/cpu if not playing
-            // this.audioContext.suspend(); 
-        }
-
         this.isRecording = false;
         useSessionStore.getState().setUserVolume(0);
+    }
+
+    /**
+     * Full teardown — call ONLY on component unmount.
+     * Releases stream tracks, closes AudioContext, and stops recording.
+     */
+    cleanup() {
+        this.stopRecording();
+        if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(t => t.stop());
+            this.mediaStream = null;
+        }
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+            this.audioContext.close();
+            this.audioContext = null;
+        }
     }
 
     private handleMessage(msg: any) {

@@ -5,6 +5,7 @@ import { api } from '@/lib/network/api';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Logger } from '@/lib/logger';
+import { integrityService } from '@/services/integrityService';
 
 export const useExamIntegrity = (sessionId: string | null) => {
     const connectionState = useSessionStore((state) => state.connectionState);
@@ -37,13 +38,14 @@ export const useExamIntegrity = (sessionId: string | null) => {
             duration: 5000,
         });
 
-        // Notify Backend of "Warning"
+        // Notify Backend with full metrics
+        const metrics = integrityService.getMetrics();
         vivaWebSocket.send({
             type: 'integrity_snapshot',
             data: {
+                ...metrics,
                 reason: reason,
-                severity: 'medium', // Warning level
-                timestamp: new Date().toISOString()
+                severity: 'medium',
             }
         });
 
@@ -125,6 +127,20 @@ export const useExamIntegrity = (sessionId: string | null) => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
     }, [handleVisibilityChange, handleFullscreenChange, resolveViolation]);
+
+    // --- Periodic Integrity Snapshots ---
+    useEffect(() => {
+        if (connectionState === 'CONNECTED' && sessionId) {
+            // Send metrics every 60s so backend can track tab_switches over time
+            integrityService.startPeriodicSnapshots(
+                (data) => vivaWebSocket.send(data),
+                60000
+            );
+        }
+        return () => {
+            integrityService.stopPeriodicSnapshots();
+        };
+    }, [connectionState, sessionId]);
 
 
     // --- Timer Logic ---

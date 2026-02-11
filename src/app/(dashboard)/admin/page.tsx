@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { PremiumCard } from '@/components/ui/premium-card';
-import { Activity, Users, Server, AlertTriangle, Shield, FileText, BarChart3 } from 'lucide-react';
+import { Activity, Users, Server, AlertTriangle, Shield, FileText, BarChart3, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
 import { motion } from 'motion/react';
@@ -204,6 +204,13 @@ export default function AdminDashboard() {
                         title="User Management"
                         desc="Manage Accounts"
                         delay={0.7}
+                    />
+                    <AdminActionCard
+                        href="/admin/subjects"
+                        icon={BookOpen}
+                        title="Subjects"
+                        desc="Departments & Courses"
+                        delay={0.8}
                     />
                 </div>
 

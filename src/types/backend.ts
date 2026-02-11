@@ -77,7 +77,12 @@ export interface Exam {
     settings?: ExamSettings;
     syllabus_url?: string;
     max_attempts: number;
+    subject_id?: string;
+    is_public: boolean;
+    start_time?: string;
+    end_time?: string;
     created_at: string;
+    updated_at: string;
     candidates_count?: number;
 }
 
@@ -136,4 +141,29 @@ export interface ReviewRequest {
     status: string;
     notes?: string;
     final_score_override?: number;
+}
+
+export interface Department {
+    id: string;
+    tenant_id: string;
+    name: string;
+    code: string;
+    description?: string;
+    head_user_id?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Subject {
+    id: string;
+    tenant_id: string;
+    department_id: string;
+    name: string;
+    code: string;
+    description?: string;
+    credits?: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }

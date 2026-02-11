@@ -92,18 +92,11 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
         return () => {
             integrityService.stopMonitoring();
-            if (stream) {
-                Logger.log('MediaManager: Stopping Stream');
-                stream.getTracks().forEach(t => t.stop());
-            }
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
+            Logger.log('MediaManager: Cleaning up AudioManager');
+            audioManager.cleanup();
             setMicStatus(false);
         };
-    }, [stream]); // Dependent on stream? stream changes? 
-    // Ideally this effect should be dependent on [stream] for stream cleanup, but [integrity] is global.
-    // Mixing them is fine if we accept start/stop on stream change (rare).
+    }, []); // Run once on mount/unmount only
 
     useEffect(() => {
         if (!stream) return;
@@ -162,7 +155,6 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
                 const metrics = integrityService.getMetrics();
                 vivaWebSocket.sendIntegritySnapshot({
-                    timestamp: new Date().toISOString(),
                     data: dataUrl,
                     ...metrics
                 } as any);

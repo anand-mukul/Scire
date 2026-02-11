@@ -4,7 +4,7 @@ import { TranscriptSpeaker } from '@/types/backend';
 
 type WebSocketMessage =
     | { type: 'state_update'; state: DialogueState }
-    | { type: 'transcript'; text: string; is_final: boolean; role: 'STUDENT' | 'AI' | 'SYSTEM'; timestamp: string }
+    | { type: 'transcript'; text: string; is_final: boolean; role: 'STUDENT' | 'ASSISTANT' | 'SYSTEM'; timestamp: string }
     | { type: 'audio_chunk'; data: string } // base64
     | { type: 'ping' }
     | { type: 'pong' }
