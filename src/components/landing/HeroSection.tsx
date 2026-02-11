@@ -9,21 +9,21 @@ import { ChevronRight, PlayCircle } from 'lucide-react';
 
 export const HeroSection = () => {
     return (
-        <section className="relative h-[40rem] md:h-screen w-full flex md:items-center md:justify-center bg-background/[0.96] antialiased dark:bg-grid-white/[0.02] bg-grid-black/[0.02] overflow-hidden">
+        <section className="relative min-h-[calc(100vh-80px)] w-full flex items-center justify-center bg-background overflow-hidden">
             <AmbientGlow />
-            <div className="p-4 max-w-7xl  mx-auto relative z-10  w-full pt-20 md:pt-0">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-20 md:py-0">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex justify-center"
+                    className="flex justify-center mb-8"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-xs font-semibold uppercase tracking-wider text-primary backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold uppercase tracking-wide text-primary backdrop-blur-sm">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                         </span>
-                        Introducing Scire v1.0
+                        Introducing Scire Platform
                     </div>
                 </motion.div>
 
@@ -31,41 +31,45 @@ export const HeroSection = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-6xl md:text-8xl font-bold text-center bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] pb-4 will-change-transform tracking-tighter md:leading-[0.9]"
+                    className="text-5xl sm:text-6xl md:text-7xl font-bold text-center text-foreground pb-4 tracking-tight leading-[1.1]"
                 >
-                    The Future of <br /> Oral Assessments
+                    <span className="bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)]">
+                        The Future of Oral
+                    </span>
+                    <br />
+                    Assessments
                 </motion.h1>
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="mt-6 font-medium text-lg md:text-xl text-muted-foreground max-w-2xl text-center mx-auto leading-relaxed"
+                    className="mt-8 text-base md:text-lg text-muted-foreground max-w-2xl text-center mx-auto leading-relaxed"
                 >
                     Conduct massive scale viva exams with autonomous AI examiners.
-                    Real-time anti-cheat, instant grading, and detailed analytics for modern education.
+                    Real-time anti-cheat, instant grading, and detailed analytics.
                 </motion.p>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
-                    className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12"
                 >
                     <Link href="/auth/register">
-                        <Button className="h-14 px-8 rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-2xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-105 font-bold text-lg min-w-[200px]">
+                        <Button className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl hover:shadow-primary/20 transition-all font-semibold text-base">
                             Start Free Trial
-                            <ChevronRight className="w-5 h-5 ml-1" />
+                            <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                     </Link>
                     <Link href="#features">
-                        <Button variant="outline" className="h-12 px-8 rounded-full border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 transition-all font-medium text-lg">
-                            <PlayCircle className="w-5 h-5 mr-2" />
+                        <Button variant="outline" className="h-12 px-8 border-border text-foreground hover:bg-secondary font-semibold text-base">
+                            <PlayCircle className="w-4 h-4 mr-2" />
                             See How It Works
                         </Button>
                     </Link>
                 </motion.div>
             </div>
-            <BackgroundBeams className="opacity-40 top-0" />
+            <BackgroundBeams className="opacity-30 top-0" />
         </section>
     );
 };

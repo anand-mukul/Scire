@@ -81,9 +81,9 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
     const logoText = role === 'STUDENT' ? 'Student Portal' : 'Admin Console';
 
     const Content = (
-        <div className={cn("flex flex-col h-full bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border transition-colors duration-300", className)}>
+        <div className={cn("flex flex-col h-full bg-sidebar border-r border-border transition-colors duration-300", className)}>
             {/* Logo */}
-            <div className="p-6 border-b border-sidebar-border/50">
+            <div className="px-6 py-5 border-b border-border">
                 <Link href="/" className="flex items-center gap-3 group" onClick={onNavigate}>
                     <Logo showText={false} size="md" href="" />
                     <div className="flex flex-col">
@@ -96,7 +96,7 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto scroll-hidden">
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto scroll-hidden">
                 {items.map((item, index) => {
                     const Icon = item.icon;
                     // Exact match for root active state or specific sub-paths
@@ -110,24 +110,24 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
                                 href={item.href}
                                 onClick={onNavigate}
                                 className={cn(
-                                    'group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden',
+                                    'group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 relative overflow-hidden font-medium text-sm',
                                     isActive
-                                        ? 'text-sidebar-primary-foreground font-medium'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50'
+                                        ? 'text-sidebar-primary-foreground bg-sidebar-primary'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent'
                                 )}
                             >
                                 {isActive && (
                                     <motion.div
                                         layoutId="sidebar-active"
-                                        className="absolute inset-0 bg-sidebar-primary shadow-[0_0_20px_-5px_var(--brand-primary)] rounded-xl"
+                                        className="absolute inset-0 bg-sidebar-primary rounded-lg"
                                         initial={false}
                                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                     />
                                 )}
-                                <div className={cn("relative z-10 p-1 rounded-lg transition-colors", isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground")}>
+                                <div className={cn("relative z-10 transition-colors")}>
                                     <Icon size={18} />
                                 </div>
-                                <span className="relative z-10 text-sm tracking-wide">{item.label}</span>
+                                <span className="relative z-10">{item.label}</span>
                             </Link>
                         </div>
                     );
@@ -135,25 +135,25 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
             </nav>
 
             {/* User Profile Section */}
-            <div className="p-4 border-t border-sidebar-border/50 mt-auto bg-sidebar-accent/20">
+            <div className="p-4 border-t border-border mt-auto">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="ghost"
-                            className="w-full justify-start gap-3 h-auto p-3 hover:bg-sidebar-accent/50 group border border-transparent hover:border-sidebar-border/50 rounded-xl transition-all"
+                            className="w-full justify-start gap-3 h-auto p-2.5 hover:bg-sidebar-accent group border border-transparent hover:border-border rounded-lg transition-all"
                         >
-                            <Avatar className="h-10 w-10 border-2 border-sidebar-border group-hover:border-sidebar-primary/50 transition-colors">
-                                <AvatarFallback className="bg-gradient-to-br from-sidebar-accent to-sidebar-secondary text-sidebar-foreground text-sm font-bold">
+                            <Avatar className="h-9 w-9 border border-border group-hover:border-sidebar-primary transition-colors">
+                                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-xs font-semibold">
                                     {isLoading ? '...' : user?.full_name ? getInitials(user.full_name) : 'U'}
                                 </AvatarFallback>
                             </Avatar>
-                            <div className="flex-1 text-left overflow-hidden">
-                                <p className="text-sm font-bold text-foreground truncate transition-colors">
+                            <div className="flex-1 text-left overflow-hidden min-w-0">
+                                <p className="text-xs font-semibold text-foreground truncate">
                                     {isLoading ? 'Loading...' : user?.full_name || 'User'}
                                 </p>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <p className="text-[10px] text-muted-foreground capitalize truncate font-mono tracking-wider">
+                                    <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                                    <p className="text-[10px] text-muted-foreground capitalize truncate">
                                         {role.toLowerCase()}
                                     </p>
                                 </div>
@@ -161,26 +161,26 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
                             <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-60 bg-popover/80 backdrop-blur-xl border-border text-popover-foreground p-2 shadow-2xl" side="top">
+                    <DropdownMenuContent align="end" className="w-56 bg-popover border-border text-popover-foreground p-1 shadow-lg" side="top">
                         <DropdownMenuItem asChild>
-                            <Link href="/profile" className="flex items-center gap-2 cursor-pointer focus:bg-accent focus:text-accent-foreground rounded-lg py-2" onClick={onNavigate}>
+                            <Link href="/profile" className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-2 text-sm hover:bg-secondary transition-colors" onClick={onNavigate}>
                                 <UserIcon className="h-4 w-4" />
                                 <span>Profile</span>
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href="/settings" className="flex items-center gap-2 cursor-pointer focus:bg-accent focus:text-accent-foreground rounded-lg py-2" onClick={onNavigate}>
+                            <Link href="/settings" className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-2 text-sm hover:bg-secondary transition-colors" onClick={onNavigate}>
                                 <Settings className="h-4 w-4" />
                                 <span>Settings</span>
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-border my-2" />
+                        <DropdownMenuSeparator className="bg-border my-1" />
                         <DropdownMenuItem
                             onClick={() => {
                                 logout();
                                 onNavigate?.();
                             }}
-                            className="text-destructive focus:text-destructive-foreground focus:bg-destructive/10 cursor-pointer rounded-lg py-2"
+                            className="text-destructive hover:bg-destructive/10 cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors"
                         >
                             <LogOut className="h-4 w-4 mr-2" />
                             <span>Log out</span>

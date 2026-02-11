@@ -120,23 +120,24 @@ export default function AdminDashboard() {
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
             <AmbientGlow />
 
-            <div className="container mx-auto p-6 space-y-8 relative z-10">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
+                        className="space-y-3"
                     >
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)]">
+                        <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
                             Admin Console
                         </h1>
-                        <p className="text-muted-foreground text-lg mt-2 max-w-2xl">
+                        <p className="text-muted-foreground text-base max-w-2xl">
                             Command center for system monitoring, user management, and platform analytics.
                         </p>
                     </motion.div>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
                     {isLoadingStats
                         ? Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
                         : statCards.map((stat, index) => (
@@ -146,7 +147,7 @@ export default function AdminDashboard() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
                             >
-                                <PremiumCard className="h-full group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 bg-card/40 backdrop-blur-xl border-border">
+                                <PremiumCard className="h-full group relative overflow-hidden transition-all duration-300 hover:border-primary/20 bg-card border-border">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                     <div className="relative z-10 flex flex-col justify-between h-full p-6">

@@ -144,17 +144,17 @@ export default function StudentDashboard() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <div className="relative z-10 p-8 max-w-7xl mx-auto space-y-12">
+            <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto space-y-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex flex-col gap-2"
+                    className="flex flex-col gap-3"
                 >
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] pb-2">
+                    <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
                         Student Portal
                     </h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl">
+                    <p className="text-muted-foreground text-base max-w-2xl">
                         Calm, focused, and ready for your viva.
                     </p>
                 </motion.div>
@@ -162,15 +162,15 @@ export default function StudentDashboard() {
                 <div className="grid gap-8 md:grid-cols-12 items-start">
                     {/* Join Exam Section */}
                     <div className="md:col-span-12 lg:col-span-8">
-                        <PremiumCard className="h-full flex flex-col justify-between bg-card/40 border-border relative group overflow-hidden backdrop-blur-xl p-8 md:p-10">
+                        <PremiumCard className="h-full flex flex-col justify-between bg-card border-border relative group overflow-hidden p-8 md:p-10">
                             <div className="relative z-10">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="bg-primary/10 p-3 rounded-2xl w-fit border border-primary/20 shadow-[var(--brand-glow)]">
-                                        <Zap className="text-primary w-6 h-6" />
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="bg-primary/10 p-3 rounded-lg w-fit border border-primary/20">
+                                        <Zap className="text-primary w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h2 className="text-3xl font-bold text-foreground tracking-tight">Join Exam Session</h2>
-                                        <p className="text-muted-foreground text-base mt-1">Enter the 8-character code provided by your examiner.</p>
+                                        <h2 className="text-2xl font-semibold text-foreground">Join Exam Session</h2>
+                                        <p className="text-muted-foreground text-sm mt-1">Enter the 8-character code provided by your examiner.</p>
                                     </div>
                                 </div>
 
@@ -179,18 +179,18 @@ export default function StudentDashboard() {
                                     const form = e.target as HTMLFormElement;
                                     const input = form.elements.namedItem('examCode') as HTMLInputElement;
                                     if (input.value) window.location.href = `/student/join?code=${input.value}`;
-                                }} className="mt-8 space-y-6">
+                                }} className="mt-8 space-y-5">
                                     <div className="relative max-w-lg">
                                         <Input
                                             name="examCode"
                                             placeholder="EXAM-CODE"
-                                            className="bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground/50 text-center font-mono text-3xl tracking-[0.3em] uppercase h-20 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all shadow-inner"
+                                            className="bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-center font-mono text-2xl tracking-[0.3em] uppercase h-14 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                             maxLength={10}
                                             autoComplete="off"
                                         />
                                     </div>
                                     <div className="flex flex-col gap-3">
-                                        <Button type="submit" className="w-full max-w-lg h-14 text-lg font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                                        <Button type="submit" className="w-full max-w-lg h-12 text-base font-semibold">
                                             Verify & Join Exam
                                         </Button>
                                         <p className="text-muted-foreground text-xs text-center max-w-lg">
@@ -205,18 +205,18 @@ export default function StudentDashboard() {
                     {/* System Readiness & Status */}
                     <div className="md:col-span-12 lg:col-span-4 space-y-6">
                         {/* Readiness Card */}
-                        <PremiumCard className="p-6 bg-card/40 border-border backdrop-blur-xl">
+                        <PremiumCard className="p-6 bg-card border-border">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg border ${isSystemReady ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-secondary border-border'}`}>
-                                        <div className={`w-2 h-2 rounded-full ${isSystemReady ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
+                                    <div className={`p-2 rounded-lg border ${isSystemReady ? 'bg-primary/10 border-primary/20' : 'bg-secondary border-border'}`}>
+                                        <div className={`w-2 h-2 rounded-full ${isSystemReady ? 'bg-primary animate-pulse' : 'bg-muted-foreground'}`} />
                                     </div>
-                                    <h3 className="font-bold text-foreground">System Check</h3>
+                                    <h3 className="font-semibold text-foreground">System Check</h3>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 hover:bg-accent"
+                                    className="h-8 w-8 hover:bg-secondary"
                                     onClick={checkSystem}
                                     title="Run Check Again"
                                 >
@@ -230,7 +230,7 @@ export default function StudentDashboard() {
                                 <StatusBadge status={status.network} label="Network" />
                             </div>
 
-                            <div className="mt-6 pt-6 border-t border-border/50">
+                            <div className="mt-6 pt-6 border-t border-border">
                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                     {isSystemReady
                                         ? "Your environment is optimized for this exam session. Good luck."

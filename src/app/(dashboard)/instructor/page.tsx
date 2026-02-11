@@ -39,7 +39,7 @@ export default function InstructorDashboard() {
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
             <AmbientGlow />
 
-            <div className="container mx-auto p-6 space-y-8 relative z-10">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 relative z-10">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -47,30 +47,30 @@ export default function InstructorDashboard() {
                     transition={{ duration: 0.5 }}
                     className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6"
                 >
-                    <div className="space-y-2">
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] pb-2">
+                    <div className="space-y-3">
+                        <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
                             Instructor Console
                         </h1>
-                        <p className="text-muted-foreground text-lg max-w-2xl">
+                        <p className="text-muted-foreground text-base max-w-2xl">
                             Orchestrate complex evaluations and monitor candidate performance in real-time.
                         </p>
                     </div>
                     <Button
-                        className="h-12 px-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_-5px_rgba(var(--primary),0.3)] hover:shadow-primary/40 transition-all hover:scale-105 font-medium border-0"
+                        className="h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-semibold"
                         onClick={() => router.push('/instructor/exam/create')}
                     >
-                        <Plus className="mr-2 h-5 w-5" />
+                        <Plus className="mr-2 h-4 w-4" />
                         New Assessment
                     </Button>
                 </motion.div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     {[
-                        { label: 'Active Exams', value: stats?.active_exams?.toString() || '-', icon: FileText, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-                        { label: 'Live Sessions', value: stats?.live_sessions?.toString() || '-', icon: Activity, isLive: true, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-                        { label: 'Pending Reviews', value: stats?.pending_reviews?.toString() || '-', icon: Users, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-                        { label: 'Avg. Score', value: stats?.avg_score ? `${stats.avg_score}%` : '-', icon: BarChart3, color: 'text-violet-500', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+                        { label: 'Active Exams', value: stats?.active_exams?.toString() || '-', icon: FileText, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+                        { label: 'Live Sessions', value: stats?.live_sessions?.toString() || '-', icon: Activity, isLive: true, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+                        { label: 'Pending Reviews', value: stats?.pending_reviews?.toString() || '-', icon: Users, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+                        { label: 'Avg. Score', value: stats?.avg_score ? `${stats.avg_score}%` : '-', icon: BarChart3, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
                     ].map((stat, i) => (
                         <motion.div
                             key={i}
@@ -78,19 +78,19 @@ export default function InstructorDashboard() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1 }}
                         >
-                            <PremiumCard className="relative overflow-hidden group p-6 flex items-center gap-6 hover:border-border transition-all duration-300 border-border bg-card/40 backdrop-blur-xl">
-                                <div className={`p-4 rounded-2xl ${stat.bg} border ${stat.border}`}>
-                                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                            <PremiumCard className="relative overflow-hidden group p-6 flex items-center gap-5 hover:border-primary/20 transition-all duration-300 border-border bg-card">
+                                <div className={`p-3 rounded-lg ${stat.bg} border ${stat.border}`}>
+                                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
                                 </div>
-                                <div className="relative">
+                                <div className="relative flex-1">
                                     {stat.isLive && (
                                         <span className="absolute -right-3 -top-1 flex h-2 w-2">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                                         </span>
                                     )}
-                                    <div className="text-3xl font-black text-foreground tracking-tight">{isLoadingStats ? '...' : stat.value}</div>
-                                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">{stat.label}</div>
+                                    <div className="text-3xl font-bold text-foreground">{isLoadingStats ? '...' : stat.value}</div>
+                                    <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1">{stat.label}</div>
                                 </div>
                             </PremiumCard>
                         </motion.div>

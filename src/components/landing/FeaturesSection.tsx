@@ -54,15 +54,15 @@ export const FeaturesSection = () => {
     ];
 
     return (
-        <section id="features" className="py-20 bg-background relative z-20">
-            <div className="container mx-auto px-4">
-                <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+        <section id="features" className="py-24 bg-background relative z-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
-                        className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground pb-2"
+                        className="text-4xl md:text-5xl font-bold text-foreground leading-tight"
                     >
                         Intelligence at Scale
                     </motion.h2>
@@ -73,11 +73,11 @@ export const FeaturesSection = () => {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="text-lg text-muted-foreground"
                     >
-                        Everything you need to conduct world-class oral assessments.
+                        Everything you need to conduct world-class oral assessments at any scale.
                     </motion.p>
                 </div>
 
-                <BentoGrid className="max-w-4xl mx-auto">
+                <BentoGrid className="max-w-5xl mx-auto">
                     {items.map((item, i) => (
                         <BentoGridItem
                             key={i}

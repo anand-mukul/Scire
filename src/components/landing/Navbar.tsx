@@ -26,36 +26,36 @@ export const Navbar = () => {
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-4 md:px-12 border-b transition-all duration-300 ${scrolled
-                ? "bg-background/80 backdrop-blur-xl border-border py-3"
-                : "bg-transparent border-transparent py-5"
+            className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b transition-all duration-300 ${scrolled
+                ? "bg-background/80 backdrop-blur-sm border-border"
+                : "bg-transparent border-transparent"
                 }`}
         >
             <Logo size="sm" />
 
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
                 <AnimatedThemeToggler />
 
                 {!isLoading && user ? (
                     <Link href="/student">
-                        <Button className="bg-foreground text-background hover:bg-muted-foreground/90 shadow-[0_0_20px_-5px_var(--primary)/0.3] hover:shadow-primary/40 transition-all font-semibold rounded-full px-6">
+                        <Button className="h-10 px-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-semibold">
                             Dashboard
-                            <ChevronRight className="w-4 h-4 ml-0.5" />
+                            <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
                     </Link>
                 ) : (
                     <>
                         <Link href="/auth/login">
-                            <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-foreground/5">
+                            <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-secondary">
                                 <LogIn className="w-4 h-4 mr-1.5 hidden sm:block" />
                                 Sign In
                             </Button>
                         </Link>
                         <Link href="/auth/register">
-                            <Button className="bg-foreground text-background hover:bg-muted-foreground/90 shadow-[0_0_20px_-5px_var(--primary)/0.3] hover:shadow-primary/40 transition-all font-semibold rounded-full px-6">
+                            <Button className="h-10 px-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-semibold">
                                 <UserPlus className="w-4 h-4 mr-1.5 hidden sm:block" />
                                 Get Started
-                                <ChevronRight className="w-4 h-4 ml-0.5" />
+                                <ChevronRight className="w-4 h-4 ml-1" />
                             </Button>
                         </Link>
                     </>
