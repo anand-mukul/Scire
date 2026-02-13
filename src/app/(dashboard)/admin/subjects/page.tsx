@@ -3,9 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
-import { motion } from 'motion/react';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -363,16 +361,11 @@ export default function AdminSubjectsPage() {
 
     return (
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="container mx-auto p-6 space-y-8 relative z-10">
                 {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6"
-                >
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-primary/10 rounded-xl border border-primary/20">
@@ -394,22 +387,17 @@ export default function AdminSubjectsPage() {
                         <CreateDepartmentDialog onCreated={invalidateAll} />
                         <CreateSubjectDialog departments={departments} onCreated={invalidateAll} />
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Department Summary */}
                 {departments.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
-                    >
+                    <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
                         {departments.map((dept) => {
                             const count = subjects.filter((s) => s.department_id === dept.id).length;
                             return (
-                                <PremiumCard
+                                <Card
                                     key={dept.id}
-                                    className="!p-4 bg-card/40 border-border hover:border-primary/30 transition-all cursor-pointer group"
+                                    className="p-4 hover:border-primary/30 transition-colors cursor-pointer group"
                                     onClick={() => setDeptFilter(deptFilter === dept.id ? 'all' : dept.id)}
                                 >
                                     <div className={`flex items-center gap-3 ${deptFilter === dept.id ? 'text-primary' : ''}`}>
@@ -421,19 +409,14 @@ export default function AdminSubjectsPage() {
                                             <p className="text-xs text-muted-foreground truncate">{count} subject{count !== 1 ? 's' : ''}</p>
                                         </div>
                                     </div>
-                                </PremiumCard>
+                                </Card>
                             );
                         })}
-                    </motion.div>
+                    </div>
                 )}
 
                 {/* Filters */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="flex flex-col md:flex-row gap-4"
-                >
+                <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -453,15 +436,10 @@ export default function AdminSubjectsPage() {
                             Clear filter
                         </Button>
                     )}
-                </motion.div>
+                </div>
 
                 {/* Subject List */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="space-y-3"
-                >
+                <div className="space-y-3">
                     {isLoading ? (
                         Array(4)
                             .fill(0)
@@ -469,7 +447,7 @@ export default function AdminSubjectsPage() {
                                 <Skeleton key={i} className="h-20 w-full rounded-xl bg-white/5" />
                             ))
                     ) : filteredSubjects.length === 0 ? (
-                        <PremiumCard className="text-center py-16 text-muted-foreground bg-card/40 border-dashed border-border">
+                        <Card className="text-center py-16 text-muted-foreground border-dashed">
                             <GraduationCap className="w-12 h-12 mx-auto mb-4 opacity-20" />
                             <p className="font-medium">No subjects found</p>
                             <p className="text-sm mt-1">
@@ -477,18 +455,13 @@ export default function AdminSubjectsPage() {
                                     ? 'Create a department first, then add subjects.'
                                     : 'Click "Add Subject" to create one.'}
                             </p>
-                        </PremiumCard>
+                        </Card>
                     ) : (
                         filteredSubjects.map((subject, index) => {
                             const dept = deptMap.get(subject.department_id);
                             return (
-                                <motion.div
-                                    key={subject.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.03 }}
-                                >
-                                    <PremiumCard className="!p-0 bg-card/40 border-border hover:border-primary/30 transition-all group backdrop-blur-xl">
+                                <div key={subject.id}>
+                                    <Card className="hover:border-primary/30 transition-colors group">
                                         <div className="relative p-5 flex items-center justify-between gap-4">
                                             <div className="flex items-center gap-4 min-w-0 flex-1">
                                                 {/* Icon */}
@@ -568,12 +541,12 @@ export default function AdminSubjectsPage() {
                                                 )}
                                             </Button>
                                         </div>
-                                    </PremiumCard>
-                                </motion.div>
+                                    </Card>
+                                </div>
                             );
                         })
                     )}
-                </motion.div>
+                </div>
             </div>
         </div>
     );

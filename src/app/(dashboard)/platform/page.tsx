@@ -14,6 +14,7 @@ import { redirect } from 'next/navigation';
 import { Building2, Users, Activity, Plus, Settings, BarChart3, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { UserRole } from '@/types/auth';
+import { TenantStatus } from '@/types/backend';
 
 export default function PlatformAdminPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -44,8 +45,8 @@ export default function PlatformAdminPage() {
 
     // Stats from tenant data
     const totalTenants = tenants?.length || 0;
-    const activeTenants = tenants?.filter((t: { status: string }) => t.status === 'active').length || 0;
-    const trialTenants = tenants?.filter((t: { status: string }) => t.status === 'trial').length || 0;
+    const activeTenants = tenants?.filter((t: { status: TenantStatus }) => t.status === TenantStatus.ACTIVE).length || 0;
+    const trialTenants = tenants?.filter((t: { status: TenantStatus }) => t.status === TenantStatus.TRIAL).length || 0;
 
     return (
         <div className="container py-8">
@@ -191,13 +192,13 @@ function StatCard({
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
     const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-        active: { bg: 'bg-green-500/10', text: 'text-green-500', label: 'Active' },
-        suspended: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Suspended' },
-        trial: { bg: 'bg-purple-500/10', text: 'text-purple-500', label: 'Trial' },
-        churned: { bg: 'bg-gray-500/10', text: 'text-gray-500', label: 'Churned' },
+        [TenantStatus.ACTIVE]: { bg: 'bg-green-500/10', text: 'text-green-500', label: 'Active' },
+        [TenantStatus.SUSPENDED]: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Suspended' },
+        [TenantStatus.TRIAL]: { bg: 'bg-purple-500/10', text: 'text-purple-500', label: 'Trial' },
+        [TenantStatus.CHURNED]: { bg: 'bg-gray-500/10', text: 'text-gray-500', label: 'Churned' },
     };
 
-    const config = statusConfig[status] || statusConfig.active;
+    const config = statusConfig[status] || { bg: 'bg-secondary', text: 'text-muted-foreground', label: status };
 
     return (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}>

@@ -1,16 +1,16 @@
 'use client';
 
 import React from 'react';
-import { PremiumCard } from '@/components/ui/premium-card';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { Badge } from '@/components/ui/badge';
-import { VivaSession } from '@/types/backend';
+import { VivaSession, SessionStatus } from '@/types/backend';
 import { useSessions } from '@/hooks/use-dashboard-data';
 import { FileText, Calendar, Clock, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { formatToLocalDateTime, formatDuration } from '@/lib/date-utils';
-import { motion } from 'motion/react';
+// import { motion } from 'motion/react';
 
 interface HistorySession extends VivaSession {
     exam_title?: string;
@@ -18,26 +18,21 @@ interface HistorySession extends VivaSession {
 
 export default function StudentHistoryPage() {
     // Fetch completed sessions
-    const { data: sessions, isLoading } = useSessions({ status: 'COMPLETED' });
+    const { data: sessions, isLoading } = useSessions({ status: SessionStatus.COMPLETED });
 
     return (
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="relative z-10 p-8 max-w-7xl mx-auto space-y-12">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col gap-2"
-                >
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] pb-2 flex items-center gap-4">
+                <div className="flex flex-col gap-2 animate-in fade-in duration-300">
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground flex items-center gap-4">
                         Exam History
                     </h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl">
+                    <p className="text-muted-foreground text-sm max-w-2xl">
                         View your past assessments and results.
                     </p>
-                </motion.div>
+                </div>
 
                 <div className="grid gap-4">
                     {isLoading ? (
@@ -46,7 +41,7 @@ export default function StudentHistoryPage() {
                             Loading history...
                         </div>
                     ) : sessions?.length === 0 ? (
-                        <PremiumCard className="p-16 flex flex-col items-center justify-center text-center bg-card/40 border-border border-dashed">
+                        <Card className="p-16 flex flex-col items-center justify-center text-center border-dashed">
                             <div className="p-4 rounded-full bg-muted/20 text-muted-foreground mb-4">
                                 <FileText className="w-8 h-8" />
                             </div>
@@ -54,20 +49,15 @@ export default function StudentHistoryPage() {
                             <p className="text-muted-foreground max-w-sm mx-auto">
                                 Once you finish an exam, it will appear here for you to review.
                             </p>
-                        </PremiumCard>
+                        </Card>
                     ) : (
                         (sessions as unknown as HistorySession[])?.map((session, index) => {
                             const isPending = session.final_score === null || session.final_score === undefined;
                             const passed = (session.final_score || 0) >= 50;
 
                             return (
-                                <motion.div
-                                    key={session.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                                >
-                                    <PremiumCard className="p-6 group hover:border-primary/50 transition-all duration-300 bg-card/40 backdrop-blur-xl border-border">
+                                <div key={session.id} className="animate-in fade-in duration-200" style={{ animationDelay: `${index * 50}ms` }}>
+                                    <Card className="p-6 group hover:border-primary/50 transition-all duration-200">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                             <div className="space-y-3 flex-1 min-w-0">
                                                 <div className="flex flex-wrap items-center gap-3">
@@ -115,8 +105,8 @@ export default function StudentHistoryPage() {
                                                 </Link>
                                             </div>
                                         </div>
-                                    </PremiumCard>
-                                </motion.div>
+                                    </Card>
+                                </div>
                             );
                         })
                     )}

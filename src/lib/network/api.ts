@@ -209,6 +209,10 @@ export const api = {
             const { data } = await apiClient.get<Record<string, unknown>[]>(`/exams/${examId}/knowledge-base`);
             return data;
         },
+        retryIngestion: async (examId: string) => {
+            const { data } = await apiClient.post(`/exams/${examId}/media/retry-ingestion`);
+            return data;
+        },
     },
 
     sessions: {

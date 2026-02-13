@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSessionStore, DialogueState } from '@/lib/store/session-store';
 import { vivaWebSocket } from '@/lib/network/websocket-client';
 import { audioManager } from '@/services/audioManager';
 import { integrityService } from '@/services/integrityService';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import { Logger } from '@/lib/logger';
 
 interface MediaManagerProps {
@@ -17,10 +16,9 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
     const fsmState = useSessionStore((state) => state.fsmState);
     const setMicStatus = useSessionStore((state) => state.setMicStatus);
     const [stream, setStream] = useState<MediaStream | null>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const processorRef = useRef<ScriptProcessorNode | null>(null);
-    const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    // Persistent video element for snapshot capture — avoids creating temp elements each time
+    const snapshotVideoRef = useRef<HTMLVideoElement | null>(null);
 
     // 1. Acquire Persistent Stream (Audio + Video)
     useEffect(() => {
@@ -28,7 +26,6 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
         const initMedia = async () => {
             try {
-                // If we already have a stream, check if it's active
                 if (stream && stream.active) return;
 
                 Logger.log('MediaManager: Requesting User Media...');
@@ -41,7 +38,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                         sampleRate: 16000
                     },
                     video: {
-                        width: 320,  // Low internal res for snapshots is fine
+                        width: 320,
                         height: 240,
                         frameRate: 15
                     }
@@ -52,10 +49,8 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                     if (onStreamReady) onStreamReady(mediaStream);
                     Logger.log('MediaManager: Stream Active');
 
-                    // Share with AudioManager for transmission
                     audioManager.setStream(mediaStream);
 
-                    // Connect to Analysis Service for Visuals
                     import('@/services/AudioAnalysisService').then(({ AudioAnalysisService }) => {
                         AudioAnalysisService.getInstance().connectMicrophone(mediaStream);
                     });
@@ -68,23 +63,19 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
             }
         };
 
-        // Initialize media during CALIBRATION (mic check) and main exam phases
-        // Only skip during AUTH (pre-connect) and END (session over)
         if (fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END) {
             initMedia();
         }
 
         return () => {
             mounted = false;
-            // We do NOT stop the stream here on unmount immediately if we navigate?
-            // Actually, we SHOULD stop it if this component is unmounted (e.g. session end).
+            // Stop all tracks on unmount to release camera/mic hardware
             if (stream) {
-                // For now, let's keep it tied to component lifecycle.
-                // stream.getTracks().forEach(t => t.stop());
-                // setStream(null);
+                stream.getTracks().forEach(t => t.stop());
+                setStream(null);
             }
         };
-    }, [fsmState]); // Re-run if state changes significantly? No, just once. 
+    }, [fsmState]);
 
     // Lifecycle: Cleanup & Integrity Monitoring
     useEffect(() => {
@@ -95,21 +86,28 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
             Logger.log('MediaManager: Cleaning up AudioManager');
             audioManager.cleanup();
             setMicStatus(false);
-        };
-    }, []); // Run once on mount/unmount only
 
+            // Cleanup snapshot video element
+            if (snapshotVideoRef.current) {
+                snapshotVideoRef.current.srcObject = null;
+                snapshotVideoRef.current = null;
+            }
+        };
+    }, []);
+
+    // Periodic integrity snapshots
     useEffect(() => {
         if (!stream) return;
         if (fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) return;
 
         const interval = setInterval(() => {
             captureAndSendSnapshot();
-        }, 30000); // Every 30 seconds
+        }, 30000);
 
         return () => clearInterval(interval);
     }, [stream, fsmState]);
 
-    // Manage Audio Transmission (Mic Management)
+    // Manage Audio Transmission
     const isAgentSpeaking = useSessionStore(s => s.isAgentSpeaking);
     useEffect(() => {
         if (!stream) return;
@@ -138,39 +136,46 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
         }
     }, [stream, fsmState, isAgentSpeaking]);
 
-    const captureAndSendSnapshot = () => {
+    // Reuse a persistent video element for snapshot capture instead of creating new ones each call
+    const captureAndSendSnapshot = useCallback(() => {
         if (!stream || !canvasRef.current) return;
 
         const videoTrack = stream.getVideoTracks()[0];
         if (!videoTrack || !videoTrack.enabled) return;
 
-        // Create a temporary video element to grab frame
-        const video = document.createElement('video');
-        video.srcObject = stream;
+        // Reuse or create the video element
+        if (!snapshotVideoRef.current) {
+            snapshotVideoRef.current = document.createElement('video');
+            snapshotVideoRef.current.muted = true;
+            snapshotVideoRef.current.playsInline = true;
+        }
+
+        const video = snapshotVideoRef.current;
+
+        // Only update srcObject if stream changed
+        if (video.srcObject !== stream) {
+            video.srcObject = stream;
+        }
+
         video.play().then(() => {
             const ctx = canvasRef.current?.getContext('2d');
             if (ctx && canvasRef.current) {
                 ctx.drawImage(video, 0, 0, canvasRef.current.width, canvasRef.current.height);
-                const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.5); // Low quality is enough
+                const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.5);
 
                 const metrics = integrityService.getMetrics();
                 vivaWebSocket.sendIntegritySnapshot({
                     data: dataUrl,
                     ...metrics
                 } as any);
-                // console.log('Sent Integrity Snapshot');
             }
-            // Cleanup video element? It's not attached to DOM.
-            video.srcObject = null;
         }).catch(e => Logger.error("Snapshot failed", e));
-    };
-
+    }, [stream]);
 
 
     return (
         <div className="hidden">
             <canvas ref={canvasRef} width={320} height={240} />
-            {/* We could render a small preview here if we wanted to debug */}
         </div>
     );
 };

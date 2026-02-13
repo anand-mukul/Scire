@@ -32,7 +32,7 @@ export const TranscriptDrawer: React.FC<TranscriptDrawerProps> = ({ transcripts,
                     )}
                 </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-neutral-900 border-l border-white/10 p-0 flex flex-col">
+            <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-neutral-900 border-l border-white/10 p-0 flex flex-col" aria-describedby={undefined}>
                 <SheetHeader className="p-6 border-b border-white/5 bg-black/20">
                     <SheetTitle className="text-white font-mono flex items-center gap-2">
                         <MessageCircle className="w-5 h-5 text-blue-500" />

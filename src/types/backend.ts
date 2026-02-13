@@ -19,6 +19,12 @@ export enum ExamStatus {
     ARCHIVED = 'ARCHIVED'
 }
 
+export enum KBStatus {
+    PROCESSING = 'PROCESSING',
+    READY = 'READY',
+    FAILED = 'FAILED'
+}
+
 export enum SessionStatus {
     PENDING = 'PENDING',
     IN_PROGRESS = 'IN_PROGRESS',
@@ -39,6 +45,13 @@ export enum TranscriptSpeaker {
     AI = 'AI',
     STUDENT = 'STUDENT',
     SYSTEM = 'SYSTEM'
+}
+
+export enum TenantStatus {
+    ACTIVE = 'ACTIVE',
+    SUSPENDED = 'SUSPENDED',
+    TRIAL = 'TRIAL',
+    CHURNED = 'CHURNED'
 }
 
 export interface User {
@@ -76,6 +89,7 @@ export interface Exam {
     exam_code: string;
     settings?: ExamSettings;
     syllabus_url?: string;
+    kb_status?: KBStatus | null;
     max_attempts: number;
     subject_id?: string;
     is_public: boolean;

@@ -6,13 +6,14 @@ import { api } from '@/lib/network/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PremiumCard } from '@/components/ui/premium-card';
-import { CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
-import { AlertCircle, Save, Check } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
+import { AlertCircle, Save, Check, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getTimezoneAbbreviation } from '@/lib/date-utils';
+import { ExamStatus } from '@/types/backend';
 
 interface ExamSettingsProps {
     exam: any;
@@ -47,7 +48,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
         }));
     }, [exam]);
 
-    const isPublished = exam.status === 'PUBLISHED' || exam.status === 'ACTIVE';
+    const isPublished = exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE;
 
     const updateMutation = useMutation({
         mutationFn: (data: any) => api.exams.update(exam.id, data),
@@ -78,19 +79,19 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
     const handlePublish = () => {
         // Confirmation could be added here
         updateMutation.mutate({
-            status: 'PUBLISHED',
+            status: ExamStatus.PUBLISHED,
         });
     };
 
     const handleArchive = () => {
         updateMutation.mutate({
-            status: 'ARCHIVED',
+            status: ExamStatus.ARCHIVED,
         });
     };
 
     return (
         <div className="space-y-6">
-            <PremiumCard className="bg-card/40 border-border backdrop-blur-md">
+            <Card className="bg-card/40 border-border backdrop-blur-md">
                 <CardHeader>
                     <CardTitle>Exam Configuration</CardTitle>
                     <CardDescription>
@@ -134,7 +135,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                 onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) || 30 })}
                                 disabled={isPublished}
                             />
-                            <p className="text-xs text-muted-foreground">Time limit for the exam.</p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">Time limit for the exam. <Globe className="inline h-3 w-3" /><span className="font-mono">{getTimezoneAbbreviation()}</span></p>
                         </div>
                     </div>
 
@@ -214,9 +215,9 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                         </Button>
                     )}
                 </CardFooter>
-            </PremiumCard>
+            </Card>
 
-            <PremiumCard className={isPublished ? "border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm" : "border-amber-500/20 bg-amber-500/5 backdrop-blur-sm"}>
+            <Card className={isPublished ? "border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm" : "border-amber-500/20 bg-amber-500/5 backdrop-blur-sm"}>
                 <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">Exam Status: <span className={`uppercase font-mono px-2 py-0.5 rounded text-xs ${isPublished ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>{formData.status}</span></CardTitle>
                 </CardHeader>
@@ -247,7 +248,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                         </div>
                     )}
                 </CardContent>
-            </PremiumCard>
+            </Card>
         </div>
     );
 }

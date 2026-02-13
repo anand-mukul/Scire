@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
-import { PremiumCard } from '@/components/ui/premium-card';
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +60,7 @@ export default function KnowledgeBaseViewer({ examId }: KnowledgeBaseViewerProps
     }
 
     return (
-        <PremiumCard className="bg-card/40 border-border backdrop-blur-md mt-6">
+        <Card className="bg-card/40 border-border backdrop-blur-md mt-6">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -118,6 +117,6 @@ export default function KnowledgeBaseViewer({ examId }: KnowledgeBaseViewerProps
                     )}
                 </ScrollArea>
             </CardContent>
-        </PremiumCard>
+        </Card>
     );
 }

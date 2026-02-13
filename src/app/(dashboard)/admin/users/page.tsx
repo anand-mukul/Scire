@@ -4,9 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
 import { UserRole } from '@/types/auth';
-import { motion } from 'motion/react';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -163,16 +161,11 @@ export default function AdminUsersPage() {
 
     return (
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="container mx-auto p-6 space-y-8 relative z-10">
                 {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6"
-                >
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-primary/10 rounded-xl border border-primary/20">
@@ -267,15 +260,10 @@ export default function AdminUsersPage() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                </motion.div>
+                </div>
 
                 {/* Filters */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                    className="flex flex-col md:flex-row gap-4"
-                >
+                <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -299,15 +287,10 @@ export default function AdminUsersPage() {
                             ))}
                         </SelectContent>
                     </Select>
-                </motion.div>
+                </div>
 
                 {/* User List */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
-                    className="space-y-3"
-                >
+                <div className="space-y-3">
                     {isLoading ? (
                         Array(5)
                             .fill(0)
@@ -315,19 +298,14 @@ export default function AdminUsersPage() {
                                 <Skeleton key={i} className="h-20 w-full rounded-xl bg-white/5" />
                             ))
                     ) : filteredUsers?.length === 0 ? (
-                        <PremiumCard className="text-center py-16 text-muted-foreground bg-card/40 border-dashed border-border">
+                        <Card className="text-center py-16 text-muted-foreground border-dashed">
                             <Users className="w-12 h-12 mx-auto mb-4 opacity-20" />
                             <p>No users found matching your criteria.</p>
-                        </PremiumCard>
+                        </Card>
                     ) : (
                         filteredUsers?.map((user, index) => (
-                            <motion.div
-                                key={user.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.03 }}
-                            >
-                                <PremiumCard className="!p-0 bg-card/40 border-border hover:border-primary/30 transition-all group backdrop-blur-xl">
+                            <div key={user.id}>
+                                <Card className="hover:border-primary/30 transition-colors group">
                                     <div className="relative p-5 flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-4 min-w-0 flex-1">
                                             {/* Avatar */}
@@ -409,11 +387,11 @@ export default function AdminUsersPage() {
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
-                                </PremiumCard>
-                            </motion.div>
+                                </Card>
+                            </div>
                         ))
                     )}
-                </motion.div>
+                </div>
             </div>
         </div>
     );

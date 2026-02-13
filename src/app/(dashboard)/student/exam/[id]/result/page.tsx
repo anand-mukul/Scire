@@ -3,11 +3,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PremiumLoader } from '@/components/ui/premium-loader';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { Trophy, Clock, AlertTriangle, CheckCircle, ArrowLeft, Download, Mail, XCircle, Loader2, Zap, ShieldAlert, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { formatDuration } from '@/lib/date-utils';
@@ -36,9 +36,9 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
     if (!session) {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-4 text-center">
-                <XCircle className="w-16 h-16 text-neutral-600" />
-                <h2 className="text-xl font-semibold text-white">Session Not Found</h2>
-                <p className="text-neutral-500 max-w-md">We couldn't locate the exam session you are looking for. It may have been deleted or archived.</p>
+                <XCircle className="w-16 h-16 text-muted-foreground" />
+                <h2 className="text-xl font-semibold text-foreground">Session Not Found</h2>
+                <p className="text-muted-foreground max-w-md">We couldn't locate the exam session you are looking for. It may have been deleted or archived.</p>
                 <Link href="/student">
                     <Button variant="outline">Return to Dashboard</Button>
                 </Link>
@@ -61,7 +61,7 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
 
     return (
         <div className="relative min-h-screen w-full bg-background overflow-x-hidden text-foreground pb-20">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="relative z-10 p-6 md:p-12 max-w-5xl mx-auto space-y-10">
                 {/* Navigation */}
@@ -113,7 +113,7 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                 `}</style>
 
                 {/* Main Score Card */}
-                <PremiumCard className={`p-8 md:p-16 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 ${isPending
+                <Card className={`p-8 md:p-16 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 ${isPending
                     ? 'bg-card/40 border-primary/20'
                     : passed
                         ? 'bg-gradient-to-b from-primary/10 to-card/40 border-primary/20 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)]'
@@ -178,11 +178,11 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                             </p>
                         </div>
                     )}
-                </PremiumCard>
+                </Card>
 
                 {/* Statistics Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <PremiumCard className="p-6 flex items-center gap-6 group hover:border-border transition-colors">
+                    <Card className="p-6 flex items-center gap-6 group hover:border-border transition-colors">
                         <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
                             <Clock className="w-6 h-6" />
                         </div>
@@ -190,9 +190,9 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">Duration</p>
                             <p className="text-2xl font-bold text-foreground">{formatDuration(session.start_time, session.end_time)}</p>
                         </div>
-                    </PremiumCard>
+                    </Card>
 
-                    <PremiumCard className="p-6 flex items-center gap-6 group hover:border-border transition-colors">
+                    <Card className="p-6 flex items-center gap-6 group hover:border-border transition-colors">
                         <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                             <CheckCircle className="w-6 h-6" />
                         </div>
@@ -202,11 +202,11 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                                 {session.confidence_score ? `${Math.round(session.confidence_score * 100)}%` : '--'}
                             </p>
                         </div>
-                    </PremiumCard>
+                    </Card>
                 </div>
 
                 {/* Integrity Report - Enhanced */}
-                <PremiumCard className={`overflow-hidden transition-all ${isFlagged ? 'border-destructive/30' : 'border-emerald-500/30'}`}>
+                <Card className={`overflow-hidden transition-all ${isFlagged ? 'border-destructive/30' : 'border-emerald-500/30'}`}>
                     <div className={`p-6 border-b ${isFlagged ? 'bg-destructive/10 border-destructive/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
                         <div className="flex items-center gap-3">
                             {isFlagged ? (
@@ -273,10 +273,10 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                             </div>
                         )}
                     </div>
-                </PremiumCard>
+                </Card>
 
                 {/* Share Credential */}
-                <PremiumCard className="p-6">
+                <Card className="p-6">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="space-y-2 text-center md:text-left">
                             <h3 className="text-xl font-bold text-foreground">Share Your Success</h3>
@@ -309,7 +309,7 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                             </div>
                         )}
                     </div>
-                </PremiumCard>
+                </Card>
 
                 {/* Actions Footer */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">

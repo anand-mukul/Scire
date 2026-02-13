@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/network/api';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 
 const requestSchema = z.object({
     full_name: z.string().min(2, "Name is required"),
@@ -57,7 +57,7 @@ export default function RequestAccessPage() {
     if (submitted) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-                <AmbientGlow />
+                {/* <AmbientGlow /> */}
                 <Card className="max-w-md w-full backdrop-blur-3xl bg-card/30 border-white/10 shadow-2xl">
                     <CardHeader className="text-center">
                         <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
@@ -79,7 +79,7 @@ export default function RequestAccessPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="w-full max-w-lg space-y-8 relative z-10">
                 <div className="text-center space-y-2">

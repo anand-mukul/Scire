@@ -15,8 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, MessageSquare } from 'lucide-react';
-import { VivaSession, GradingDetail } from '@/types/backend';
-import { BackgroundBeams } from '@/components/visuals/BackgroundBeams';
+import { VivaSession, GradingDetail, ReviewStatus } from '@/types/backend';
+// import { BackgroundBeams } from '@/components/visuals/BackgroundBeams';
 
 import { toast } from 'sonner';
 
@@ -70,7 +70,7 @@ export default function ReviewSessionPage() {
 
     const handleApprove = () => {
         reviewMutation.mutate({
-            status: 'approved',
+            status: ReviewStatus.APPROVED,
             notes: notes || 'Approved by reviewer',
             final_score_override: overrideScore ? parseFloat(overrideScore) : undefined
         });
@@ -78,14 +78,14 @@ export default function ReviewSessionPage() {
 
     const handleReject = () => {
         reviewMutation.mutate({
-            status: 'rejected',
+            status: ReviewStatus.REJECTED,
             notes: notes || 'Rejected by reviewer',
         });
     };
 
     return (
         <div className="relative min-h-screen w-full bg-background text-foreground p-6 md:p-12">
-            <BackgroundBeams className="-z-10 opacity-20" />
+            {/* <BackgroundBeams className="-z-10 opacity-20" /> */}
 
             <div className="max-w-7xl mx-auto space-y-8 relative z-10">
                 {/* Header */}

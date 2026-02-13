@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSystemCheck, SystemStatus } from '@/hooks/use-system-check';
 import { Trophy, Zap, RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 
-import { VivaSession } from '@/types/backend';
+import { VivaSession, SessionStatus } from '@/types/backend';
 import { useMySessions } from '@/hooks/use-dashboard-data';
 import { formatToLocalDateTime } from '@/lib/date-utils';
 import { XCircle, Flag } from 'lucide-react';
@@ -112,16 +111,16 @@ export default function StudentDashboard() {
     };
 
     const allSessions = (sessions || []) as StudentSession[];
-    const activeSessions = allSessions.filter(s => (s.status as string) === 'in_progress' || (s.status as string) === 'live');
-    const historySessions = allSessions.filter(s => (s.status as string) === 'completed' || (s.status as string) === 'graded');
+    const activeSessions = allSessions.filter(s => s.status === SessionStatus.IN_PROGRESS);
+    const historySessions = allSessions.filter(s => s.status === SessionStatus.COMPLETED);
 
     // Derived overall status
     const isSystemReady = status.microphone === 'ready' && status.camera === 'ready' && status.network === 'ready';
 
     return (
-        <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
+        <main className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
             {/* Background Effects */}
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <AlertDialog open={!!sessionToTerminate} onOpenChange={(open) => !open && setSessionToTerminate(null)}>
                 <AlertDialogContent className="bg-popover border-border text-popover-foreground">
@@ -144,37 +143,32 @@ export default function StudentDashboard() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <div className="relative z-10 p-8 max-w-7xl mx-auto space-y-12">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col gap-2"
-                >
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] pb-2">
+            <div className="relative z-10 p-6 md:p-8 max-w-7xl mx-auto space-y-8">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                         Student Portal
                     </h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl">
+                    <p className="text-muted-foreground text-sm max-w-2xl">
                         Calm, focused, and ready for your viva.
                     </p>
-                </motion.div>
+                </div>
 
                 <div className="grid gap-8 md:grid-cols-12 items-start">
                     {/* Join Exam Section */}
                     <div className="md:col-span-12 lg:col-span-8">
-                        <PremiumCard className="h-full flex flex-col justify-between bg-card/40 border-border relative group overflow-hidden backdrop-blur-xl p-8 md:p-10">
-                            <div className="relative z-10">
+                        <Card className="h-full flex flex-col justify-between p-8 md:p-10">
+                            <div>
                                 <div className="flex items-center gap-4 mb-6">
-                                    <div className="bg-primary/10 p-3 rounded-2xl w-fit border border-primary/20 shadow-[var(--brand-glow)]">
+                                    <div className="bg-primary/10 p-3 rounded-2xl w-fit border border-primary/20">
                                         <Zap className="text-primary w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h2 className="text-3xl font-bold text-foreground tracking-tight">Join Exam Session</h2>
+                                        <h2 className="text-xl font-semibold text-foreground">Join Exam Session</h2>
                                         <p className="text-muted-foreground text-base mt-1">Enter the 8-character code provided by your examiner.</p>
                                     </div>
                                 </div>
 
-                                <form onSubmit={(e) => {
+                                <form aria-label="Join exam session" onSubmit={(e) => {
                                     e.preventDefault();
                                     const form = e.target as HTMLFormElement;
                                     const input = form.elements.namedItem('examCode') as HTMLInputElement;
@@ -184,13 +178,13 @@ export default function StudentDashboard() {
                                         <Input
                                             name="examCode"
                                             placeholder="EXAM-CODE"
-                                            className="bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground/50 text-center font-mono text-3xl tracking-[0.3em] uppercase h-20 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all shadow-inner"
+                                            className="bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground/50 text-center font-mono text-2xl tracking-[0.2em] uppercase h-16 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all"
                                             maxLength={10}
                                             autoComplete="off"
                                         />
                                     </div>
                                     <div className="flex flex-col gap-3">
-                                        <Button type="submit" className="w-full max-w-lg h-14 text-lg font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                                        <Button type="submit" className="w-full max-w-lg h-12 text-base font-semibold">
                                             Verify & Join Exam
                                         </Button>
                                         <p className="text-muted-foreground text-xs text-center max-w-lg">
@@ -199,28 +193,28 @@ export default function StudentDashboard() {
                                     </div>
                                 </form>
                             </div>
-                        </PremiumCard>
+                        </Card>
                     </div>
 
                     {/* System Readiness & Status */}
                     <div className="md:col-span-12 lg:col-span-4 space-y-6">
                         {/* Readiness Card */}
-                        <PremiumCard className="p-6 bg-card/40 border-border backdrop-blur-xl">
+                        <Card className="p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-lg border ${isSystemReady ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-secondary border-border'}`}>
                                         <div className={`w-2 h-2 rounded-full ${isSystemReady ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
                                     </div>
-                                    <h3 className="font-bold text-foreground">System Check</h3>
+                                    <h3 className="font-medium text-foreground">System Check</h3>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 hover:bg-accent"
+                                    className="h-8 w-8 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     onClick={checkSystem}
-                                    title="Run Check Again"
+                                    aria-label="Run system check again"
                                 >
-                                    <RefreshCw className={`w-4 h-4 text-muted-foreground ${status.microphone === 'checking' ? 'animate-spin' : ''}`} />
+                                    <RefreshCw className={`w-4 h-4 text-muted-foreground ${status.microphone === 'checking' ? 'animate-spin' : ''}`} aria-hidden="true" />
                                 </Button>
                             </div>
 
@@ -237,14 +231,14 @@ export default function StudentDashboard() {
                                         : "Please ensure your devices are connected and permissions are granted."}
                                 </p>
                             </div>
-                        </PremiumCard>
+                        </Card>
                     </div>
                 </div>
 
                 {/* Activity Tabs */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-foreground">Your Examinations</h3>
+                        <h3 className="text-lg font-medium text-foreground">Your Examinations</h3>
                     </div>
 
                     <Tabs defaultValue="active" className="w-full">
@@ -269,17 +263,17 @@ export default function StudentDashboard() {
                                 ))
                             ) : activeSessions.length === 0 ? (
                                 <div className="col-span-full">
-                                    <PremiumCard className="flex flex-col items-center justify-center py-16 text-center border-dashed border-border bg-transparent hover:bg-card/20 transition-colors">
+                                    <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed">
                                         <div className="bg-secondary p-4 rounded-full mb-4">
                                             <Zap className="w-8 h-8 text-muted-foreground" />
                                         </div>
-                                        <h4 className="text-lg font-bold text-foreground mb-2">No Active Exams</h4>
-                                        <p className="text-muted-foreground max-w-sm mx-auto">You&apos;re all caught up! Enter an exam code above to start a new session.</p>
-                                    </PremiumCard>
+                                        <h4 className="text-base font-medium text-foreground mb-2">No Active Exams</h4>
+                                        <p className="text-muted-foreground text-sm max-w-sm mx-auto">You&apos;re all caught up! Enter an exam code above to start a new session.</p>
+                                    </Card>
                                 </div>
                             ) : (
                                 activeSessions.map((session) => (
-                                    <PremiumCard key={session.id} interactive className="group hover:border-primary/50 transition-all bg-card/40 backdrop-blur-xl border-border">
+                                    <Card key={session.id} className="p-6 group hover:border-primary/50 transition-all">
                                         <div className="flex justify-between items-start mb-4 gap-4">
                                             <div className="min-w-0 flex-1">
                                                 <div className="font-bold text-foreground text-lg truncate group-hover:text-primary transition-colors" title={session.exam?.title || session.exam_title || 'Untitled Exam'}>
@@ -288,11 +282,11 @@ export default function StudentDashboard() {
                                                 <div className="text-xs text-muted-foreground font-mono mt-1">ID: {session.id.slice(0, 8)}</div>
                                             </div>
                                             <Badge className="shrink-0 bg-primary/10 text-primary border-primary/20">
-                                                <span className="relative flex h-2 w-2 mr-2">
+                                                <span className="relative flex h-2 w-2 mr-2" aria-hidden="true">
                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                                                 </span>
-                                                Live
+                                                <span className="sr-only">Session is </span>Live
                                             </Badge>
                                         </div>
 
@@ -308,7 +302,7 @@ export default function StudentDashboard() {
                                         </div>
 
                                         <div className="space-y-3">
-                                            <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 font-bold tracking-wide">
+                                            <Button asChild className="w-full h-10 font-semibold">
                                                 <Link href={`/student/exam/${session.id}/session`}>
                                                     RESUME SESSION
                                                 </Link>
@@ -335,7 +329,7 @@ export default function StudentDashboard() {
                                                 </Button>
                                             </div>
                                         </div>
-                                    </PremiumCard>
+                                    </Card>
                                 ))
                             )}
                         </TabsContent>
@@ -350,17 +344,17 @@ export default function StudentDashboard() {
                                 ))
                             ) : historySessions.length === 0 ? (
                                 <div className="col-span-full">
-                                    <PremiumCard className="flex flex-col items-center justify-center py-16 text-center border-dashed border-border bg-transparent">
+                                    <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed">
                                         <div className="bg-secondary p-4 rounded-full mb-4">
                                             <Trophy className="w-8 h-8 text-muted-foreground" />
                                         </div>
-                                        <h4 className="text-lg font-bold text-foreground mb-2">No History Yet</h4>
-                                        <p className="text-muted-foreground max-w-sm mx-auto">Complete your first exam to see your performance metrics here.</p>
-                                    </PremiumCard>
+                                        <h4 className="text-base font-medium text-foreground mb-2">No History Yet</h4>
+                                        <p className="text-muted-foreground text-sm max-w-sm mx-auto">Complete your first exam to see your performance metrics here.</p>
+                                    </Card>
                                 </div>
                             ) : (
                                 historySessions.map((session) => (
-                                    <PremiumCard key={session.id} interactive className="group hover:border-border transition-all bg-card/40 backdrop-blur-xl border-border">
+                                    <Card key={session.id} className="p-6 group hover:border-primary/30 transition-all">
                                         <div className="flex justify-between items-start mb-6 gap-4">
                                             <div className="min-w-0 flex-1">
                                                 <div className="font-bold text-foreground text-lg truncate group-hover:text-foreground/80 transition-colors" title={session.exam?.title || session.exam_title || 'Untitled Exam'}>
@@ -374,20 +368,20 @@ export default function StudentDashboard() {
                                         <div className="flex items-end justify-between border-t border-border pt-4">
                                             <div>
                                                 <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Score</div>
-                                                <div className="text-3xl font-black text-primary">{session.score || 0}%</div>
+                                                <div className="text-2xl font-semibold text-primary">{session.score || 0}%</div>
                                             </div>
                                             <Button asChild size="sm" variant="ghost" className="text-muted-foreground hover:text-primary group-hover:translate-x-1 transition-all">
                                                 <Link href={`/student/exam/${session.id}/result`}>Details →</Link>
                                             </Button>
                                         </div>
-                                    </PremiumCard>
+                                    </Card>
                                 ))
                             )}
                         </TabsContent>
                     </Tabs>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
 

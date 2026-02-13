@@ -116,14 +116,17 @@ export const useExamIntegrity = (sessionId: string | null) => {
     }, [triggerViolation, resolveViolation, examSettings.require_fullscreen]);
 
     useEffect(() => {
+        const handleFocus = () => { if (!document.hidden) resolveViolation(); };
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleVisibilityChange); // Fallback
-        window.addEventListener('focus', () => { if (!document.hidden) resolveViolation() });
+        window.addEventListener('blur', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('blur', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
     }, [handleVisibilityChange, handleFullscreenChange, resolveViolation]);

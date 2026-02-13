@@ -120,3 +120,48 @@ export function formatDuration(
         ? `${hours}h ${remainingMins}m`
         : `${hours} hour${hours !== 1 ? 's' : ''}`;
 }
+
+/**
+ * Get the user's IANA timezone name (e.g., "Asia/Kolkata")
+ */
+export function getUserTimezone(): string {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+        return 'UTC';
+    }
+}
+
+/**
+ * Get a short timezone abbreviation (e.g., "IST", "EST")
+ */
+export function getTimezoneAbbreviation(): string {
+    try {
+        const parts = new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(new Date());
+        return parts.find(p => p.type === 'timeZoneName')?.value || 'UTC';
+    } catch {
+        return 'UTC';
+    }
+}
+
+/**
+ * Format a UTC date to local datetime WITH timezone label
+ * e.g., "Feb 13, 2026, 4:00 PM IST"
+ */
+export function formatToLocalDateTimeWithTZ(utcDate: string | Date | undefined | null): string {
+    if (!utcDate) return 'N/A';
+
+    try {
+        const date = new Date(utcDate);
+        return date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short',
+        });
+    } catch {
+        return 'N/A';
+    }
+}

@@ -78,10 +78,6 @@ export interface SessionState {
     setError: (error: string | null) => void;
     setOnboardingStatus: (accepted: boolean) => void;
 
-    // Legacy setters (kept for compatibility during refactor, can map to setConnectionState)
-    setConnectionStatus: (isConnected: boolean) => void;
-    setIsReconnecting: (isReconnecting: boolean) => void;
-
     setFsmState: (state: DialogueState) => void;
     setStatus: (status: SessionStatus) => void;
     addTranscript: (item: TranscriptItem) => void;
@@ -178,18 +174,6 @@ export const useSessionStore = create<SessionState>()(
         setOnboardingStatus: (accepted) =>
             set((state) => {
                 state.onboardingAccepted = accepted;
-            }),
-
-        setConnectionStatus: (isConnected) =>
-            set((state) => {
-                state.isConnected = isConnected;
-                state.connectionState = isConnected ? 'CONNECTED' : 'DISCONNECTED';
-            }),
-
-        setIsReconnecting: (isReconnecting) =>
-            set((state) => {
-                state.isReconnecting = isReconnecting;
-                if (isReconnecting) state.connectionState = 'RECONNECTING';
             }),
 
         setFsmState: (fsmState) =>

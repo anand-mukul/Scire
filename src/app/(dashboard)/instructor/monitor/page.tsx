@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useSessions } from '@/hooks/use-dashboard-data';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { Activity, Headphones, AlertTriangle } from 'lucide-react';
 import { VivaSession } from '@/types/backend';
 
@@ -17,16 +17,18 @@ interface DashboardSession extends VivaSession {
     integrity_status?: string;
 }
 
+import { SessionStatus } from '@/types/backend';
+
 export default function InstructorMonitorPage() {
-    const { data: sessions, isLoading } = useSessions({ status: 'in_progress' });
+    const { data: sessions, isLoading } = useSessions({ status: SessionStatus.IN_PROGRESS });
     const dashboardSessions = (sessions || []) as DashboardSession[];
 
     return (
         <div className="p-8 space-y-8 min-h-screen bg-background text-foreground relative overflow-hidden">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
             <div className="flex justify-between items-end relative z-10">
                 <div className="space-y-2">
-                    <h1 className="text-3xl font-bold text-foreground">Live Monitor</h1>
+                    <h1 className="text-2xl font-semibold text-foreground">Live Monitor</h1>
                     <p className="text-muted-foreground">Real-time oversight of all active exam sessions.</p>
                 </div>
                 <Badge variant="outline" className="h-8 px-3 text-emerald-500 bg-emerald-500/10 border-emerald-500/20">
@@ -42,13 +44,13 @@ export default function InstructorMonitorPage() {
                 {isLoading ? (
                     <div>Loading sessions...</div>
                 ) : sessions?.length === 0 ? (
-                    <div className="col-span-full py-20 text-center bg-muted/20 rounded-xl border border-dashed border-border backdrop-blur-sm">
+                    <div className="col-span-full py-20 text-center bg-muted/20 rounded-xl border border-dashed border-border">
                         <Activity className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                         <p className="text-muted-foreground">No active sessions to monitor</p>
                     </div>
                 ) : (
                     dashboardSessions.map((session) => (
-                        <PremiumCard key={session.id} className="flex flex-col gap-4 p-5 bg-card/60 hover:bg-card/80 transition-all border-border relative overflow-hidden backdrop-blur-md">
+                        <Card key={session.id} className="flex flex-col gap-4 p-5">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h3 className="font-bold text-foreground truncate">
@@ -58,11 +60,11 @@ export default function InstructorMonitorPage() {
                                         {session.exam?.title || session.exam_title || 'Unknown Exam'}
                                     </p>
                                 </div>
-                                <div className={`w-3 h-3 rounded-full ${session.integrity_status === 'flagged' ? 'bg-destructive animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]'}`} />
+                                <div className={`w-3 h-3 rounded-full ${session.integrity_status === 'flagged' ? 'bg-destructive animate-pulse' : 'bg-primary'}`} />
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="uppercase text-[10px] tracking-wider bg-secondary/20 text-secondary-foreground border-secondary/30">
+                                <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">
                                     {session.state || session.status || 'Unknown'}
                                 </Badge>
                                 {session.integrity_status === 'flagged' && (
@@ -73,12 +75,12 @@ export default function InstructorMonitorPage() {
                             </div>
 
                             <div className="mt-auto pt-4 border-t border-border flex gap-2">
-                                <Button size="sm" className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20">
+                                <Button size="sm" className="w-full" variant="outline">
                                     <Headphones className="w-4 h-4 mr-2" />
                                     Connect
                                 </Button>
                             </div>
-                        </PremiumCard>
+                        </Card>
                     ))
                 )}
             </div >

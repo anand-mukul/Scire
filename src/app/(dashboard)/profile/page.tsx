@@ -5,11 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { motion } from 'motion/react';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { Mail, Shield, Calendar, User, Settings, LogOut, CheckCircle2, Copy, Check, Sparkles, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import {
     AlertDialog,
@@ -68,41 +66,27 @@ export default function ProfilePage() {
     const isStudent = (user.role as string) === 'STUDENT';
 
     return (
-        <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground selection:bg-primary/20">
-            <AmbientGlow />
+        <main className="relative min-h-screen w-full bg-background overflow-hidden text-foreground selection:bg-primary/20">
+            {/* <AmbientGlow /> */}
 
-            <div className="relative z-10 p-6 md:p-8 max-w-5xl mx-auto space-y-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col gap-2"
-                >
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <div className="relative z-10 p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-3">
                         Profile & Settings
-                        <Sparkles className="w-6 h-6 text-primary animate-pulse" />
                     </h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl">
+                    <p className="text-muted-foreground max-w-2xl">
                         Manage your account details and preferences.
                     </p>
-                </motion.div>
+                </div>
 
                 <div className="grid gap-8 lg:grid-cols-12 items-start">
                     {/* Main Profile Info */}
-                    <motion.div
-                        className="lg:col-span-8 space-y-8"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 }}
-                    >
-                        <PremiumCard className="p-8 md:p-10 relative overflow-hidden group">
-                            {/* Decorative background blur */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] group-hover:bg-primary/10 transition-colors duration-700" />
+                    <div className="lg:col-span-8 space-y-8">
+                        <Card className="p-8 md:p-10 relative overflow-hidden group">
 
-                            <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
+                            <div className="flex flex-col md:flex-row gap-8 items-start">
                                 <div className="relative">
-                                    <div className="absolute -inset-1 bg-gradient-to-br from-primary to-purple-600 rounded-full blur-sm opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
-                                    <Avatar className="h-24 w-24 md:h-28 md:w-28 border-2 border-background shadow-xl relative">
+                                    <Avatar className="h-24 w-24 md:h-28 md:w-28 border-2 border-border shadow-sm">
                                         <AvatarFallback className="bg-muted text-foreground text-3xl font-bold">
                                             {getInitials(user.full_name)}
                                         </AvatarFallback>
@@ -140,8 +124,8 @@ export default function ProfilePage() {
                                                 </div>
                                                 <button
                                                     onClick={handleCopyId}
-                                                    className="opacity-0 group-hover/id:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
-                                                    title="Copy ID"
+                                                    className="opacity-0 group-hover/id:opacity-100 transition-opacity text-muted-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+                                                    aria-label="Copy account ID to clipboard"
                                                 >
                                                     {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                                                 </button>
@@ -156,7 +140,7 @@ export default function ProfilePage() {
                                                 <Shield className="w-3 h-3" /> Status
                                             </div>
                                             <div className="flex items-center gap-2 text-emerald-500 font-medium text-sm">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
                                                 Verified
                                             </div>
                                         </div>
@@ -172,7 +156,7 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                        </PremiumCard>
+                        </Card>
 
                         {/* Capabilities Section */}
                         <div className="space-y-4">
@@ -226,16 +210,11 @@ export default function ProfilePage() {
                                 )}
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Sidebar / Quick Actions */}
-                    <motion.div
-                        className="lg:col-span-4 space-y-6"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                    >
-                        <PremiumCard className="p-6">
+                    <div className="lg:col-span-4 space-y-6">
+                        <Card className="p-6">
                             <h3 className="font-semibold text-foreground mb-6 flex items-center gap-2">
                                 <Settings className="w-4 h-4 text-muted-foreground" />
                                 Management
@@ -279,7 +258,7 @@ export default function ProfilePage() {
                                     </AlertDialogContent>
                                 </AlertDialog>
                             </div>
-                        </PremiumCard>
+                        </Card>
 
                         <div className="p-6 rounded-2xl border border-border bg-card/30 backdrop-blur-sm">
                             <h4 className="font-medium text-foreground mb-2 text-sm">Need Help?</h4>
@@ -291,9 +270,9 @@ export default function ProfilePage() {
                                 Contact Support
                             </a>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }

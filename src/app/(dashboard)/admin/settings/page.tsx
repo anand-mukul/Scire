@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { motion } from 'motion/react';
+// motion removed - not used
 import { Save, Upload, Settings as SettingsIcon, Shield, Palette, Brain, Radio, CheckCircle, AlertTriangle, CreditCard, Check } from 'lucide-react';
 import RazorpayButton from '@/components/ui/razorpay-button';
 
 import { api } from '@/lib/network/api';
 import { useTenant } from '@/contexts/TenantContext';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -171,7 +171,7 @@ export default function TenantSettingsPage() {
 
     return (
         <div className="relative min-h-screen p-6 pb-20 space-y-8">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="flex items-center justify-between">
                 <div>

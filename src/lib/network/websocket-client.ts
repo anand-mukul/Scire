@@ -13,6 +13,7 @@ type WebSocketMessage =
     | { type: 'integrity_snapshot'; data: any }
     | { type: 'integrity_alert'; reason: string; severity: string; violation_type: string; remaining_seconds: number }
     | { type: 'session_start' }
+    | { type: 'session_leave' }
     | { type: 'session_metadata'; expiry_time: string | null; settings: Record<string, any> }
     | { type: 'interrupt' }
     | { type: 'error'; code: string; message: string };
@@ -73,10 +74,9 @@ class VivaWebSocketClient {
         try {
             Logger.log("VivaWS: Initiating Secure Connection...");
 
-            const cleanToken = this.token.replace('Bearer ', '').trim();
-            const urlWithToken = `${this.url}?token=${cleanToken}`;
-
-            this.ws = new WebSocket(urlWithToken);
+            // Auth via httpOnly cookie (access_token) — sent automatically with WS handshake.
+            // No longer exposing JWT in the URL query string (security risk: visible in logs/proxies).
+            this.ws = new WebSocket(this.url);
 
             this.setupListeners();
 
@@ -335,7 +335,10 @@ class VivaWebSocketClient {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(chunk);
         } else {
-            this.messageQueue.push(chunk);
+            // Cap queue size to prevent memory overflow during extended disconnects
+            if (this.messageQueue.length < 100) {
+                this.messageQueue.push(chunk);
+            }
         }
     }
 

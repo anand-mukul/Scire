@@ -2,13 +2,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'motion/react';
+// motion removed — using CSS transitions
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { api } from '@/lib/network/api';
 import { PremiumLoader } from '@/components/ui/premium-loader';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { cn } from '@/lib/utils';
 import {
     CheckCircle, AlertCircle,
@@ -17,24 +17,9 @@ import {
 } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { CameraOverlay } from '@/components/viva/CameraOverlay';
+import MobileBlockScreen from '@/components/viva/MobileBlockScreen';
 
-// Animations
-const slideVariants = {
-    enter: (direction: number) => ({
-        x: direction > 0 ? 20 : -20,
-        opacity: 0,
-    }),
-    center: {
-        zIndex: 1,
-        x: 0,
-        opacity: 1,
-    },
-    exit: (direction: number) => ({
-        zIndex: 0,
-        x: direction < 0 ? 20 : -20,
-        opacity: 0,
-    }),
-};
+// Removed: slideVariants (motion) — using CSS transitions instead
 
 export default function OnboardingPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -248,13 +233,14 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
     return (
         <div className="relative h-full api min-h-screen w-full overflow-hidden bg-background flex items-center justify-center font-sans p-4 md:p-6 text-foreground">
-            <AmbientGlow />
+            {/* Mobile Device Blocker — must be first */}
+            <MobileBlockScreen />
+
+            {/* <AmbientGlow /> */}
 
             {/* Main Card Container */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-[900px] h-[600px] md:h-[550px] max-h-[85vh] bg-card/40 backdrop-blur-2xl border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative group"
+            <div
+                className="w-full max-w-[900px] h-[600px] md:h-[550px] max-h-[85vh] bg-card/40 backdrop-blur-2xl border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative group animate-in fade-in zoom-in-95 duration-300"
             >
                 {/* Glow Effect */}
                 <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/20 transition-colors duration-1000" />
@@ -292,10 +278,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                             <s.icon size={18} />
                                         )}
                                         {step === s.id && (
-                                            <motion.div
-                                                layoutId="active-step"
+                                            <div
                                                 className="absolute -inset-1 rounded-full bg-primary/20 blur-sm"
-                                                transition={{ duration: 0.2 }}
                                             />
                                         )}
                                     </div>
@@ -312,139 +296,131 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
                 {/* Right Content Area */}
                 <div className="flex-1 relative overflow-hidden flex flex-col">
-                    <AnimatePresence custom={direction} mode="wait">
-                        <motion.div
-                            key={step}
-                            custom={direction}
-                            variants={slideVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="flex-1 h-full p-6 md:p-10 flex flex-col"
-                        >
-                            {/* Step 1: Policy */}
-                            {step === 1 && (
-                                <div className="h-full flex flex-col">
-                                    <div className="mb-6">
-                                        <h2 className="text-2xl font-bold text-foreground mb-2">Academic Integrity</h2>
-                                        <p className="text-muted-foreground">Review and accept the session terms to proceed.</p>
-                                    </div>
-
-                                    <ScrollArea className="flex-1 h-full bg-muted/20 rounded-xl border border-border p-4 mb-6">
-                                        <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
-                                            <p className="font-semibold text-foreground">By proceeding, you agree that:</p>
-                                            <ul className="list-disc pl-4 space-y-2">
-                                                <li>You are the registered student for this assessment.</li>
-                                                <li>You will remain in the camera frame for the entire duration.</li>
-                                                <li>Your microphone and screen activity will be monitored.</li>
-                                                <li>Using external devices (phones, tablets) is strictly prohibited.</li>
-                                                <li>Leaving full-screen mode may result in immediate termination.</li>
-                                            </ul>
-                                            <p className="text-xs text-muted-foreground/70 pt-4 italic">
-                                                * This session is recorded for automated proctoring analysis.
-                                            </p>
-                                        </div>
-                                    </ScrollArea>
-
-                                    <div className="flex items-center justify-between pt-2">
-                                        <div className="flex items-center gap-3">
-                                            <Checkbox
-                                                id="terms"
-                                                checked={termsAccepted}
-                                                onCheckedChange={(c) => setTermsAccepted(!!c)}
-                                                className="border-primary/50 data-[state=checked]:bg-primary"
-                                            />
-                                            <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer select-none">
-                                                I accept the policy
-                                            </label>
-                                        </div>
-                                        <Button
-                                            onClick={() => goToStep(2)}
-                                            disabled={!termsAccepted}
-                                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                                        >
-                                            Continue <ArrowRight className="ml-2 w-4 h-4" />
-                                        </Button>
-                                    </div>
+                    <div
+                        key={step}
+                        className="flex-1 h-full p-6 md:p-10 flex flex-col animate-in fade-in duration-200"
+                    >
+                        {/* Step 1: Policy */}
+                        {step === 1 && (
+                            <div className="h-full flex flex-col">
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-foreground mb-2">Academic Integrity</h2>
+                                    <p className="text-muted-foreground">Review and accept the session terms to proceed.</p>
                                 </div>
-                            )}
 
-                            {/* Step 2: Camera */}
-                            {step === 2 && (
-                                <div className="h-full flex flex-col items-center">
-                                    <div className="relative w-full flex-1 bg-black rounded-2xl overflow-hidden border border-border shadow-2xl group mb-6">
-                                        {/* Video / Image */}
+                                <ScrollArea className="flex-1 h-full bg-muted/20 rounded-xl border border-border p-4 mb-6">
+                                    <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
+                                        <p className="font-semibold text-foreground">By proceeding, you agree that:</p>
+                                        <ul className="list-disc pl-4 space-y-2">
+                                            <li>You are the registered student for this assessment.</li>
+                                            <li>You will remain in the camera frame for the entire duration.</li>
+                                            <li>Your microphone and screen activity will be monitored.</li>
+                                            <li>Using external devices (phones, tablets) is strictly prohibited.</li>
+                                            <li>Leaving full-screen mode may result in immediate termination.</li>
+                                        </ul>
+                                        <p className="text-xs text-muted-foreground/70 pt-4 italic">
+                                            * This session is recorded for automated proctoring analysis.
+                                        </p>
+                                    </div>
+                                </ScrollArea>
+
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <Checkbox
+                                            id="terms"
+                                            checked={termsAccepted}
+                                            onCheckedChange={(c) => setTermsAccepted(!!c)}
+                                            className="border-primary/50 data-[state=checked]:bg-primary"
+                                        />
+                                        <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer select-none">
+                                            I accept the policy
+                                        </label>
+                                    </div>
+                                    <Button
+                                        onClick={() => goToStep(2)}
+                                        disabled={!termsAccepted}
+                                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                                    >
+                                        Continue <ArrowRight className="ml-2 w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 2: Camera */}
+                        {step === 2 && (
+                            <div className="h-full flex flex-col items-center">
+                                <div className="relative w-full flex-1 bg-black rounded-2xl overflow-hidden border border-border shadow-2xl group mb-6">
+                                    {/* Video / Image */}
+                                    {capturedImage ? (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img src={capturedImage} alt="Captured" className="w-full h-full object-cover transform scale-x-[-1]" />
+                                    ) : hasMediaAccess ? (
+                                        <video
+                                            ref={videoRef}
+                                            autoPlay
+                                            muted
+                                            playsInline
+                                            className="w-full h-full object-cover transform scale-x-[-1] z-0 relative"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                                            <PremiumLoader size="sm" text="Initializing Camera..." />
+                                        </div>
+                                    )}
+
+                                    {/* Overlays */}
+                                    <CameraOverlay status={scanStatus} message={scanMessage} />
+
+                                    {error && (
+                                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 text-center z-20">
+                                            <div className="space-y-4">
+                                                <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+                                                <p className="text-destructive-foreground">{error}</p>
+                                                <Button variant="outline" onClick={handleSmartRetry} className="border-white/20 text-white hover:bg-white/10">Retry</Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Footer Controls */}
+                                <div className="w-full flex items-center justify-between">
+                                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => goToStep(1)}>
+                                        Back
+                                    </Button>
+
+                                    <div className="flex gap-2">
                                         {capturedImage ? (
-                                            /* eslint-disable-next-line @next/next/no-img-element */
-                                            <img src={capturedImage} alt="Captured" className="w-full h-full object-cover transform scale-x-[-1]" />
-                                        ) : hasMediaAccess ? (
-                                            <video
-                                                ref={videoRef}
-                                                autoPlay
-                                                muted
-                                                playsInline
-                                                className="w-full h-full object-cover transform scale-x-[-1] z-0 relative"
-                                            />
-                                        ) : (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-3">
-                                                <PremiumLoader size="sm" text="Initializing Camera..." />
-                                            </div>
-                                        )}
-
-                                        {/* Overlays */}
-                                        <CameraOverlay status={scanStatus} message={scanMessage} />
-
-                                        {error && (
-                                            <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 text-center z-20">
-                                                <div className="space-y-4">
-                                                    <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-                                                    <p className="text-destructive-foreground">{error}</p>
-                                                    <Button variant="outline" onClick={handleSmartRetry} className="border-white/20 text-white hover:bg-white/10">Retry</Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Footer Controls */}
-                                    <div className="w-full flex items-center justify-between">
-                                        <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => goToStep(1)}>
-                                            Back
-                                        </Button>
-
-                                        <div className="flex gap-2">
-                                            {capturedImage ? (
-                                                <>
-                                                    <Button variant="outline" onClick={handleRetake} disabled={isLoading} className="border-border hover:bg-secondary text-foreground">
-                                                        <RefreshCw className="mr-2 w-4 h-4" /> Retake
-                                                    </Button>
-                                                    <Button
-                                                        onClick={handleSubmit}
-                                                        disabled={isLoading}
-                                                        className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px]"
-                                                    >
-                                                        {isLoading ? <PremiumLoader size="sm" text="" className="scale-75" /> : (
-                                                            <>Start Session <ArrowRight className="ml-2 w-4 h-4" /></>
-                                                        )}
-                                                    </Button>
-                                                </>
-                                            ) : (
-                                                <Button
-                                                    onClick={handleCapture}
-                                                    disabled={!hasMediaAccess}
-                                                    className="bg-blue-600 hover:bg-blue-500 text-white px-8 shadow-lg shadow-blue-500/20"
-                                                >
-                                                    <Aperture className="mr-2 w-4 h-4" /> Capture Photo
+                                            <>
+                                                <Button variant="outline" onClick={handleRetake} disabled={isLoading} className="border-border hover:bg-secondary text-foreground">
+                                                    <RefreshCw className="mr-2 w-4 h-4" /> Retake
                                                 </Button>
-                                            )}
-                                        </div>
+                                                <Button
+                                                    onClick={handleSubmit}
+                                                    disabled={isLoading}
+                                                    className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px]"
+                                                >
+                                                    {isLoading ? <PremiumLoader size="sm" text="" className="scale-75" /> : (
+                                                        <>Start Session <ArrowRight className="ml-2 w-4 h-4" /></>
+                                                    )}
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button
+                                                onClick={handleCapture}
+                                                disabled={!hasMediaAccess}
+                                                className="bg-blue-600 hover:bg-blue-500 text-white px-8 shadow-lg shadow-blue-500/20"
+                                            >
+                                                <Aperture className="mr-2 w-4 h-4" /> Capture Photo
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 }

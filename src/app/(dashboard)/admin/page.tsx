@@ -2,14 +2,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { PremiumCard } from '@/components/ui/premium-card';
 import { Activity, Users, Server, AlertTriangle, Shield, FileText, BarChart3, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
-import { motion } from 'motion/react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { formatToLocalDateTime } from '@/lib/date-utils';
 
 
@@ -65,6 +62,7 @@ export default function AdminDashboard() {
             value: stats?.total_users ?? 0,
             icon: Users,
             description: `${stats?.users_by_role?.STUDENT ?? 0} students`,
+            color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20',
         },
         {
             title: 'Active Sessions',
@@ -72,18 +70,21 @@ export default function AdminDashboard() {
             icon: Activity,
             description: `${stats?.active_exams ?? 0} active exams`,
             isLive: true,
+            color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20',
         },
         {
             title: 'System Health',
             value: '99.9%',
             icon: Server,
             description: 'All systems operational',
+            color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20',
         },
         {
             title: 'Flagged Sessions',
             value: stats?.flagged_sessions ?? 0,
             icon: AlertTriangle,
             description: stats?.flagged_sessions ? 'Requires review' : 'No issues detected',
+            color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20',
         },
     ];
 
@@ -117,62 +118,47 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <AmbientGlow />
-
-            <div className="container mx-auto p-6 space-y-8 relative z-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)]">
+        <main className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
+            <div className="container mx-auto p-6 md:p-8 space-y-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
                             Admin Console
                         </h1>
-                        <p className="text-muted-foreground text-lg mt-2 max-w-2xl">
+                        <p className="text-muted-foreground mt-2 max-w-2xl">
                             Command center for system monitoring, user management, and platform analytics.
                         </p>
-                    </motion.div>
+                    </div>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     {isLoadingStats
                         ? Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
-                        : statCards.map((stat, index) => (
-                            <motion.div
-                                key={stat.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                            >
-                                <PremiumCard className="h-full group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 bg-card/40 backdrop-blur-xl border-border">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                                    <div className="relative z-10 flex flex-col justify-between h-full p-6">
-                                        <div className="flex justify-between items-start">
-                                            <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors duration-300">
-                                                <stat.icon className="h-6 w-6 text-primary group-hover:text-primary transition-colors" />
-                                            </div>
-                                            {stat.isLive && (
-                                                <span className="relative flex h-2.5 w-2.5">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-                                                </span>
-                                            )}
+                        : statCards.map((stat) => (
+                            <Card key={stat.title} className="h-full group transition-colors hover:border-primary/50">
+                                <div className="flex flex-col justify-between h-full p-6">
+                                    <div className="flex justify-between items-start">
+                                        <div className={`p-3 rounded-xl ${stat.bg} border ${stat.border}`}>
+                                            <stat.icon className={`h-5 w-5 ${stat.color}`} aria-hidden="true" />
                                         </div>
-
-                                        <div className="mt-6">
-                                            <div className="text-4xl font-bold text-foreground tracking-tight">{stat.value}</div>
-                                            <p className="text-sm font-medium text-muted-foreground mt-1">{stat.title}</p>
-                                        </div>
-
-                                        <div className="mt-4 pt-4 border-t border-border/50">
-                                            <p className="text-xs text-muted-foreground font-medium">{stat.description}</p>
-                                        </div>
+                                        {stat.isLive && (
+                                            <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                                            </span>
+                                        )}
                                     </div>
-                                </PremiumCard>
-                            </motion.div>
+
+                                    <div className="mt-6">
+                                        <div className="text-3xl font-semibold text-foreground tracking-tight">{stat.value}</div>
+                                        <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
+                                    </div>
+
+                                    <div className="mt-4 pt-4 border-t border-border/50">
+                                        <p className="text-xs text-muted-foreground">{stat.description}</p>
+                                    </div>
+                                </div>
+                            </Card>
                         ))}
                 </div>
 
@@ -219,52 +205,38 @@ export default function AdminDashboard() {
                     <div className="lg:col-span-1 space-y-4">
                         {isLoadingStats
                             ? Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-xl opacity-20" />)
-                            : additionalStats.map((stat, index) => (
-                                <motion.div
-                                    key={stat.title}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                                >
-                                    <PremiumCard className="relative overflow-hidden group !p-0 border-border bg-card/40 backdrop-blur-xl hover:border-primary/30 transition-colors">
-                                        <div className="relative h-full w-full p-6 flex items-center justify-between">
-                                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                            <div className="relative z-10">
-                                                <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">{stat.title}</p>
-                                                <p className="text-3xl font-black text-foreground">{stat.value}</p>
-                                            </div>
-                                            <div className="relative z-10 p-3 rounded-xl bg-primary/10 text-primary group-hover:text-primary group-hover:bg-primary/20 transition-all">
-                                                <stat.icon className="w-6 h-6" />
-                                            </div>
+                            : additionalStats.map((stat) => (
+                                <Card key={stat.title} className="group hover:border-primary/30 transition-colors">
+                                    <div className="p-6 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">{stat.title}</p>
+                                            <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
                                         </div>
-                                    </PremiumCard>
-                                </motion.div>
+                                        <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                                            <stat.icon className="w-5 h-5" />
+                                        </div>
+                                    </div>
+                                </Card>
                             ))}
                     </div>
 
                     <div className="lg:col-span-2 grid gap-6 md:grid-cols-2">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.8 }}
-                            className="bg-card/40 rounded-3xl border border-border backdrop-blur-xl p-8 h-full flex flex-col relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 p-32 bg-primary/5 blur-[50px] rounded-full pointer-events-none" />
-                            <div className="flex items-center justify-between mb-8 relative z-10">
+                        <Card className="p-6 h-full flex flex-col">
+                            <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-primary/10 rounded-xl text-primary border border-primary/20"><Server className="w-5 h-5" /></div>
+                                    <div className="p-2.5 bg-primary/10 rounded-lg text-primary border border-primary/20"><Server className="w-4 h-4" /></div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-foreground leading-tight">System Logs</h3>
-                                        <p className="text-xs text-muted-foreground font-mono mt-1">LATEST EVENTS</p>
+                                        <h3 className="text-base font-semibold text-foreground">System Logs</h3>
+                                        <p className="text-xs text-muted-foreground mt-0.5">Latest events</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     LIVE
                                 </div>
                             </div>
 
-                            <div className="space-y-6 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar relative z-10">
+                            <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
                                 {isLoadingLogs ? (
                                     Array(3).fill(0).map((_, i) => (
                                         <div key={i} className="flex gap-4"><Skeleton className="h-2 w-2 rounded-full mt-2" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/4" /></div></div>
@@ -288,46 +260,37 @@ export default function AdminDashboard() {
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
+                        </Card>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.9 }}
-                            className="bg-card/40 rounded-3xl border border-border backdrop-blur-xl p-8 h-full flex flex-col relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 p-32 bg-secondary/5 blur-[50px] rounded-full pointer-events-none" />
-                            <div className="flex items-center justify-between mb-8 relative z-10">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-secondary/10 rounded-xl text-secondary-foreground border border-secondary/20"><Users className="w-5 h-5" /></div>
+                        <Card className="p-6 h-full flex flex-col">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-muted rounded-lg text-muted-foreground border border-border"><Users className="w-4 h-4" /></div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-foreground leading-tight">User Base</h3>
-                                        <p className="text-xs text-muted-foreground font-mono mt-1">ROLE DISTRIBUTION</p>
+                                        <h3 className="text-base font-semibold text-foreground">User Base</h3>
+                                        <p className="text-xs text-muted-foreground mt-0.5">Role distribution</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-5 flex-1 relative z-10">
+                            <div className="space-y-5 flex-1">
                                 {isLoadingStats ? (
                                     Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
                                 ) : stats?.users_by_role ? (
                                     Object.entries(stats.users_by_role).map(([role, count], i) => {
                                         const total = Object.values(stats.users_by_role).reduce((a, b) => a + b, 0);
                                         const percent = Math.round((count / total) * 100);
-                                        const opacity = i === 0 ? 'bg-white/70' : i === 1 ? 'bg-white/50' : 'bg-white/30';
 
                                         return (
                                             <div key={role} className="group">
                                                 <div className="flex justify-between items-end mb-2">
-                                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{role}</span>
+                                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{role}</span>
                                                     <span className="text-sm font-mono text-foreground">{count} <span className="text-muted-foreground">/ {percent}%</span></span>
                                                 </div>
-                                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${percent}%` }}
-                                                        transition={{ duration: 1, delay: 1 + (i * 0.1) }}
-                                                        className={`h-full ${opacity} rounded-full bg-primary`}
+                                                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                                    <div
+                                                        style={{ width: `${percent}%` }}
+                                                        className="h-full rounded-full bg-primary transition-all duration-700"
                                                     />
                                                 </div>
                                             </div>
@@ -337,33 +300,27 @@ export default function AdminDashboard() {
                                     <p className="text-muted-foreground text-sm italic">No user data available</p>
                                 )}
                             </div>
-                        </motion.div>
+                        </Card>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
 
 // Helper component for quick actions
-function AdminActionCard({ href, icon: Icon, title, desc, delay }: { href: string; icon: any; title: string; desc: string; delay: number }) {
+function AdminActionCard({ href, icon: Icon, title, desc }: { href: string; icon: any; title: string; desc: string; delay: number }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay }}
-        >
-            <Link href={href} className="block h-full">
-                <PremiumCard interactive className="h-full p-6 flex flex-col items-center text-center justify-center gap-4 hover:-translate-y-2 transition-all duration-300 group border-border bg-card/40 backdrop-blur-xl hover:border-primary/50">
-                    <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary group-hover:bg-primary/20 group-hover:text-primary group-hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all duration-300">
-                        <Icon className="w-8 h-8 group-hover:scale-110 transition-transform" />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-foreground text-lg mb-1">{title}</h3>
-                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold group-hover:text-primary transition-colors">{desc}</p>
-                    </div>
-                </PremiumCard>
-            </Link>
-        </motion.div>
+        <Link href={href} className="block h-full" aria-label={`${title}: ${desc}`}>
+            <Card className="h-full p-6 flex flex-col items-center text-center justify-center gap-3 hover:border-primary/50 transition-colors group">
+                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary">
+                    <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                    <h3 className="font-semibold text-foreground mb-0.5">{title}</h3>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+            </Card>
+        </Link>
     );
 }

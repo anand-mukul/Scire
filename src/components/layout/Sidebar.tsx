@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import {
     BookOpen,
     LayoutDashboard,
@@ -15,6 +16,9 @@ import {
     FileText,
     LogOut,
     ChevronDown,
+    GraduationCap,
+    Activity,
+    Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,13 +40,17 @@ const NAV_ITEMS = {
         { label: 'Help & Rules', href: '/student/help', icon: BookOpen },
     ],
     INSTRUCTOR: [
-        { label: 'Exams', href: '/instructor', icon: BookOpen },
+        { label: 'Dashboard', href: '/instructor', icon: LayoutDashboard },
+        { label: 'Exams', href: '/instructor/exams', icon: BookOpen },
+        { label: 'Create Exam', href: '/instructor/exam/create', icon: Plus },
         { label: 'Monitor', href: '/instructor/monitor', icon: Video },
         { label: 'Rubrics', href: '/instructor/rubrics', icon: FileText },
     ],
     ADMIN: [
         { label: 'Overview', href: '/admin', icon: LayoutDashboard },
         { label: 'Users', href: '/admin/users', icon: Users },
+        { label: 'Subjects', href: '/admin/subjects', icon: GraduationCap },
+        { label: 'System', href: '/admin/system', icon: Activity },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
     ],
     PLATFORM_ADMIN: [
@@ -55,6 +63,14 @@ const NAV_ITEMS = {
     ],
 };
 
+const ROLE_LABELS: Record<string, string> = {
+    STUDENT: 'Student',
+    INSTRUCTOR: 'Instructor',
+    ADMIN: 'Admin',
+    PLATFORM_ADMIN: 'Platform',
+    REVIEWER: 'Reviewer',
+};
+
 interface SidebarProps {
     className?: string;
     isMobile?: boolean;
@@ -64,8 +80,8 @@ interface SidebarProps {
 export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
     const pathname = usePathname();
     const { user, logout, isLoading } = useAuth();
+    const { tenantName } = useTenant();
 
-    // Ensure role is uppercase to match NAV_ITEMS keys
     const role = (user?.role || 'STUDENT').toUpperCase();
     const items = NAV_ITEMS[role as keyof typeof NAV_ITEMS] || NAV_ITEMS.STUDENT;
 
@@ -78,18 +94,21 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
             .slice(0, 2);
     };
 
-    const logoText = role === 'STUDENT' ? 'Student Portal' : 'Admin Console';
+    const orgName = tenantName || 'Scire';
+    const roleLabel = ROLE_LABELS[role] || 'User';
 
     const Content = (
         <div className={cn("flex flex-col h-full bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border transition-colors duration-300", className)}>
-            {/* Logo */}
+            {/* Logo & Org Name */}
             <div className="p-6 border-b border-sidebar-border/50">
                 <Link href="/" className="flex items-center gap-3 group" onClick={onNavigate}>
                     <Logo showText={false} size="md" href="" />
                     <div className="flex flex-col">
-                        <Logo showIcon={false} size="md" className="gap-0" href="" />
+                        <span className="text-base font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                            {orgName}
+                        </span>
                         <span className="text-[10px] text-muted-foreground font-mono tracking-widest uppercase group-hover:text-foreground transition-colors">
-                            {logoText}
+                            {roleLabel} Console
                         </span>
                     </div>
                 </Link>
@@ -97,12 +116,10 @@ export const Sidebar = ({ className, isMobile, onNavigate }: SidebarProps) => {
 
             {/* Navigation */}
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto scroll-hidden">
-                {items.map((item, index) => {
+                {items.map((item) => {
                     const Icon = item.icon;
-                    // Exact match for root active state or specific sub-paths
-                    const isActive = item.href === '/student' || item.href === '/instructor' || item.href === '/admin' || item.href === '/reviewer' || item.href === '/platform'
-                        ? pathname === item.href
-                        : pathname.startsWith(item.href);
+                    const isExactMatch = item.href === '/student' || item.href === '/instructor' || item.href === '/admin' || item.href === '/reviewer' || item.href === '/platform';
+                    const isActive = isExactMatch ? pathname === item.href : pathname.startsWith(item.href);
 
                     return (
                         <div key={item.href}>

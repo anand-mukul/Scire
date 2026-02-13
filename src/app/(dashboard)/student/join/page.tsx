@@ -2,9 +2,8 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { PremiumCard } from '@/components/ui/premium-card';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/network/api';
@@ -60,16 +59,12 @@ function JoinPageContent() {
 
     return (
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground flex items-center justify-center p-4">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-md relative z-10"
-            >
-                <PremiumCard className="p-8 border-border bg-card/40 backdrop-blur-xl">
+            <div className="w-full max-w-md animate-in fade-in duration-300">
+                <Card className="p-8">
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-foreground mb-2">Join Exam</h1>
+                        <h1 className="text-2xl font-semibold text-foreground mb-2">Join Exam</h1>
                         <p className="text-muted-foreground">Enter the unique code provided by your instructor to start your assessment.</p>
                     </div>
 
@@ -96,7 +91,7 @@ function JoinPageContent() {
 
                         <Button
                             type="submit"
-                            className="w-full h-12 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_var(--brand-primary)]/20 hover:shadow-[0_0_30px_var(--brand-primary)]/40 transition-all"
+                            className="w-full h-12 text-lg font-semibold"
                             disabled={!examCode || isLoading}
                         >
                             {isLoading ? (
@@ -118,8 +113,8 @@ function JoinPageContent() {
                             By joining, you agree to the <span className="text-primary hover:underline cursor-pointer">Terms of Service</span> and <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>.
                         </p>
                     </div>
-                </PremiumCard>
-            </motion.div>
+                </Card>
+            </div>
         </div>
     );
 }

@@ -1,39 +1,34 @@
 'use client';
 
 import React from 'react';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { motion } from 'motion/react';
-import { PremiumCard } from '@/components/ui/premium-card';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
+// import { motion } from 'motion/react';
+import { Card } from '@/components/ui/card';
 import { Shield, HelpCircle, Mail, AlertTriangle } from 'lucide-react';
 
 export default function StudentHelpPage() {
     return (
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="relative z-10 p-8 max-w-7xl mx-auto space-y-12">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col gap-2"
-                >
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] pb-2">
+                <div className="flex flex-col gap-2 animate-in fade-in duration-300">
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                         Help & Exam Rules
                     </h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl">
+                    <p className="text-muted-foreground text-sm max-w-2xl">
                         Guidelines to ensure a smooth and fair examination experience.
                     </p>
-                </motion.div>
+                </div>
 
                 <div className="grid gap-8 md:grid-cols-2">
                     {/* Rules Section */}
-                    <PremiumCard className="p-8 bg-card/40 border-border backdrop-blur-xl space-y-6">
+                    <Card className="p-8 space-y-6">
                         <div className="flex items-center gap-4 pb-6 border-b border-border/50">
-                            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 shadow-[0_0_15px_-3px_rgba(249,115,22,0.3)]">
+                            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500">
                                 <AlertTriangle className="w-6 h-6" />
                             </div>
-                            <h2 className="text-2xl font-bold text-foreground">Exam Rules</h2>
+                            <h2 className="text-xl font-medium text-foreground">Exam Rules</h2>
                         </div>
 
                         <ul className="space-y-4 text-muted-foreground">
@@ -59,28 +54,28 @@ export default function StudentHelpPage() {
                                 </div>
                             </li>
                         </ul>
-                    </PremiumCard>
+                    </Card>
 
                     {/* Support Section */}
                     <div className="space-y-8">
-                        <PremiumCard className="p-6 bg-card/40 border-border backdrop-blur-xl group hover:border-blue-500/30 transition-colors">
+                        <Card className="p-6 group hover:border-primary/50 transition-colors">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 group-hover:bg-blue-500/20 transition-colors">
+                                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary group-hover:bg-primary/20 transition-colors">
                                     <Shield className="w-5 h-5" />
                                 </div>
-                                <h3 className="font-bold text-foreground">Technical Verification</h3>
+                                <h3 className="font-medium text-foreground">Technical Verification</h3>
                             </div>
                             <p className="text-muted-foreground text-sm mb-4">
                                 Before joining, ensure your microphone and camera permissions are allowed. Run the system check on the dashboard if you are unsure.
                             </p>
-                        </PremiumCard>
+                        </Card>
 
-                        <PremiumCard className="p-6 bg-card/40 border-border backdrop-blur-xl group hover:border-primary/50 transition-colors">
+                        <Card className="p-6 group hover:border-primary/50 transition-colors">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary group-hover:bg-primary/20 transition-colors">
                                     <HelpCircle className="w-5 h-5" />
                                 </div>
-                                <h3 className="font-bold text-foreground">Need Assistance?</h3>
+                                <h3 className="font-medium text-foreground">Need Assistance?</h3>
                             </div>
                             <p className="text-muted-foreground text-sm mb-6">
                                 If you experience technical issues during the exam, contact your proctor immediately or email support.
@@ -89,7 +84,7 @@ export default function StudentHelpPage() {
                                 <Mail className="w-4 h-4" />
                                 <span>support@scira.com</span>
                             </a>
-                        </PremiumCard>
+                        </Card>
                     </div>
                 </div>
             </div>

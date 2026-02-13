@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useSessionStore, DialogueState } from '@/lib/store/session-store';
+import { TranscriptSpeaker } from '@/types/backend';
 import { toast } from 'sonner';
 import { CalibrationPhase } from '@/components/viva/phases/CalibrationPhase';
 import { QuestionPhase } from '@/components/viva/phases/QuestionPhase';
@@ -9,7 +10,7 @@ import { ListeningPhase } from '@/components/viva/phases/ListeningPhase';
 import { EvaluationPhase } from '@/components/viva/phases/EvaluationPhase';
 import { TTSPlayer } from '@/components/viva/TTSPlayer';
 import { useExamIntegrity } from '@/hooks/use-exam-integrity';
-import { Loader2, LogOut, CheckCircle, Maximize, Mic, Timer as TimerIcon } from 'lucide-react';
+import { LogOut, CheckCircle, Maximize, Timer as TimerIcon, AlertTriangle, WifiOff, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
@@ -28,15 +29,83 @@ import { MediaManager } from '@/components/viva/MediaManager';
 import AIOrb from '../visuals/AIOrb';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/network/api';
+import { vivaWebSocket } from '@/lib/network/websocket-client';
 import { TranscriptDrawer } from './TranscriptDrawer';
 import { PremiumLoader } from '@/components/ui/premium-loader';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { cn } from '@/lib/utils';
 
 
-// Placeholder Components for Phases
+// Placeholder for Auth phase
 const AuthPhase = () => <div className="text-center p-8 text-neutral-400 animate-pulse">Authenticating Secure Session...</div>;
-const EndPhase = () => <div className="text-center p-8 text-xl font-bold text-neutral-200">Session Completed</div>;
+
+// Proper End Phase with completion summary
+const EndPhase: React.FC = () => {
+    const transcripts = useSessionStore((state) => state.transcripts);
+    const fsmState = useSessionStore((state) => state.fsmState);
+    const router = useRouter();
+
+    const isTerminated = fsmState === DialogueState.TERMINATED;
+    const questionCount = transcripts.filter(t => t.speaker === TranscriptSpeaker.AI).length;
+
+    return (
+        <div className="text-center space-y-4 py-4">
+            <div className={cn(
+                "inline-flex items-center justify-center w-16 h-16 rounded-full mb-2",
+                isTerminated
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-emerald-500/10 text-emerald-400"
+            )}>
+                {isTerminated ? <AlertTriangle className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
+            </div>
+
+            <h2 className="text-2xl font-bold text-foreground">
+                {isTerminated ? 'Session Terminated' : 'Session Completed'}
+            </h2>
+
+            <p className="text-muted-foreground max-w-md mx-auto">
+                {isTerminated
+                    ? 'Your session was terminated due to an integrity violation. Contact your instructor for details.'
+                    : 'Your responses have been submitted for grading. Results will be available once reviewed.'}
+            </p>
+
+            {!isTerminated && questionCount > 0 && (
+                <div className="flex justify-center gap-6 text-sm text-muted-foreground mt-4">
+                    <div className="bg-muted/40 px-4 py-2 rounded-lg border border-border">
+                        <span className="font-mono font-bold text-foreground text-lg">{questionCount}</span>
+                        <span className="ml-2">Questions Answered</span>
+                    </div>
+                </div>
+            )}
+
+            <Button
+                onClick={() => router.push('/student')}
+                variant="outline"
+                className="mt-6 border-border hover:bg-muted text-foreground"
+            >
+                Return to Dashboard
+            </Button>
+        </div>
+    );
+};
+
+// Mobile detection — block exam on mobile/tablet
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const check = () => {
+            const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const isNarrow = window.innerWidth < 768;
+            const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+            setIsMobile((hasTouchScreen && isNarrow) || (isCoarsePointer && isNarrow));
+        };
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
+    return isMobile;
+};
 
 const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
     const [timeLeft, setTimeLeft] = React.useState<string>("00:00");
@@ -51,7 +120,6 @@ const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
             const expiry = new Date(expiryTime).getTime();
             const diff = expiry - now;
 
-            // Dynamic duration from settings (default 15 mins if missing)
             const durationMinutes = settings?.duration_minutes || 15;
             const total = durationMinutes * 60 * 1000;
 
@@ -64,8 +132,6 @@ const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((diff % (1000 * 60)) / 1000);
             setTimeLeft(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
-            // Calculate percentage based on Remaining / Total
-            // Note: This assumes we start at 'total'. If we join late, valid behavior is showing remaining portion of Total.
             setPercent(Math.max(0, (diff / total) * 100));
         }, 1000);
 
@@ -90,6 +156,30 @@ const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
     );
 };
 
+// Get status badge text and color based on FSM state
+const getStatusBadge = (fsmState: DialogueState, isAgentSpeaking: boolean) => {
+    if (isAgentSpeaking) return { text: 'AI SPEAKING', color: 'border-blue-500/50 text-blue-400', dotColor: 'bg-blue-500 animate-pulse' };
+
+    switch (fsmState) {
+        case DialogueState.LISTENING:
+            return { text: 'LISTENING', color: 'border-emerald-500/50 text-emerald-400', dotColor: 'bg-emerald-500 animate-pulse' };
+        case DialogueState.EVALUATION:
+        case DialogueState.SCAFFOLD:
+            return { text: 'PROCESSING', color: 'border-amber-500/50 text-amber-400', dotColor: 'bg-amber-500 animate-pulse' };
+        case DialogueState.CALIBRATION:
+            return { text: 'CALIBRATING', color: 'border-purple-500/50 text-purple-400', dotColor: 'bg-purple-500 animate-pulse' };
+        case DialogueState.QUESTION:
+        case DialogueState.TRANSFER:
+            return { text: 'QUESTION', color: 'border-cyan-500/50 text-cyan-400', dotColor: 'bg-cyan-500' };
+        case DialogueState.END:
+            return { text: 'COMPLETED', color: 'border-neutral-500/50 text-neutral-400', dotColor: 'bg-neutral-500' };
+        case DialogueState.TERMINATED:
+            return { text: 'TERMINATED', color: 'border-red-500/50 text-red-400', dotColor: 'bg-red-500' };
+        default:
+            return { text: fsmState?.toUpperCase() || 'IDLE', color: 'text-neutral-500', dotColor: 'bg-neutral-600' };
+    }
+};
+
 export const VivaOrchestrator: React.FC = () => {
     const fsmState = useSessionStore((state) => state.fsmState);
     const connectionState = useSessionStore((state) => state.connectionState);
@@ -103,7 +193,7 @@ export const VivaOrchestrator: React.FC = () => {
     // Audio stream for visualizer
     const [audioStream, setAudioStream] = React.useState<MediaStream | null>(null);
 
-    // Local state for degradation notice
+    // Voice degradation state
     const [isVoiceUnavailable, setIsVoiceUnavailable] = React.useState(false);
 
     const expiryTime = useSessionStore((state) => state.expiryTime);
@@ -111,57 +201,26 @@ export const VivaOrchestrator: React.FC = () => {
 
     const { requestFullscreen } = useExamIntegrity(sessionId);
     const router = useRouter();
+    const isMobile = useIsMobile();
 
     const [longConnect, setLongConnect] = React.useState(false);
     const [isFullscreen, setIsFullscreen] = React.useState(false);
-
-    // Capture the stream from MediaManager via a callback mechanism or shared state?
-    // Using a ref or context would be better, but for now we can pass a setter to MediaManager?
-    // Actually, MediaManager is rendered here. We can pass a prop `onStreamReady`.
-    // Let's modify MediaManager to accept this prop.
-
-    // Question Timer (60s default)
-    const [questionTimeLeft, setQuestionTimeLeft] = React.useState<number>(60);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState<number>(0);
-
-    React.useEffect(() => {
-        if (fsmState === DialogueState.QUESTION) {
-            setQuestionTimeLeft(60);
-            setCurrentQuestionIndex(prev => prev + 1);
-        }
-    }, [fsmState]);
-
-    React.useEffect(() => {
-        if (fsmState !== DialogueState.LISTENING && fsmState !== DialogueState.QUESTION) return;
-
-        const interval = setInterval(() => {
-            setQuestionTimeLeft((prev) => {
-                if (prev <= 0) return 0;
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [fsmState]);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     // Strict Mode Enforcement
     React.useEffect(() => {
         const checkFullscreen = () => {
             const isFS = !!document.fullscreenElement;
             setIsFullscreen(isFS);
-            if (examSettings.strict_mode && !isFS && connectionState === 'CONNECTED') {
-                // Aggressively request or warn
-                // We can't requestFullscreen without user gesture, so we rely on the overlay to block interaction
-            }
         };
         const handleVoiceUnavailable = () => setIsVoiceUnavailable(true);
 
         document.addEventListener('fullscreenchange', checkFullscreen);
         window.addEventListener('viva:voice_unavailable', handleVoiceUnavailable);
 
-        // Strict Mode interval check
         const integrityInterval = setInterval(() => {
             if (examSettings.strict_mode && connectionState === 'CONNECTED' && !document.fullscreenElement) {
-                setIsFullscreen(false); // Trigger overlay
+                setIsFullscreen(false);
             }
         }, 2000);
 
@@ -170,7 +229,7 @@ export const VivaOrchestrator: React.FC = () => {
             window.removeEventListener('viva:voice_unavailable', handleVoiceUnavailable);
             clearInterval(integrityInterval);
         };
-    }, [connectionState, examSettings.strict_mode, requestFullscreen]);
+    }, [connectionState, examSettings.strict_mode]);
 
     React.useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -182,27 +241,39 @@ export const VivaOrchestrator: React.FC = () => {
         return () => clearTimeout(timer);
     }, [connectionState]);
 
-    // Handle Finish
+    // Handle Leave Session — sends abandon signal to backend
+    const handleLeaveSession = async () => {
+        if (sessionId) {
+            try {
+                // Send leave signal through WS so backend marks session as ABANDONED
+                vivaWebSocket.send({ type: 'session_leave' });
+            } catch {
+                // If WS send fails, that's fine — backend will auto-abandon on disconnect
+            }
+        }
+        router.push('/student');
+    };
+
+    // Handle Submit — ends session properly with grading trigger
     const handleFinish = async () => {
         if (fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) return;
+        if (isSubmitting) return;
 
         if (sessionId) {
-            // Optimistic update
+            setIsSubmitting(true);
             setFsmState(DialogueState.END);
             try {
                 await api.sessions.end(sessionId);
                 toast.success("Exam Submitted Successfully");
-                router.push('/student');
             } catch (err: any) {
-                // Ignore "already completed" errors as success
                 if (err.message?.includes("completed") || err.message?.includes("finished")) {
-                    router.push('/student');
+                    // Already completed — treat as success
                 } else {
                     console.error("Submission failed:", err);
                     toast.error("Submission Error. Please try again.");
-                    // Revert state if critical failure?
-                    // setFsmState(DialogueState.EVALUATION); 
                 }
+            } finally {
+                setIsSubmitting(false);
             }
         }
     };
@@ -223,11 +294,30 @@ export const VivaOrchestrator: React.FC = () => {
         }
     };
 
+    // --- Mobile Block ---
+    if (isMobile) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen space-y-6 text-center p-8 bg-background">
+                <div className="p-4 rounded-full bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/50">
+                    <Monitor className="h-8 w-8" />
+                </div>
+                <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-foreground">Desktop Required</h3>
+                    <p className="text-muted-foreground max-w-sm mx-auto">
+                        Exam sessions require a desktop or laptop computer with a camera and microphone. Please open this link on a compatible device.
+                    </p>
+                </div>
+                <Button onClick={() => router.push('/student')} variant="outline" className="border-border hover:bg-muted text-foreground">
+                    Return to Dashboard
+                </Button>
+            </div>
+        );
+    }
+
     // --- Loading / Error States ---
     if (connectionState === 'FAILED' || error) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-6 text-center p-8 relative overflow-hidden">
-                <AmbientGlow />
                 <div className="p-4 rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/50 relative z-10">
                     <LogOut className="h-8 w-8" />
                 </div>
@@ -247,7 +337,6 @@ export const VivaOrchestrator: React.FC = () => {
     if (connectionState === 'IDLE' || connectionState === 'CONNECTING') {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen space-y-6 animate-in fade-in duration-700 relative overflow-hidden bg-background">
-                <AmbientGlow />
                 <PremiumLoader text="Establishing Secure Session..." />
 
                 <p className="text-sm text-muted-foreground relative z-10">Verifying integrity headers...</p>
@@ -261,6 +350,8 @@ export const VivaOrchestrator: React.FC = () => {
         );
     }
 
+    const statusBadge = getStatusBadge(fsmState, isAgentSpeaking);
+
     // --- Main UI ---
     return (
         <TooltipProvider>
@@ -268,7 +359,6 @@ export const VivaOrchestrator: React.FC = () => {
                 "flex flex-col h-screen w-full bg-background overflow-hidden relative selection:bg-primary/30 transition-colors duration-500",
                 violation.isWarning ? 'border-[8px] border-destructive' : ''
             )}>
-                <AmbientGlow />
                 {/* Fullscreen Alert Overlay (Initial) */}
                 {examSettings.require_fullscreen && !isFullscreen && fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && !violation.isWarning && (
                     <div className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
@@ -318,8 +408,16 @@ export const VivaOrchestrator: React.FC = () => {
                     </div>
                 )}
 
+                {/* Voice Degradation Banner */}
+                {isVoiceUnavailable && (
+                    <div className="absolute top-0 left-0 right-0 z-[90] bg-amber-900/90 border-b border-amber-700 px-4 py-2 flex items-center justify-center gap-2 text-sm text-amber-200 animate-in slide-in-from-top duration-300">
+                        <WifiOff className="w-4 h-4" />
+                        <span>Voice service unavailable — switched to text-only mode</span>
+                    </div>
+                )}
+
                 {/* --- Top Bar --- */}
-                <header className="flex justify-between items-center px-6 py-4 z-50 bg-gradient-to-b from-black/80 to-transparent">
+                <header className={cn("flex justify-between items-center px-6 py-4 z-50 bg-gradient-to-b from-black/80 to-transparent", isVoiceUnavailable && "mt-8")}>
                     {/* Left: Exit */}
                     <AlertDialog>
                         <Tooltip>
@@ -338,78 +436,76 @@ export const VivaOrchestrator: React.FC = () => {
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="text-foreground">Leave Exam Session?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground">
-                                    Your progress will be saved, but the session will be marked as interrupted. Are you sure you want to leave?
+                                    Your session will be marked as <strong>abandoned</strong>. Your progress up to this point is saved, but you may not be able to resume. Are you sure?
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted/80">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => router.push('/student')} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-none">
+                                <AlertDialogAction onClick={handleLeaveSession} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-none">
                                     Leave Session
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
 
-                    {/* Center: Timer & Status */}
+                    {/* Center: Timer */}
                     <div className="flex items-start gap-8">
-                        {/* Total Exam Timer */}
                         <div className="hidden md:flex items-center gap-4">
                             <ExamTimer expiryTime={expiryTime} />
-                        </div>
-
-                        {/* Current Question Timer */}
-                        <div className="hidden md:flex items-center gap-4">
-                            <div className="flex flex-col items-center gap-1 min-w-[100px]">
-                                <div className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-medium bg-muted/40 px-3 py-1 rounded-full border border-border">
-                                    <TimerIcon className={`w-3 h-3 ${questionTimeLeft < 10 ? 'text-destructive animate-pulse' : 'text-primary'}`} />
-                                    {Math.floor(questionTimeLeft / 60).toString().padStart(2, '0')}:{(questionTimeLeft % 60).toString().padStart(2, '0')}
-                                </div>
-                                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full transition-all duration-1000 ease-linear rounded-full ${questionTimeLeft < 10 ? 'bg-destructive' : 'bg-primary'}`}
-                                        style={{ width: `${(questionTimeLeft / 60) * 100}%` }}
-                                    />
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-3">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/50 border border-neutral-800 text-xs font-mono transition-colors ${fsmState === DialogueState.LISTENING ? 'border-emerald-500/50 text-emerald-400' : 'text-neutral-500'
-                            }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${fsmState === DialogueState.LISTENING ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-600'}`} />
-                            {fsmState === DialogueState.LISTENING ? 'LISTENING' : 'AI SPEAKING'}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/50 border border-neutral-800 text-xs font-mono transition-colors ${statusBadge.color}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${statusBadge.dotColor}`} />
+                            {statusBadge.text}
                         </div>
 
                         <TranscriptDrawer transcripts={transcripts} />
 
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    size="sm"
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 border-0"
-                                    onClick={handleFinish}
-                                >
-                                    <span className="hidden sm:inline mr-2">Submit</span>
-                                    <CheckCircle className="w-4 h-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left">
-                                <p>Finish & Submit Exam</p>
-                            </TooltipContent>
-                        </Tooltip>
+                        {/* Submit with Confirmation */}
+                        <AlertDialog>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 border-0"
+                                            disabled={isSubmitting || fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED}
+                                        >
+                                            <span className="hidden sm:inline mr-2">Submit</span>
+                                            <CheckCircle className="w-4 h-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                    <p>Finish & Submit Exam</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <AlertDialogContent className="bg-card/95 border-border text-foreground backdrop-blur-xl">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-foreground">Submit Exam?</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-muted-foreground">
+                                        This will end your exam session and submit all responses for grading. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted/80">Continue Exam</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleFinish} className="bg-emerald-600 hover:bg-emerald-500 text-white border-none">
+                                        {isSubmitting ? 'Submitting...' : 'Submit & Finish'}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 </header>
 
                 {/* --- Main Content --- */}
                 <main className="flex-1 flex flex-col relative z-0">
-
-
                     {/* AI Orb - Center Stage */}
                     <div className="flex-1 flex items-center justify-center relative z-10 -mt-10">
-                        <div className="w-[80vw] max-w-[400px] aspect-square relative hover:scale-105 transition-transform duration-700 ease-out cursor-default">
-                            <div className="absolute inset-0 bg-blue-500/5 rounded-full blur-3xl transform scale-150 pointer-events-none" />
+                        <div className="w-[80vw] max-w-[400px] aspect-square relative cursor-default">
                             <AIOrb />
                         </div>
                     </div>
@@ -424,7 +520,6 @@ export const VivaOrchestrator: React.FC = () => {
 
                 {/* Functional Components */}
                 <TTSPlayer />
-                {/* Pass onStreamReady to capture the stream for the visualizer */}
                 <MediaManager onStreamReady={setAudioStream} />
 
             </div>

@@ -3,9 +3,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
-import { motion } from 'motion/react';
-import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { PremiumCard } from '@/components/ui/premium-card';
+import { Card } from '@/components/ui/card';
 
 import {
     Activity,
@@ -72,16 +70,11 @@ export default function AdminSystemPage() {
 
     return (
         <div className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <AmbientGlow />
+            {/* <AmbientGlow /> */}
 
             <div className="container mx-auto p-6 space-y-8 relative z-10">
                 {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="space-y-2"
-                >
+                <div className="space-y-2 animate-in fade-in duration-300">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-primary/10 rounded-xl border border-primary/20">
                             <Cpu className="w-6 h-6 text-primary" />
@@ -93,47 +86,34 @@ export default function AdminSystemPage() {
                             </p>
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Overall Status Banner */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                >
-                    <PremiumCard className="p-5 flex items-center justify-between bg-emerald-500/5 border-emerald-500/10">
+                <div>
+                    <Card className="p-5 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                                 <Clock className="w-6 h-6 text-emerald-500" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-foreground">All Systems Operational</h2>
+                                <h2 className="text-lg font-semibold text-foreground">All Systems Operational</h2>
                                 <p className="text-sm text-muted-foreground">
                                     Last checked: {new Date().toLocaleTimeString()}
                                 </p>
                             </div>
                         </div>
-                    </PremiumCard>
-                </motion.div>
+                    </Card>
+                </div>
 
                 {/* Service Status Grid */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
-                >
-                    <h2 className="text-lg font-semibold text-foreground mb-4 px-1">Service Status</h2>
+                <div>
+                    <h2 className="text-base font-semibold text-foreground mb-4 px-1">Service Status</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {systemMetrics.map((metric, index) => {
                             const Icon = metric.icon;
                             return (
-                                <motion.div
-                                    key={metric.label}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                >
-                                    <PremiumCard className={`p-5 ${getStatusColor(metric.status)} transition-all bg-card/40 backdrop-blur-xl`}>
+                                <div key={metric.label}>
+                                    <Card className={`p-5 ${getStatusColor(metric.status)} transition-colors`}>
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-lg bg-background/20 flex items-center justify-center border border-current opacity-70">
                                                 <Icon className="w-5 h-5" />
@@ -143,20 +123,16 @@ export default function AdminSystemPage() {
                                                 <div className="font-bold">{metric.value}</div>
                                             </div>
                                         </div>
-                                    </PremiumCard>
-                                </motion.div>
+                                    </Card>
+                                </div>
                             );
                         })}
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Platform Stats */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                >
-                    <h2 className="text-lg font-semibold text-foreground mb-4 px-1">Platform Statistics</h2>
+                <div>
+                    <h2 className="text-base font-semibold text-foreground mb-4 px-1">Platform Statistics</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
                             { label: 'Total Users', value: stats?.total_users || '-', icon: Users, color: 'blue' },
@@ -166,13 +142,8 @@ export default function AdminSystemPage() {
                         ].map((stat, index) => {
                             const Icon = stat.icon;
                             return (
-                                <motion.div
-                                    key={stat.label}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 + index * 0.05 }}
-                                >
-                                    <PremiumCard className="p-5 bg-card/40 border-border hover:border-primary/30 transition-all backdrop-blur-xl">
+                                <div key={stat.label}>
+                                    <Card className="p-5 hover:border-primary/30 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                                                 <Icon className="w-5 h-5 text-primary" />
@@ -184,20 +155,16 @@ export default function AdminSystemPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </PremiumCard>
-                                </motion.div>
+                                    </Card>
+                                </div>
                             );
                         })}
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Uptime */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
-                >
-                    <PremiumCard className="p-6 bg-card/40 border-border backdrop-blur-xl">
+                <div>
+                    <Card className="p-6">
                         <div className="flex items-center gap-4 mb-4">
                             <Clock className="w-5 h-5 text-muted-foreground" />
                             <h3 className="font-semibold text-foreground">System Uptime</h3>
@@ -216,8 +183,8 @@ export default function AdminSystemPage() {
                                 <div className="text-sm text-muted-foreground">Today</div>
                             </div>
                         </div>
-                    </PremiumCard>
-                </motion.div>
+                    </Card>
+                </div>
             </div>
         </div>
     );

@@ -14,16 +14,13 @@ export class AudioManager {
     constructor() {
         // Subscribe to store for barge-in checks
         useSessionStore.subscribe((state, prevState) => {
-            // Edge edge: Agent stopped speaking (or was interrupted)
             if (prevState.isAgentSpeaking && !state.isAgentSpeaking) {
                 this.clearPlaybackQueue();
             }
         });
 
-        // Listen for raw audio chunks via Event Bus (bridged by WebSocketClient)
-        window.addEventListener('viva:audio_chunk', ((e: CustomEvent) => {
-            this.playAudioChunk(e.detail);
-        }) as EventListener);
+        // NOTE: Audio playback is handled by TTSPlayer component.
+        // AudioManager is only responsible for mic recording and transmission.
 
         // Listen for Voice Degradation
         window.addEventListener('viva:voice_unavailable', () => {
@@ -45,55 +42,10 @@ export class AudioManager {
             await this.audioContext.resume();
         }
 
-        // Load Worklet (Inline for simplicity, or external file)
-        // We will assume `recorderProcessor.js` exists in public or use a Blob.
+        // Load the AudioWorklet processor from a static file (CSP-compliant)
         if (!this.isProcessorLoaded) {
-            const processorCode = `
-                class RecorderProcessor extends AudioWorkletProcessor {
-                    _remainder = 0;
-                    BUFFER_SIZE = 2048;
-                    _buffer = new Float32Array(2048);
-                    _bufferIdx = 0;
-                    
-                    constructor() {
-                        super();
-                        this.targetSampleRate = 16000;
-                        console.log("RecorderProcessor: Initialized. Context SampleRate:", sampleRate);
-                    }
-
-                    process(inputs, outputs, parameters) {
-                        const input = inputs[0];
-                        if (input && input.length > 0) {
-                            const inputChannel = input[0];
-                            const currentRate = sampleRate;
-                            const ratio = currentRate / this.targetSampleRate;
-                            
-                            let inputIndex = this._remainder;
-
-                            // Always process through buffer to ensure consistent chunk size
-                            while (inputIndex < inputChannel.length) {
-                                this._buffer[this._bufferIdx++] = inputChannel[Math.floor(inputIndex)];
-                                
-                                if (this._bufferIdx >= this.BUFFER_SIZE) {
-                                    this.port.postMessage(this._buffer.slice());
-                                    this._bufferIdx = 0;
-                                }
-                                
-                                inputIndex += ratio;
-                            }
-
-                            this._remainder = inputIndex - inputChannel.length;
-                        }
-                        return true;
-                    }
-                }
-                registerProcessor('recorder-processor', RecorderProcessor);
-            `;
-            const blob = new Blob([processorCode], { type: 'application/javascript' });
-            const url = URL.createObjectURL(blob);
-
             try {
-                await this.audioContext.audioWorklet.addModule(url);
+                await this.audioContext.audioWorklet.addModule('/recorder-processor.js');
                 this.isProcessorLoaded = true;
             } catch (e) {
                 Logger.error('Failed to load AudioWorklet:', e);
@@ -104,65 +56,75 @@ export class AudioManager {
     async setStream(stream: MediaStream) {
         if (this.mediaStream === stream) return;
 
-        // Stop previous stream if it was internal (but we are moving to external management)
-        // this.stopRecording(); 
-
         this.mediaStream = stream;
         Logger.log("AudioManager: Stream set externally");
 
-        // If we were supposed to be recording, restart with new stream
-        if (this.isRecording) {
-            this.startRecording();
-        }
+        // Pre-connect the worklet so it's ready when recording starts
+        await this.ensureWorkletConnected();
     }
 
-    async startRecording() {
-        if (this.isRecording) return; // Prevent duplicate starts
+    /**
+     * Ensures the AudioWorkletNode is created and connected exactly once.
+     * Subsequent calls are no-ops if already connected.
+     */
+    private async ensureWorkletConnected() {
+        if (this.workletNode) return; // Already connected
         await this.initialize();
-        if (!this.audioContext) return;
+        if (!this.audioContext || !this.mediaStream) return;
 
         try {
-            if (!this.mediaStream) {
-                Logger.log("AudioManager: No stream available, requesting...");
-                this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            }
-
-            // prevent multiple source connections
-            if (this.workletNode) return;
-
             const source = this.audioContext.createMediaStreamSource(this.mediaStream);
 
             this.workletNode = new AudioWorkletNode(this.audioContext, 'recorder-processor');
 
             this.workletNode.port.onmessage = (event) => {
-                // event.data is Float32Array
-                // Check if we should send (Muted? Agent Speaking?)
+                // Gate: only send audio when actively recording and mic is active
+                if (!this.isRecording) return;
+
                 const state = useSessionStore.getState();
                 if (state.isAgentSpeaking || !state.isMicActive) return;
 
-                // Simple VAD / Volume Monitor
                 this.analyzeVolume(event.data);
 
-                // Convert to Int16
                 const pcm16 = this.floatTo16BitPCM(event.data);
                 vivaWebSocket.sendAudioChunk(pcm16.buffer as ArrayBuffer);
             };
 
             source.connect(this.workletNode);
             // Do NOT connect worklet to destination to avoid self-hear
-            // source.disconnect(); // Not needed if we just don't connect to destination
-
-            this.isRecording = true;
-            useSessionStore.getState().setUserVolume(0);
+            Logger.log("AudioManager: Worklet connected (persistent)");
         } catch (e) {
-            Logger.error('Mic Access Error:', e);
-            useSessionStore.getState().setError('Microphone access denied');
+            Logger.error('AudioManager: Worklet connection error:', e);
         }
     }
 
+    async startRecording() {
+        if (this.isRecording) return;
+
+        // Ensure worklet is ready (no-op if already connected)
+        await this.ensureWorkletConnected();
+
+        this.isRecording = true;
+        useSessionStore.getState().setUserVolume(0);
+        Logger.log("AudioManager: Recording started (flag toggled)");
+    }
+
     stopRecording() {
-        // DO NOT stop MediaStream tracks here — MediaManager owns the stream lifecycle.
-        // Only disconnect the worklet to stop sending audio data.
+        // Just toggle the flag — keep the worklet connected to avoid
+        // reinitialization delays that cause silence gaps.
+        if (!this.isRecording) return;
+
+        this.isRecording = false;
+        useSessionStore.getState().setUserVolume(0);
+        Logger.log("AudioManager: Recording stopped (flag toggled)");
+    }
+
+    /**
+     * Full teardown — call ONLY on component unmount.
+     * Releases stream tracks, closes AudioContext, and destroys the worklet.
+     */
+    cleanup() {
+        this.isRecording = false;
 
         if (this.workletNode) {
             this.workletNode.port.onmessage = null;
@@ -170,16 +132,6 @@ export class AudioManager {
             this.workletNode = null;
         }
 
-        this.isRecording = false;
-        useSessionStore.getState().setUserVolume(0);
-    }
-
-    /**
-     * Full teardown — call ONLY on component unmount.
-     * Releases stream tracks, closes AudioContext, and stops recording.
-     */
-    cleanup() {
-        this.stopRecording();
         if (this.mediaStream) {
             this.mediaStream.getTracks().forEach(t => t.stop());
             this.mediaStream = null;
@@ -188,6 +140,7 @@ export class AudioManager {
             this.audioContext.close();
             this.audioContext = null;
         }
+        this.isProcessorLoaded = false;
     }
 
     private handleMessage(msg: any) {

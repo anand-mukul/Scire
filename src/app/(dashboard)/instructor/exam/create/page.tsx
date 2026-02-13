@@ -7,14 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, FileText, X, Loader2, ArrowLeft, ShieldAlert, Globe, BookOpen } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { api } from '@/lib/network/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { PremiumCard } from '@/components/ui/premium-card';
+// import { AmbientGlow } from '@/components/ui/ambient-glow';
+import { Card } from '@/components/ui/card';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { cn } from '@/lib/utils';
 
@@ -128,33 +127,33 @@ export default function CreateExamPage() {
     };
 
     return (
-        <div className="min-h-screen w-full relative overflow-hidden bg-background">
-            <AmbientGlow />
+        <main className="min-h-screen w-full relative overflow-hidden bg-background">
+            {/* <AmbientGlow /> */}
 
-            <div className="container mx-auto p-4 md:p-8 max-w-6xl relative z-10 space-y-8">
+            <div className="container mx-auto p-6 md:p-8 max-w-6xl relative z-10 space-y-8">
                 {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col gap-4"
+                <div
+                    className="flex flex-col gap-4 animate-in fade-in duration-300"
                 >
                     <Button
                         variant="ghost"
-                        className="w-fit pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors p-0 h-auto"
+                        className="w-fit pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         onClick={() => router.push('/instructor')}
+                        aria-label="Go back to instructor console"
                     >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
                         Back to Instructor Console
                     </Button>
+
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                             Create New Exam
                         </h1>
-                        <p className="text-muted-foreground text-lg mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             Set up the details, schedule, and source material for your new assessment.
                         </p>
                     </div>
-                </motion.div>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -162,12 +161,8 @@ export default function CreateExamPage() {
                     <div className="lg:col-span-8 space-y-6">
 
                         {/* Basic Info */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <PremiumCard className="p-6 bg-card/40 border-border/50">
+                        <div>
+                            <Card className="p-6">
                                 <h2 className="text-xl font-semibold mb-6">Exam Details</h2>
                                 <div className="space-y-4">
                                     <div className="space-y-2">
@@ -209,16 +204,12 @@ export default function CreateExamPage() {
                                         </div>
                                     )}
                                 </div>
-                            </PremiumCard>
-                        </motion.div>
+                            </Card>
+                        </div>
 
                         {/* Knowledge Base */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                        >
-                            <PremiumCard className="p-6 bg-card/40 border-border/50 h-full">
+                        <div>
+                            <Card className="p-6 h-full">
                                 <div className="flex items-center justify-between mb-2">
                                     <h2 className="text-xl font-semibold">Syllabus & Material</h2>
                                     {file && <span className="text-xs font-medium text-emerald-500 uppercase tracking-wide">Ready for processing</span>}
@@ -238,13 +229,11 @@ export default function CreateExamPage() {
                                     onDrop={handleFileDrop}
                                     onClick={() => document.getElementById('file-upload')?.click()}
                                 >
-                                    <AnimatePresence mode="wait">
+                                    <div>
                                         {file ? (
-                                            <motion.div
+                                            <div
                                                 key="file-selected"
-                                                initial={{ opacity: 0, scale: 0.98 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20"
+                                                className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 animate-in fade-in duration-200"
                                             >
                                                 <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
                                                     <FileText className="w-6 h-6 text-emerald-500" />
@@ -260,7 +249,7 @@ export default function CreateExamPage() {
                                                 >
                                                     Remove File
                                                 </Button>
-                                            </motion.div>
+                                            </div>
                                         ) : (
                                             <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 pointer-events-none">
                                                 <Upload className="w-8 h-8 text-muted-foreground mb-3" />
@@ -268,32 +257,29 @@ export default function CreateExamPage() {
                                                 <p className="text-sm text-muted-foreground mt-1">Max file size: 10MB</p>
                                             </div>
                                         )}
-                                    </AnimatePresence>
+                                    </div>
 
                                     <input
                                         id="file-upload"
                                         type="file"
                                         className="hidden"
                                         accept="application/pdf"
+                                        aria-label="Upload syllabus PDF file"
                                         onChange={(e) => {
                                             if (e.target.files?.[0]) setFile(e.target.files[0]);
                                         }}
                                     />
                                 </div>
-                            </PremiumCard>
-                        </motion.div>
+                            </Card>
+                        </div>
                     </div>
 
                     {/* Sidebar (Right) */}
                     <div className="lg:col-span-4 space-y-6">
 
                         {/* Schedule */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                        >
-                            <PremiumCard className="p-6 bg-card/40 border-border/50 space-y-6">
+                        <div>
+                            <Card className="p-6 space-y-6">
                                 <h2 className="text-lg font-semibold">Schedule</h2>
                                 <div className="space-y-4">
                                     <div className="space-y-2">
@@ -313,16 +299,12 @@ export default function CreateExamPage() {
                                         />
                                     </div>
                                 </div>
-                            </PremiumCard>
-                        </motion.div>
+                            </Card>
+                        </div>
 
                         {/* Settings */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 }}
-                        >
-                            <PremiumCard className="p-6 bg-card/40 border-border/50 space-y-6">
+                        <div>
+                            <Card className="p-6 space-y-6">
                                 <h2 className="text-lg font-semibold">Config & Security</h2>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -388,8 +370,8 @@ export default function CreateExamPage() {
                                         <Switch checked={isPublic} onCheckedChange={setIsPublic} />
                                     </div>
                                 </div>
-                            </PremiumCard>
-                        </motion.div>
+                            </Card>
+                        </div>
 
                         <Button
                             size="lg"
@@ -410,6 +392,6 @@ export default function CreateExamPage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
