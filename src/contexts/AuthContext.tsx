@@ -139,33 +139,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const register = useCallback(async (data: RegisterData): Promise<User> => {
+    const register = useCallback(async (data: RegisterData): Promise<void> => {
         setIsLoading(true);
         setError(null);
         try {
             await api.auth.register(data);
-
-            // Explicitly login after registration to ensure we have the token
-            const tokens = await api.auth.login({
-                email: data.email,
-                password: data.password
-            });
-
-            // Store access token in secure memory (not localStorage!)
-            if (tokens.access_token) {
-                setAccessToken(tokens.access_token);
-            }
-
-            // Fetch user data after login
-            const userData = await api.auth.me();
-            if (!userData) {
-                throw new Error('Failed to fetch user data after registration');
-            }
-            setUser(userData);
-            return userData;
+            // Registration now requires email verification before login.
+            // The register page will show a "check your email" message.
         } catch (err) {
-            setUser(null);
-            clearAccessToken();
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const forgotPassword = useCallback(async (email: string): Promise<void> => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            await api.auth.forgotPassword(email);
+        } catch (err) {
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const resetPassword = useCallback(async (token: string, password: string): Promise<void> => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            await api.auth.resetPassword(token, password);
+        } catch (err) {
             throw err;
         } finally {
             setIsLoading(false);
@@ -210,6 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         login,
         register,
+        forgotPassword,
+        resetPassword,
         logout,
         refetch: fetchUser,
     };

@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, getLandingPageForRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const registerSchema = z.object({
     full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -32,8 +32,8 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-    const router = useRouter();
     const { register: registerUser } = useAuth();
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -49,17 +49,13 @@ export default function RegisterPage() {
     const onSubmit = async (data: RegisterFormData) => {
         setIsLoading(true);
         try {
-            const user = await registerUser({
+            await registerUser({
                 full_name: data.full_name,
                 email: data.email,
                 password: data.password,
             });
-            toast.success('Account created successfully!');
-
-            // Redirect based on user role
-            const targetUrl = getLandingPageForRole(user.role);
-            router.push(targetUrl);
-            router.refresh(); // Force refresh to update server state
+            toast.success('Account created! Please verify your email.');
+            router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');
         } finally {

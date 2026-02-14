@@ -9,6 +9,7 @@ import { Mail, Shield, Calendar, User, Settings, LogOut, CheckCircle2, Copy, Che
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { SUPPORT_MAIL } from '@/lib/constants';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -265,7 +266,7 @@ export default function ProfilePage() {
                             <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                                 For security reasons, sensitive details must be updated by an administrator.
                             </p>
-                            <a href="mailto:support@scira.com" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+                            <a href={`mailto:${SUPPORT_MAIL}`} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
                                 <Mail className="w-3 h-3" />
                                 Contact Support
                             </a>

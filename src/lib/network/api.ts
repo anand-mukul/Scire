@@ -154,6 +154,20 @@ export const api = {
         changePassword: async (data: Record<string, unknown>) => {
             return authClient.post('/auth/change-password', data);
         },
+        forgotPassword: async (email: string) => {
+            return authClient.post('/auth/forgot-password', { email });
+        },
+        resetPassword: async (token: string, password: string) => {
+            return authClient.post('/auth/reset-password', { token, new_password: password });
+        },
+        verifyEmail: async (token: string) => {
+            const { data } = await authClient.post<{ message: string }>('/auth/verify-email', { token });
+            return data;
+        },
+        resendVerification: async (email: string) => {
+            const { data } = await authClient.post<{ message: string }>('/auth/resend-verification', { email });
+            return data;
+        },
     },
 
     sso: {

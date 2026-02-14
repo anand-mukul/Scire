@@ -105,7 +105,9 @@ export interface AuthContextType {
     isLoading: boolean;
     isAuthenticated: boolean;
     login: (credentials: LoginCredentials) => Promise<User>;
-    register: (data: RegisterData) => Promise<User>;
+    register: (data: RegisterData) => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
+    resetPassword: (token: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     refetch: () => Promise<User | null>;
 }

@@ -5,6 +5,7 @@ import React from 'react';
 // import { motion } from 'motion/react';
 import { Card } from '@/components/ui/card';
 import { Shield, HelpCircle, Mail, AlertTriangle } from 'lucide-react';
+import { SUPPORT_MAIL } from '@/lib/constants';
 
 export default function StudentHelpPage() {
     return (
@@ -80,9 +81,9 @@ export default function StudentHelpPage() {
                             <p className="text-muted-foreground text-sm mb-6">
                                 If you experience technical issues during the exam, contact your proctor immediately or email support.
                             </p>
-                            <a href="mailto:support@scira.com" className="flex items-center gap-2 text-foreground bg-secondary/50 hover:bg-primary hover:text-primary-foreground p-3 rounded-lg transition-all border border-border hover:border-primary shadow-sm">
+                            <a href={`mailto:${SUPPORT_MAIL}`} className="flex items-center gap-2 text-foreground bg-secondary/50 hover:bg-primary hover:text-primary-foreground p-3 rounded-lg transition-all border border-border hover:border-primary shadow-sm">
                                 <Mail className="w-4 h-4" />
-                                <span>support@scira.com</span>
+                                <span>{SUPPORT_MAIL}</span>
                             </a>
                         </Card>
                     </div>

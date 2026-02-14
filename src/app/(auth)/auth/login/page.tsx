@@ -113,7 +113,12 @@ function LoginForm() {
             router.push(targetPath);
             router.refresh();
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Invalid email or password');
+            const msg = error instanceof Error ? error.message : 'Invalid email or password';
+            if (msg.toLowerCase().includes('email not verified') || msg.toLowerCase().includes('not verified')) {
+                toast.warning('Your email is not yet verified. Please check your inbox for the verification link.');
+            } else {
+                toast.error(msg);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -219,6 +224,14 @@ function LoginForm() {
                             {errors.password && (
                                 <p className="text-sm text-red-500 font-medium">{errors.password.message}</p>
                             )}
+                            <div className="flex justify-end">
+                                <Link
+                                    href="/auth/forgot-password"
+                                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Submit Button */}
