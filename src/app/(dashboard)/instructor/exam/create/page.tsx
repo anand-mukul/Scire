@@ -1,21 +1,33 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, FileText, X, Loader2, ArrowLeft, ShieldAlert, Globe, BookOpen } from 'lucide-react';
+import { Upload, FileText, Loader2, ShieldAlert, Globe, BookOpen, Clock, HelpCircle, Calendar, Hash, RotateCcw } from 'lucide-react';
 import { api } from '@/lib/network/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-// import { AmbientGlow } from '@/components/ui/ambient-glow';
-import { Card } from '@/components/ui/card';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { cn } from '@/lib/utils';
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form';
+import { Separator } from "@/components/ui/separator";
+import { PageHeader } from '@/components/dashboard/page-header';
+import Link from 'next/link';
 
 interface SubjectOption {
     id: string;
@@ -23,22 +35,51 @@ interface SubjectOption {
     code: string;
 }
 
-export default function CreateExamPage() {
-    const [title, setTitle] = useState('');
-    const [duration, setDuration] = useState(30);
-    const [numberOfQuestions, setNumberOfQuestions] = useState(5);
-    const [maxAttempts, setMaxAttempts] = useState(1);
-    const [strictMode, setStrictMode] = useState(false);
-    const [isPublic, setIsPublic] = useState(false);
-    const [subjectId, setSubjectId] = useState<string | undefined>(undefined);
-    const [file, setFile] = useState<File | null>(null);
-    const [startTime, setStartTime] = useState<Date | undefined>(undefined);
-    const [endTime, setEndTime] = useState<Date | undefined>(undefined);
+const examFormSchema = z.object({
+    title: z.string().min(1, "Exam title is required"),
+    subject_id: z.string().optional(),
+    start_time: z.date().optional(),
+    end_time: z.date().optional(),
+    duration: z.coerce.number().min(5).max(180).default(30),
+    number_of_questions: z.coerce.number().min(1).max(50).default(5),
+    max_attempts: z.coerce.number().min(1).max(5).default(1),
+    strict_mode: z.boolean().default(false),
+    is_public: z.boolean().default(false),
+    file: z.any()
+        .refine((file) => file instanceof File, "Syllabus file is required")
+        .refine((file) => file?.type === "application/pdf", "Only PDF files are allowed")
+        .refine((file) => file?.size <= 10 * 1024 * 1024, "Max file size is 10MB"),
+}).refine(data => {
+    if (data.start_time && data.end_time) {
+        return data.end_time > data.start_time;
+    }
+    return true;
+}, {
+    message: "End time must be after start time",
+    path: ["end_time"],
+});
 
+type ExamFormValues = z.infer<typeof examFormSchema>;
+
+export default function CreateExamPage() {
     const queryClient = useQueryClient();
     const router = useRouter();
 
-    // Fetch subjects for the dropdown — fails gracefully if tenant has none
+    const form = useForm<ExamFormValues>({
+        resolver: zodResolver(examFormSchema) as any,
+        defaultValues: {
+            title: '',
+            duration: 30,
+            number_of_questions: 5,
+            max_attempts: 1,
+            strict_mode: false,
+            is_public: false,
+            subject_id: 'none',
+        },
+    });
+
+    const fileRef = form.watch('file');
+
     const { data: subjects = [] } = useQuery<SubjectOption[]>({
         queryKey: ['subjects'],
         queryFn: async () => {
@@ -46,7 +87,6 @@ export default function CreateExamPage() {
                 const data = await api.tenant.listSubjects();
                 return (data as SubjectOption[]) || [];
             } catch {
-                // Tenant may not have subjects configured — that's fine
                 return [];
             }
         },
@@ -54,32 +94,22 @@ export default function CreateExamPage() {
     });
 
     const createMutation = useMutation({
-        mutationFn: async () => {
-            if (!title.trim()) throw new Error("Exam title is required");
-            if (!file) throw new Error("Syllabus file is required");
-
-            // Validate schedule logic
-            if (startTime && endTime && startTime >= endTime) {
-                throw new Error("End time must be after start time");
-            }
-
-            // Clamp values for safety (defense in depth — backend validates too)
-            const safeDuration = Math.max(5, Math.min(180, duration));
-            const safeQuestions = Math.max(1, Math.min(50, numberOfQuestions));
-            const safeAttempts = Math.max(1, Math.min(5, maxAttempts));
+        mutationFn: async (values: ExamFormValues) => {
+            const subjectId = values.subject_id === 'none' ? undefined : values.subject_id;
+            const file = values.file as File;
 
             const exam = await api.exams.create({
-                title: title.trim(),
+                title: values.title.trim(),
                 settings: {
-                    duration_minutes: safeDuration,
-                    strict_mode: strictMode,
-                    number_of_questions: safeQuestions,
+                    duration_minutes: values.duration,
+                    strict_mode: values.strict_mode,
+                    number_of_questions: values.number_of_questions,
                 },
-                max_attempts: safeAttempts,
-                start_time: startTime ? startTime.toISOString() : undefined,
-                end_time: endTime ? endTime.toISOString() : undefined,
-                subject_id: subjectId || undefined,
-                is_public: isPublic,
+                max_attempts: values.max_attempts,
+                start_time: values.start_time ? values.start_time.toISOString() : undefined,
+                end_time: values.end_time ? values.end_time.toISOString() : undefined,
+                subject_id: subjectId,
+                is_public: values.is_public,
             });
 
             if (!exam || !exam.id) {
@@ -114,84 +144,73 @@ export default function CreateExamPage() {
         }
     });
 
+    const onSubmit = (values: ExamFormValues) => {
+        createMutation.mutate(values);
+    };
+
     const handleFileDrop = (e: React.DragEvent) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             const droppedFile = e.dataTransfer.files[0];
-            if (droppedFile.type === 'application/pdf') {
-                setFile(droppedFile);
-            } else {
-                toast.error("Only PDF files are allowed");
-            }
+            form.setValue('file', droppedFile, { shouldValidate: true });
         }
     };
 
     return (
-        <main className="min-h-screen w-full relative overflow-hidden bg-background">
-            {/* <AmbientGlow /> */}
+        <div className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
+            <PageHeader
+                title="Create New Exam"
+                description="Set up the details, schedule, and source material for your new assessment."
+            />
 
-            <div className="container mx-auto p-6 md:p-8 max-w-6xl relative z-10 space-y-8">
-                {/* Header */}
-                <div
-                    className="flex flex-col gap-4 animate-in fade-in duration-300"
-                >
-                    <Button
-                        variant="ghost"
-                        className="w-fit pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        onClick={() => router.push('/instructor')}
-                        aria-label="Go back to instructor console"
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
-                        Back to Instructor Console
-                    </Button>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                            Create New Exam
-                        </h1>
-                        <p className="text-muted-foreground text-sm mt-1">
-                            Set up the details, schedule, and source material for your new assessment.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-                    {/* Main Content (Left) */}
-                    <div className="lg:col-span-8 space-y-6">
-
-                        {/* Basic Info */}
+                    {/* Basic Info */}
+                    <div className="space-y-6">
                         <div>
-                            <Card className="p-6">
-                                <h2 className="text-xl font-semibold mb-6">Exam Details</h2>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="title">Exam Title</Label>
-                                        <Input
-                                            id="title"
-                                            placeholder="e.g. Introduction to Computer Science - Final"
-                                            className="h-11 bg-background/50"
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            autoFocus
-                                        />
-                                    </div>
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-primary" />
+                                Exam Details
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-1">Basic information about the assessment.</p>
+                        </div>
+                        <Separator />
 
-                                    {/* Subject Dropdown — only rendered if tenant has subjects */}
-                                    {subjects.length > 0 && (
-                                        <div className="space-y-2">
-                                            <Label className="flex items-center gap-2">
-                                                <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                                                Subject
-                                                <span className="text-xs text-muted-foreground font-normal">(optional)</span>
-                                            </Label>
-                                            <Select
-                                                value={subjectId ?? "none"}
-                                                onValueChange={(val) => setSubjectId(val === "none" ? undefined : val)}
-                                            >
-                                                <SelectTrigger className="w-full h-11 bg-background/50">
-                                                    <SelectValue placeholder="Select a subject" />
-                                                </SelectTrigger>
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <FormField
+                                control={form.control}
+                                name="title"
+                                render={({ field }) => (
+                                    <FormItem className="col-span-2">
+                                        <FormLabel>Exam Title</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <FileText className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input placeholder="e.g. Introduction to Computer Science - Final" className="pl-9" {...field} autoFocus />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {subjects.length > 0 && (
+                                <FormField
+                                    control={form.control}
+                                    name="subject_id"
+                                    render={({ field }) => (
+                                        <FormItem className="col-span-2 md:col-span-1">
+                                            <FormLabel>Subject <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <div className="flex items-center gap-2">
+                                                            <BookOpen className="w-4 h-4 text-muted-foreground" />
+                                                            <SelectValue placeholder="Select a subject" />
+                                                        </div>
+                                                    </SelectTrigger>
+                                                </FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="none">No Subject</SelectItem>
                                                     {subjects.map((subject) => (
@@ -201,197 +220,267 @@ export default function CreateExamPage() {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                        </div>
+                                            <FormMessage />
+                                        </FormItem>
                                     )}
-                                </div>
-                            </Card>
-                        </div>
-
-                        {/* Knowledge Base */}
-                        <div>
-                            <Card className="p-6 h-full">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-xl font-semibold">Syllabus & Material</h2>
-                                    {file && <span className="text-xs font-medium text-emerald-500 uppercase tracking-wide">Ready for processing</span>}
-                                </div>
-                                <p className="text-sm text-muted-foreground mb-6">Upload the PDF course material. The AI will use this to generate questions.</p>
-
-                                <div
-                                    className={`
-                                        relative overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer
-                                        ${file
-                                            ? 'border-emerald-500/30 bg-emerald-500/5'
-                                            : 'border-muted-foreground/20 hover:border-primary/50 hover:bg-accent/50'
-                                        }
-                                    `}
-                                    style={{ minHeight: '200px' }}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={handleFileDrop}
-                                    onClick={() => document.getElementById('file-upload')?.click()}
-                                >
-                                    <div>
-                                        {file ? (
-                                            <div
-                                                key="file-selected"
-                                                className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 animate-in fade-in duration-200"
-                                            >
-                                                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
-                                                    <FileText className="w-6 h-6 text-emerald-500" />
-                                                </div>
-                                                <p className="font-medium text-foreground text-lg">{file.name}</p>
-                                                <p className="text-muted-foreground text-sm mb-4">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                                                >
-                                                    Remove File
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 pointer-events-none">
-                                                <Upload className="w-8 h-8 text-muted-foreground mb-3" />
-                                                <p className="font-medium text-foreground">Click or drag PDF to upload</p>
-                                                <p className="text-sm text-muted-foreground mt-1">Max file size: 10MB</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <input
-                                        id="file-upload"
-                                        type="file"
-                                        className="hidden"
-                                        accept="application/pdf"
-                                        aria-label="Upload syllabus PDF file"
-                                        onChange={(e) => {
-                                            if (e.target.files?.[0]) setFile(e.target.files[0]);
-                                        }}
-                                    />
-                                </div>
-                            </Card>
+                                />
+                            )}
                         </div>
                     </div>
 
-                    {/* Sidebar (Right) */}
-                    <div className="lg:col-span-4 space-y-6">
-
-                        {/* Schedule */}
+                    {/* Syllabus */}
+                    <div className="space-y-6">
                         <div>
-                            <Card className="p-6 space-y-6">
-                                <h2 className="text-lg font-semibold">Schedule</h2>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Starts</Label>
-                                        <DateTimePicker
-                                            date={startTime}
-                                            setDate={setStartTime}
-                                            label="Start Date"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ends</Label>
-                                        <DateTimePicker
-                                            date={endTime}
-                                            setDate={setEndTime}
-                                            label="End Date"
-                                        />
-                                    </div>
-                                </div>
-                            </Card>
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <BookOpen className="h-5 w-5 text-primary" />
+                                Syllabus & Material
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-1">Upload the PDF course material. The AI will use this to generate questions.</p>
+                        </div>
+                        <Separator />
+
+                        <FormField
+                            control={form.control}
+                            name="file"
+                            render={() => (
+                                <FormItem>
+                                    <FormControl>
+                                        <div
+                                            className={cn(
+                                                "relative overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer min-h-[160px] flex items-center justify-center",
+                                                fileRef
+                                                    ? 'border-emerald-500/30 bg-emerald-500/5'
+                                                    : 'border-muted-foreground/20 hover:border-primary/50 hover:bg-accent/50'
+                                            )}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={handleFileDrop}
+                                            onClick={() => document.getElementById('file-upload')?.click()}
+                                        >
+                                            <div className="w-full">
+                                                {fileRef ? (
+                                                    <div className="flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
+                                                        <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
+                                                            <FileText className="w-6 h-6 text-emerald-500" />
+                                                        </div>
+                                                        <p className="font-medium text-foreground text-lg">{fileRef.name}</p>
+                                                        <p className="text-muted-foreground text-sm mb-4">{(fileRef.size / 1024 / 1024).toFixed(2)} MB</p>
+
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                form.setValue('file', undefined);
+                                                            }}
+                                                        >
+                                                            Remove File
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+                                                        <Upload className="w-8 h-8 text-muted-foreground mb-3" />
+                                                        <p className="font-medium text-foreground">Click or drag PDF to upload</p>
+                                                        <p className="text-sm text-muted-foreground mt-1">Max file size: 10MB</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Input
+                                                id="file-upload"
+                                                type="file"
+                                                className="hidden"
+                                                accept="application/pdf"
+                                                onChange={(e) => {
+                                                    if (e.target.files?.[0]) {
+                                                        form.setValue('file', e.target.files[0], { shouldValidate: true });
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    {/* Schedule */}
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-primary" />
+                                Schedule
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-1">Define when the exam starts and ends.</p>
+                        </div>
+                        <Separator />
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <FormField
+                                control={form.control}
+                                name="start_time"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Start Date</FormLabel>
+                                        <FormControl>
+                                            <DateTimePicker date={field.value} setDate={field.onChange} label="Select start time" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="end_time"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>End Date</FormLabel>
+                                        <FormControl>
+                                            <DateTimePicker date={field.value} setDate={field.onChange} label="Select end time" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+
+                    {/* Configuration */}
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <Clock className="h-5 w-5 text-primary" />
+                                Configuration
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-1">Exam parameters and security settings.</p>
+                        </div>
+                        <Separator />
+
+
+                        <div className="grid gap-6 md:grid-cols-3">
+                            <FormField
+                                control={form.control}
+                                name="duration"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Duration (Min)</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input type="number" min={5} max={180} className="pl-9" {...field} />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="number_of_questions"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Questions</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <HelpCircle className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input type="number" min={1} max={50} className="pl-9" {...field} />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="max_attempts"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Max Attempts</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <RotateCcw className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input type="number" min={1} max={5} className="pl-9" {...field} />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
 
-                        {/* Settings */}
-                        <div>
-                            <Card className="p-6 space-y-6">
-                                <h2 className="text-lg font-semibold">Config & Security</h2>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground">Duration (Min)</Label>
-                                        <Input
-                                            type="number"
-                                            min="5"
-                                            max="180"
-                                            className="bg-background/50 h-10"
-                                            value={duration}
-                                            onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground">Questions</Label>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            max="50"
-                                            className="bg-background/50 h-10"
-                                            value={numberOfQuestions}
-                                            onChange={(e) => setNumberOfQuestions(parseInt(e.target.value) || 5)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Max Attempts</Label>
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        className="bg-background/50 h-10"
-                                        value={maxAttempts}
-                                        onChange={(e) => setMaxAttempts(parseInt(e.target.value) || 1)}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        How many times a student can attempt this exam
-                                    </p>
-                                </div>
-
-                                <div className="space-y-3 pt-2">
-                                    <div className="flex items-center justify-between">
+                        <div className="grid gap-6 md:grid-cols-2 pt-2">
+                            <FormField
+                                control={form.control}
+                                name="strict_mode"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
                                         <div className="space-y-0.5">
-                                            <Label className="text-sm font-medium flex items-center gap-2">
-                                                <ShieldAlert className="w-3.5 h-3.5" />
+                                            <FormLabel className="text-base font-medium flex items-center gap-2">
+                                                <ShieldAlert className="w-4 h-4 text-primary" />
                                                 Strict Mode
-                                            </Label>
-                                            <p className="text-xs text-muted-foreground">Enforce fullscreen & flag tab switches</p>
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Enforce fullscreen & flag tab switches
+                                            </FormDescription>
                                         </div>
-                                        <Switch checked={strictMode} onCheckedChange={setStrictMode} />
-                                    </div>
+                                        <FormControl>
+                                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
 
-                                    <div className="flex items-center justify-between">
+                            <FormField
+                                control={form.control}
+                                name="is_public"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
                                         <div className="space-y-0.5">
-                                            <Label className="text-sm font-medium flex items-center gap-2">
-                                                <Globe className="w-3.5 h-3.5" />
-                                                Allow Guest Access
-                                            </Label>
-                                            <p className="text-xs text-muted-foreground">Students outside your organization can join</p>
+                                            <FormLabel className="text-base font-medium flex items-center gap-2">
+                                                <Globe className="w-4 h-4 text-primary" />
+                                                Guest Access
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Allow external students to join
+                                            </FormDescription>
                                         </div>
-                                        <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-                                    </div>
-                                </div>
-                            </Card>
+                                        <FormControl>
+                                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
                         </div>
+                    </div>
 
+                    <div className="flex justify-start gap-4 pt-4">
                         <Button
                             size="lg"
-                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-2"
-                            disabled={!title.trim() || !file || createMutation.isPending}
-                            onClick={() => createMutation.mutate()}
+                            className="px-8 font-semibold shadow-md"
+                            disabled={createMutation.isPending}
+                            type="submit"
                         >
                             {createMutation.isPending ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Redirecting...
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Creating...
                                 </>
                             ) : (
-                                'Create and continue'
+                                'Create Exam'
                             )}
                         </Button>
-
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="lg"
+                            asChild
+                        >
+                            <Link href="/instructor/exams">Cancel</Link>
+                        </Button>
                     </div>
-                </div>
-            </div>
-        </main>
+                </form>
+            </Form>
+        </div>
     );
 }

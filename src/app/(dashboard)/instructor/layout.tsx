@@ -9,7 +9,7 @@ export default function InstructorLayout({
     children: React.ReactNode;
 }) {
     return (
-        <AuthGuard allowedRoles={[UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.PLATFORM_ADMIN]}>
+        <AuthGuard allowedRoles={[UserRole.INSTRUCTOR, UserRole.ADMIN]}>
             {children}
         </AuthGuard>
     );

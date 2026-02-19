@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Shield, Calendar, User, Settings, LogOut, CheckCircle2, Copy, Check, Sparkles, GraduationCap } from 'lucide-react';
+import { Mail, Calendar, User, Settings, LogOut, Check, Copy, GraduationCap, CheckCircle2, Shield, MapPin, Link as LinkIcon, CreditCard } from 'lucide-react';
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { PageHeader } from '@/components/dashboard/page-header';
 import { SUPPORT_MAIL } from '@/lib/constants';
 import {
     AlertDialog,
@@ -47,233 +48,209 @@ export default function ProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                    <div className="text-muted-foreground text-sm font-mono tracking-widest uppercase">Loading profile...</div>
-                </div>
+            <div className="flex h-screen items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
         );
     }
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="text-muted-foreground">Unable to load profile</div>
+            <div className="flex h-screen items-center justify-center">
+                <p className="text-muted-foreground">Unable to load profile</p>
             </div>
         );
     }
 
     const isStudent = (user.role as string) === 'STUDENT';
+    const roleColor = isStudent ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20' : 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20';
 
     return (
-        <main className="relative min-h-screen w-full bg-background overflow-hidden text-foreground selection:bg-primary/20">
-            {/* <AmbientGlow /> */}
+        <div className="space-y-8 animate-fade-in pb-10">
+            <PageHeader
+                title="Profile"
+                description="Manage your personal information and account details."
+                actions={
+                    <Button variant="outline" asChild>
+                        <Link href="/settings">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Settings
+                        </Link>
+                    </Button>
+                }
+            />
 
-            <div className="relative z-10 p-6 md:p-8 max-w-5xl mx-auto space-y-8">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-3">
-                        Profile & Settings
-                    </h1>
-                    <p className="text-muted-foreground max-w-2xl">
-                        Manage your account details and preferences.
-                    </p>
-                </div>
-
-                <div className="grid gap-8 lg:grid-cols-12 items-start">
-                    {/* Main Profile Info */}
-                    <div className="lg:col-span-8 space-y-8">
-                        <Card className="p-8 md:p-10 relative overflow-hidden group">
-
-                            <div className="flex flex-col md:flex-row gap-8 items-start">
-                                <div className="relative">
-                                    <Avatar className="h-24 w-24 md:h-28 md:w-28 border-2 border-border shadow-sm">
-                                        <AvatarFallback className="bg-muted text-foreground text-3xl font-bold">
-                                            {getInitials(user.full_name)}
-                                        </AvatarFallback>
-                                    </Avatar>
+            <div className="grid gap-6 md:grid-cols-12">
+                {/* Left Column: User Identity */}
+                <div className="md:col-span-4 space-y-6">
+                    <Card className="overflow-hidden border-border/50 shadow-sm transition-all duration-300">
+                        <div className="h-28 bg-gradient-to-r from-primary/5 via-background to-background border-b" />
+                        <CardContent className="relative pt-0">
+                            <div className="absolute -top-12 left-6">
+                                <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name}`} />
+                                    <AvatarFallback className="text-3xl font-bold bg-primary/5 text-primary">
+                                        {getInitials(user.full_name)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </div>
+                            <div className="mt-14 space-y-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold tracking-tight">{user.full_name}</h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Badge variant="secondary" className={`font-medium ${roleColor} border-0 px-2 py-0.5`}>
+                                            {isStudent ? 'Student' : user.role}
+                                        </Badge>
+                                        <div className="flex items-center text-xs text-emerald-600 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                                            Verified
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="flex-1 space-y-6">
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h2 className="text-2xl font-bold text-foreground tracking-tight">{user.full_name}</h2>
-                                            <Badge variant="secondary" className="font-medium">
-                                                {isStudent ? 'Student Account' : user.role}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-muted-foreground text-sm flex items-center gap-2">
-                                            <GraduationCap className="w-4 h-4" />
-                                            {isStudent ? 'Standard Access' : 'Administrative Access'}
-                                        </p>
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex items-center text-sm text-muted-foreground group cursor-default">
+                                        <Mail className="w-4 h-4 mr-3 opacity-70 group-hover:text-primary transition-colors" />
+                                        <span className="truncate">{user.email}</span>
                                     </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="p-3.5 rounded-xl border border-border bg-muted/40 space-y-1 hover:bg-muted/60 transition-colors">
-                                            <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-                                                <Mail className="w-3 h-3" /> Email
-                                            </div>
-                                            <div className="text-foreground font-mono text-sm truncate" title={user.email}>
-                                                {user.email}
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3.5 rounded-xl border border-border bg-muted/40 space-y-1 group/id relative hover:bg-muted/60 transition-colors">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-                                                    <User className="w-3 h-3" /> Account ID
-                                                </div>
-                                                <button
-                                                    onClick={handleCopyId}
-                                                    className="opacity-0 group-hover/id:opacity-100 transition-opacity text-muted-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
-                                                    aria-label="Copy account ID to clipboard"
-                                                >
-                                                    {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                                                </button>
-                                            </div>
-                                            <div className="text-foreground font-mono text-sm flex items-center gap-2">
-                                                {user.id.slice(0, 8)}...
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3.5 rounded-xl border border-border bg-muted/40 space-y-1 hover:bg-muted/60 transition-colors">
-                                            <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-                                                <Shield className="w-3 h-3" /> Status
-                                            </div>
-                                            <div className="flex items-center gap-2 text-emerald-500 font-medium text-sm">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-                                                Verified
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3.5 rounded-xl border border-border bg-muted/40 space-y-1 hover:bg-muted/60 transition-colors">
-                                            <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-                                                <Calendar className="w-3 h-3" /> Joined
-                                            </div>
-                                            <div className="text-foreground font-mono text-sm">
-                                                {new Date().getFullYear()}
-                                            </div>
-                                        </div>
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                        <User className="w-4 h-4 mr-3 opacity-70" />
+                                        <span className="font-mono text-xs bg-muted/50 px-1.5 py-0.5 rounded border flex items-center gap-2">
+                                            {user.id.substring(0, 12)}...
+                                            <button
+                                                onClick={handleCopyId}
+                                                className="hover:text-primary transition-colors cursor-pointer p-0.5 rounded-md hover:bg-background"
+                                                title="Copy ID"
+                                            >
+                                                {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                                            </button>
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                        <Calendar className="w-4 h-4 mr-3 opacity-70" />
+                                        <span>Joined {new Date().getFullYear()}</span>
                                     </div>
                                 </div>
                             </div>
-                        </Card>
+                            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                <Button variant="outline" size="sm" asChild className="w-full sm:flex-1 cursor-pointer hover:bg-muted/50">
+                                    <Link href={`mailto:${SUPPORT_MAIL || 'support@example.com'}`}>
+                                        <Mail className="mr-2 h-4 w-4" />
+                                        Contact Support
+                                    </Link>
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={logout}
+                                    className="w-full sm:flex-1 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer shadow-none border border-transparent hover:border-destructive/20"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Sign Out
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                        {/* Capabilities Section */}
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-foreground px-1 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-purple-500" />
-                                Account Capabilities
-                            </h3>
-                            <div className="rounded-2xl border border-border bg-card/40 divide-y divide-border/50 overflow-hidden">
+                {/* Right Column: Details & Stats */}
+                <div className="md:col-span-8 space-y-6">
+                    <Card className="border-border/50 shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle>Account Overview</CardTitle>
+                            <CardDescription>Your account status and role-specific information.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-6 sm:grid-cols-2">
+                            <div className="flex items-start space-x-4 p-4 rounded-lg bg-muted/40 border">
+                                <div className="p-2 bg-primary/10 rounded-full text-primary">
+                                    <Shield className="w-5 h-5" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="font-medium text-sm">Security Level</p>
+                                    <p className="text-xs text-muted-foreground">Standard encryption and protection enabled.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start space-x-4 p-4 rounded-lg bg-muted/40 border">
+                                <div className="p-2 bg-primary/10 rounded-full text-primary">
+                                    <GraduationCap className="w-5 h-5" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="font-medium text-sm">Academic Standing</p>
+                                    <p className="text-xs text-muted-foreground">{isStudent ? 'Active Student' : 'Faculty Member'}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 shadow-sm">
+                        <CardHeader>
+                            <CardTitle>Capabilities & Permissions</CardTitle>
+                            <CardDescription>
+                                Features accessible to your <strong>{user.role}</strong> account.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
                                 {isStudent ? (
                                     <>
-                                        <div className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
-                                            <div className="p-2.5 rounded-full bg-emerald-500/10 text-emerald-500">
-                                                <CheckCircle2 className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-foreground">Attend Oral Examinations</p>
-                                                <p className="text-xs text-muted-foreground mt-0.5">Join live sessions with autonomous AI examiners.</p>
-                                            </div>
-                                        </div>
-                                        <div className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
-                                            <div className="p-2.5 rounded-full bg-blue-500/10 text-blue-500">
-                                                <CheckCircle2 className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-foreground">Access Academic Records</p>
-                                                <p className="text-xs text-muted-foreground mt-0.5">View your exam history, transcripts, and detailed analytics.</p>
-                                            </div>
-                                        </div>
-                                        <div className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
-                                            <div className="p-2.5 rounded-full bg-purple-500/10 text-purple-500">
-                                                <CheckCircle2 className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-foreground">Secure & Proctored Environment</p>
-                                                <p className="text-xs text-muted-foreground mt-0.5">Sessions are monitored for quality assurance and integrity.</p>
-                                            </div>
-                                        </div>
+                                        <CapabilityRow
+                                            icon={CheckCircle2}
+                                            title="Oral Examinations"
+                                            description="Join live sessions with autonomous AI examiners"
+                                        />
+                                        <Separator />
+                                        <CapabilityRow
+                                            icon={CheckCircle2}
+                                            title="Academic Records"
+                                            description="View your exam history and transcripts"
+                                        />
+                                        <Separator />
+                                        <CapabilityRow
+                                            icon={CheckCircle2}
+                                            title="Study Materials"
+                                            description="Access course content and preparation guides"
+                                        />
                                     </>
                                 ) : (
                                     <>
-                                        <div className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
-                                            <div className="p-2 rounded-full bg-primary/10 text-primary">
-                                                <CheckCircle2 className="w-4 h-4" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-foreground">System Access</p>
-                                                <p className="text-xs text-muted-foreground mt-0.5">Authorized capability set for {user.role}.</p>
-                                            </div>
-                                        </div>
+                                        <CapabilityRow
+                                            icon={Shield}
+                                            title="Administrative Dashboard"
+                                            description="Full access to platform management tools"
+                                        />
+                                        <Separator />
+                                        <CapabilityRow
+                                            icon={User}
+                                            title="User Management"
+                                            description="Create, edit, and manage user accounts"
+                                        />
+                                        <Separator />
+                                        <CapabilityRow
+                                            icon={Settings}
+                                            title="System Configuration"
+                                            description="Modify global platform settings and parameters"
+                                        />
                                     </>
                                 )}
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Sidebar / Quick Actions */}
-                    <div className="lg:col-span-4 space-y-6">
-                        <Card className="p-6">
-                            <h3 className="font-semibold text-foreground mb-6 flex items-center gap-2">
-                                <Settings className="w-4 h-4 text-muted-foreground" />
-                                Management
-                            </h3>
-
-                            <div className="space-y-3">
-                                <Link href="/settings" className="block">
-                                    <Button variant="outline" className="w-full justify-start h-auto py-3 px-4 border-border bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground group transition-all">
-                                        <div className="flex flex-col items-start gap-1">
-                                            <span className="text-sm font-medium text-foreground">Account Settings</span>
-                                            <span className="text-[10px] text-muted-foreground/80 font-normal">Update password and security</span>
-                                        </div>
-                                    </Button>
-                                </Link>
-
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full justify-start h-auto py-3 px-4 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 text-muted-foreground hover:text-destructive group mt-4 transition-all"
-                                        >
-                                            <div className="flex flex-col items-start gap-1">
-                                                <span className="text-sm font-medium flex items-center gap-2">
-                                                    <LogOut className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
-                                                    Sign Out
-                                                </span>
-                                            </div>
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-card border-border text-foreground">
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Sign Out</AlertDialogTitle>
-                                            <AlertDialogDescription className="text-muted-foreground">
-                                                Are you sure you want to sign out of your account?
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel className="border-border hover:bg-muted text-foreground">Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={logout} className="bg-foreground text-background hover:bg-foreground/90">Sign Out</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </div>
-                        </Card>
-
-                        <div className="p-6 rounded-2xl border border-border bg-card/30 backdrop-blur-sm">
-                            <h4 className="font-medium text-foreground mb-2 text-sm">Need Help?</h4>
-                            <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                                For security reasons, sensitive details must be updated by an administrator.
-                            </p>
-                            <a href={`mailto:${SUPPORT_MAIL}`} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
-                                <Mail className="w-3 h-3" />
-                                Contact Support
-                            </a>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
-        </main>
+        </div >
+    );
+}
+
+function CapabilityRow({ icon: Icon, title, description }: { icon: any, title: string, description: string }) {
+    return (
+        <div className="flex items-start gap-4">
+            <div className="mt-1">
+                <Icon className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div className="space-y-1">
+                <p className="text-sm font-medium leading-none">{title}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
+        </div>
     );
 }

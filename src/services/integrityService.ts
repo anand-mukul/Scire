@@ -1,3 +1,5 @@
+import { Logger } from '@/lib/logger';
+
 class IntegrityService {
     private static instance: IntegrityService;
     private tabSwitchCount: number = 0;
@@ -86,7 +88,7 @@ class IntegrityService {
 
     private handleTabSwitch() {
         this.tabSwitchCount++;
-        console.log("Tab switch detected:", this.tabSwitchCount);
+        Logger.log("Tab switch detected:", this.tabSwitchCount);
     }
 
     /**

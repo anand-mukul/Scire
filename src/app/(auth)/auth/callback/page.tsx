@@ -16,21 +16,9 @@ function CallbackContent() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [errorMessage, setErrorMessage] = useState('');
-    const [debugInfo, setDebugInfo] = useState<any>({});
 
     useEffect(() => {
         const handleCallback = async () => {
-            // Capture debug info immediately
-            const info = {
-                href: window.location.href,
-                host: window.location.host,
-                hostname: window.location.hostname,
-                protocol: window.location.protocol,
-                referrer: document.referrer,
-                userAgent: navigator.userAgent
-            };
-            setDebugInfo(info);
-            console.log('SSO Callback Debug:', info);
 
             const success = searchParams.get('success');
             const error = searchParams.get('error');
@@ -117,12 +105,6 @@ function CallbackContent() {
                         </div>
                     </>
                 )}
-            </div>
-
-            {/* DEBUG SECTION */}
-            <div className="mt-8 p-4 bg-black/50 rounded text-xs text-left font-mono text-muted-foreground overflow-auto max-w-lg">
-                <p className="font-bold text-white mb-2">Debug Info:</p>
-                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
             </div>
         </motion.div>
     );

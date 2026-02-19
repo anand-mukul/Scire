@@ -132,9 +132,9 @@ function LoginForm() {
             className="w-full max-w-md"
         >
             {/* Card Container */}
-            <div className="relative overflow-hidden rounded-3xl border border-primary/10 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:shadow-primary/5">
+            <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:shadow-primary/10">
                 {/* Glow Effect */}
-                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
+                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
 
                 <div className="p-8 md:p-10">
                     {/* Header */}

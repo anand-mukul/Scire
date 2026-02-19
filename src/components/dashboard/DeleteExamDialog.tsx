@@ -62,38 +62,44 @@ export default function DeleteExamDialog({
 
     return (
         <AlertDialog open={open} onOpenChange={handleClose}>
-            <AlertDialogContent className="bg-card border-border text-card-foreground max-w-md">
+            <AlertDialogContent className="sm:max-w-md bg-card/95 dark:bg-card/90 border-destructive/20 shadow-2xl backdrop-blur-xl">
                 <AlertDialogHeader>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-red-500/10 rounded-full">
-                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                        <div className="p-2.5 rounded-full bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30">
+                            <AlertTriangle className="h-5 w-5 text-destructive" />
                         </div>
-                        <AlertDialogTitle className="text-lg">Delete Exam</AlertDialogTitle>
+                        <div className="space-y-0.5">
+                            <AlertDialogTitle className="text-lg font-semibold tracking-tight">Delete Exam</AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm text-muted-foreground/90 leading-relaxed">
+                                This action is <span className="font-semibold text-destructive">permanent and irreversible</span>.
+                            </AlertDialogDescription>
+                        </div>
                     </div>
-                    <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
-                        This action is <span className="text-red-400 font-semibold">permanent and irreversible</span>.
-                        All associated data including rubrics, sessions, and results will be deleted.
-                    </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div className="space-y-3 py-4 border-t border-b border-border">
-                    <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
-                        Type <span className="font-mono font-bold text-foreground bg-muted px-1.5 py-0.5 rounded text-xs">{examTitle}</span> to confirm
-                    </Label>
-                    <Input
-                        id="confirm-delete"
-                        value={confirmText}
-                        onChange={(e) => setConfirmText(e.target.value)}
-                        placeholder="Type exam title..."
-                        className="bg-background/50 border-border font-mono text-sm"
-                        autoComplete="off"
-                        disabled={deleteMutation.isPending}
-                    />
+                <div className="py-2 space-y-4">
+                    <p className="text-sm text-muted-foreground/80">
+                        All associated data including rubrics, sessions, and results will be deleted.
+                    </p>
+                    <div className="space-y-2.5 p-4 rounded-lg bg-muted/20 dark:bg-muted/10 border border-border/40">
+                        <Label htmlFor="confirm-delete" className="text-sm text-foreground/80">
+                            Type <span className="font-mono font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded text-xs select-all">{examTitle}</span> to confirm
+                        </Label>
+                        <Input
+                            id="confirm-delete"
+                            value={confirmText}
+                            onChange={(e) => setConfirmText(e.target.value)}
+                            placeholder="Type exam title..."
+                            className="bg-background dark:bg-card border-destructive/30 focus:border-destructive focus-visible:ring-destructive/20 font-medium shadow-sm placeholder:text-muted-foreground/50"
+                            autoComplete="off"
+                            disabled={deleteMutation.isPending}
+                        />
+                    </div>
                 </div>
 
-                <AlertDialogFooter>
+                <AlertDialogFooter className="gap-3">
                     <AlertDialogCancel
-                        className="border-border hover:bg-muted"
+                        className="border-border/50 hover:bg-muted/50 dark:hover:bg-muted/30 cursor-pointer"
                         disabled={deleteMutation.isPending}
                     >
                         Cancel
@@ -102,7 +108,7 @@ export default function DeleteExamDialog({
                         variant="destructive"
                         onClick={() => deleteMutation.mutate()}
                         disabled={!isConfirmed || deleteMutation.isPending}
-                        className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                        className="gap-2 shadow-sm hover:shadow-md transition-all"
                     >
                         {deleteMutation.isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

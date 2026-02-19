@@ -5,6 +5,7 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbParticles } from './OrbParticles';
 import { DeviceTier } from '@/lib/visuals/capability';
+import { Logger } from '@/lib/logger';
 
 interface OrbCanvasProps {
     tier: DeviceTier;
@@ -66,12 +67,12 @@ export const OrbCanvas: React.FC<OrbCanvasProps> = ({
     useEffect(() => {
         const handleContextLost = (event: Event) => {
             event.preventDefault();
-            console.warn("OrbCanvas: WebGL Context Lost");
+            Logger.warn("OrbCanvas: WebGL Context Lost");
             // React Three Fiber usually handles restore, but we log and prevent default to allow restore
         };
 
         const handleContextRestored = () => {
-            console.log("OrbCanvas: WebGL Context Restored");
+            Logger.log("OrbCanvas: WebGL Context Restored");
         };
 
         const canvas = containerRef.current?.querySelector('canvas');

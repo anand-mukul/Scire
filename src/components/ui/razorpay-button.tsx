@@ -50,7 +50,7 @@ export default function RazorpayButton({
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                 amount: order.amount, // Server returns correct amount
                 currency: order.currency,
-                name: "Scira Platform",
+                name: "Scire Platform",
                 description: `Subscription Upgrade (${planId.toUpperCase()})`,
                 order_id: order.id,
                 handler: async function (response: any) {

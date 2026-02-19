@@ -182,7 +182,7 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
 
                 {/* Statistics Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="p-6 flex items-center gap-6 group hover:border-border transition-colors">
+                    <Card className="p-6 flex items-center gap-6 group hover:border-border transition-colors card-hover">
                         <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
                             <Clock className="w-6 h-6" />
                         </div>
@@ -192,7 +192,7 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                         </div>
                     </Card>
 
-                    <Card className="p-6 flex items-center gap-6 group hover:border-border transition-colors">
+                    <Card className="p-6 flex items-center gap-6 group hover:border-border transition-colors card-hover">
                         <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                             <CheckCircle className="w-6 h-6" />
                         </div>
@@ -276,7 +276,7 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                 </Card>
 
                 {/* Share Credential */}
-                <Card className="p-6">
+                <Card variant="glass" className="p-6">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="space-y-2 text-center md:text-left">
                             <h3 className="text-xl font-bold text-foreground">Share Your Success</h3>
@@ -315,13 +315,13 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <Button
                         onClick={handleDownloadReport}
-                        className="flex-1 h-14 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+                        className="flex-1 h-14 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] button-press"
                     >
                         <Download className="mr-2 h-5 w-5" />
                         Download Official Report
                     </Button>
                     <Link href="/student" className="flex-1">
-                        <Button variant="outline" className="w-full h-14 text-base border-border text-foreground hover:bg-muted transition-all hover:scale-[1.02]">
+                        <Button variant="outline" className="w-full h-14 text-base border-border text-foreground hover:bg-muted transition-all hover:scale-[1.02] button-press">
                             Return to Dashboard
                         </Button>
                     </Link>

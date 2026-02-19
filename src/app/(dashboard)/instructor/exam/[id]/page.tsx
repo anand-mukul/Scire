@@ -22,6 +22,11 @@ import DeleteExamDialog from '@/components/dashboard/DeleteExamDialog';
 import ShareExamDialog from '@/components/dashboard/ShareExamDialog';
 import { Badge } from '@/components/ui/badge';
 
+import { PageHeader } from '@/components/dashboard/page-header';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+
+
 export default function ManageExamPage() {
     const params = useParams();
     const router = useRouter();
@@ -121,62 +126,61 @@ export default function ManageExamPage() {
         }
     };
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading exam details...</div>;
-    if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">Error loading exam.</div>;
-    if (!exam) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Exam not found.</div>;
+    if (isLoading) return <div className="flex items-center justify-center py-32 text-muted-foreground">Loading exam details...</div>;
+    if (error) return <div className="flex items-center justify-center py-32 text-destructive">Error loading exam.</div>;
+    if (!exam) return <div className="flex items-center justify-center py-32 text-muted-foreground">Exam not found.</div>;
 
     const isEditable = exam.status === ExamStatus.DRAFT;
     const kbStatus = exam.kb_status as KBStatus | null;
 
     return (
-        <main className="min-h-screen w-full relative overflow-hidden bg-background">
-            <div className="container mx-auto p-6 md:p-8 space-y-8 relative z-10">
+        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
+            <div className="flex flex-col gap-4">
 
-                {/* Navigation & Header */}
-                <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-                    <Button
-                        variant="ghost"
-                        className="w-fit pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        onClick={() => router.push('/instructor')}
-                        aria-label="Go back to instructor console"
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
-                        Back to Instructor Console
-                    </Button>
 
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-mono tracking-wider">
-                                    {exam.exam_code}
-                                </Badge>
-                                <Badge variant={exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE ? 'default' : 'secondary'} className="capitalize">
-                                    {exam.status}
-                                </Badge>
-                            </div>
-                            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-                                {exam.title}
-                            </h1>
-                            <div className="flex items-center gap-6 text-muted-foreground text-sm font-medium pt-1">
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4" />
-                                    <span>{exam.settings?.duration_minutes || 30} mins</span>
+                <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-4">
+                            <h1 className="text-2xl font-bold tracking-tight">{exam.title}</h1>
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm">
+                                <div className="flex items-center gap-3">
+                                    <Badge variant="outline" className="bg-background/50 backdrop-blur-sm border-border text-foreground font-mono tracking-wider shadow-sm px-3 py-1">
+                                        {exam.exam_code}
+                                    </Badge>
+                                    <Badge
+                                        variant={exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE ? 'default' : 'secondary'}
+                                        className={cn(
+                                            "capitalize px-3 py-1 shadow-sm",
+                                            (exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE) && "bg-emerald-600 hover:bg-emerald-700"
+                                        )}
+                                    >
+                                        {exam.status}
+                                    </Badge>
+                                    <div className="h-4 w-[1px] bg-border mx-2" />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4" />
-                                    <span>{exam.settings?.strict_mode ? 'Strict Mode On' : 'Standard Mode'}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <ListChecks className="w-4 h-4" />
-                                    <span>{exam.settings?.number_of_questions || 5} Questions</span>
+                                <div className="flex items-center gap-6 text-muted-foreground font-medium">
+                                    <div className="flex items-center gap-2" title="Duration">
+                                        <Clock className="w-4 h-4 text-primary/70" />
+                                        <span>{exam.settings?.duration_minutes || 30} mins</span>
+                                    </div>
+                                    <div className="flex items-center gap-2" title="Proctoring Mode">
+                                        <ShieldCheck className={cn("w-4 h-4", exam.settings?.strict_mode ? "text-primary/70" : "text-muted-foreground")} />
+                                        <span>{exam.settings?.strict_mode ? 'Strict Mode On' : 'Standard Mode'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2" title="Question Count">
+                                        <ListChecks className="w-4 h-4 text-primary/70" />
+                                        <span>{exam.settings?.number_of_questions || 5} Questions</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        {/* Share button — only shown for published/active exams */}
+
                         {(exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE) && (
                             <Button
                                 variant="outline"
-                                className="gap-2 border-primary/20 hover:bg-primary/10 hover:border-primary/30 text-primary"
+                                size="lg"
+                                className="gap-2 border-primary/20 bg-primary/5 hover:bg-primary/10 hover:border-primary/30 text-primary shadow-sm active:scale-95 transition-all"
                                 onClick={() => setShowShareDialog(true)}
                             >
                                 <Share2 className="h-4 w-4" />
@@ -185,16 +189,28 @@ export default function ManageExamPage() {
                         )}
                     </div>
                 </div>
+                <Separator className="mt-2" />
+            </div>
 
-                <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
-                    <TabsList className="bg-secondary/20 p-1 rounded-full border border-border h-auto inline-flex">
-                        <TabsTrigger value="settings" className="rounded-full px-6 py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all gap-2">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
+                <div className="flex items-center justify-between">
+                    <TabsList className="bg-muted/50 p-1 rounded-lg border border-border/50 h-auto inline-flex">
+                        <TabsTrigger
+                            value="settings"
+                            className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer gap-2"
+                        >
                             <Settings className="h-4 w-4" /> Settings
                         </TabsTrigger>
-                        <TabsTrigger value="rubrics" className="rounded-full px-6 py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all gap-2">
+                        <TabsTrigger
+                            value="rubrics"
+                            className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer gap-2"
+                        >
                             <ListChecks className="h-4 w-4" /> Grading Rubrics
                         </TabsTrigger>
-                        <TabsTrigger value="knowledge" className="rounded-full px-6 py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all gap-2">
+                        <TabsTrigger
+                            value="knowledge"
+                            className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer gap-2"
+                        >
                             <BookOpen className="h-4 w-4" /> Knowledge Base
                             {kbStatus === KBStatus.PROCESSING && (
                                 <span className="relative flex h-2 w-2 ml-1" aria-hidden="true">
@@ -209,142 +225,152 @@ export default function ManageExamPage() {
                             )}
                         </TabsTrigger>
                     </TabsList>
+                </div>
 
-                    <TabsContent value="settings" className="mt-0">
-                        <div className="animate-in fade-in duration-200">
-                            <ExamSettings exam={exam} />
-                        </div>
-                    </TabsContent>
+                <TabsContent value="settings" className="mt-0">
+                    <div className="animate-in fade-in duration-200">
+                        <ExamSettings exam={exam} />
+                    </div>
+                </TabsContent>
 
-                    <TabsContent value="rubrics" className="mt-0">
-                        <div className="animate-in fade-in duration-200">
-                            <RubricManager examId={examId} isEditable={isEditable} />
-                        </div>
-                    </TabsContent>
+                <TabsContent value="rubrics" className="mt-0">
+                    <div className="animate-in fade-in duration-200">
+                        <RubricManager examId={examId} isEditable={isEditable} />
+                    </div>
+                </TabsContent>
 
-                    <TabsContent value="knowledge" className="mt-0">
-                        <div className="animate-in fade-in duration-200">
-                            <Card className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <h2 className="text-2xl font-semibold text-foreground">Knowledge Base</h2>
+                <TabsContent value="knowledge" className="mt-0">
+                    <div className="animate-in fade-in duration-300">
+                        <Card className="border-border/60 bg-card/40 backdrop-blur-sm shadow-sm">
+                            <CardContent className="p-6 md:p-8 space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <h2 className="text-2xl font-semibold tracking-tight">Knowledge Base</h2>
                                         <p className="text-muted-foreground">Manage the source material used by AI to generate questions.</p>
                                     </div>
-                                    <div className="p-3 bg-primary/10 rounded-xl">
-                                        <BookOpen className="w-6 h-6 text-primary" />
+                                    <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <BookOpen className="h-5 w-5" />
                                     </div>
                                 </div>
 
-                                <CardContent className="p-0 space-y-6">
-                                    {/* Hidden file input for uploads */}
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        className="hidden"
-                                        accept=".pdf"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            if (exam.syllabus_url) {
-                                                handleReplace(file);
-                                            } else {
-                                                uploadMutation.mutate(file);
-                                            }
-                                            e.target.value = '';
-                                        }}
-                                    />
+                                <Separator />
 
-                                    {/* STATE 1: Empty — No syllabus uploaded */}
-                                    {!exam.syllabus_url && !kbStatus && (
-                                        <div
-                                            className="text-center py-20 px-6 border-2 border-dashed rounded-3xl bg-secondary/5 border-border hover:bg-secondary/10 hover:border-primary/30 transition-all duration-300 group cursor-pointer relative overflow-hidden"
-                                            onClick={() => isEditable && fileInputRef.current?.click()}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-20 text-foreground group-hover:text-primary group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
-                                            <h3 className="text-xl font-bold mb-2 text-foreground">No Knowledge Base Uploaded</h3>
-                                            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-                                                Upload a PDF syllabus to allow the AI to generate context-aware questions for this exam.
-                                            </p>
+                                {/* Hidden file input for uploads */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    className="hidden"
+                                    accept=".pdf"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        if (exam.syllabus_url) {
+                                            handleReplace(file);
+                                        } else {
+                                            uploadMutation.mutate(file);
+                                        }
+                                        e.target.value = '';
+                                    }}
+                                />
+
+                                {/* STATE 1: Empty — No syllabus uploaded */}
+                                {!exam.syllabus_url && !kbStatus && (
+                                    <div
+                                        className="relative group cursor-pointer border-2 border-dashed border-border hover:border-primary/50 rounded-xl p-12 text-center transition-all duration-300 bg-muted/5 hover:bg-muted/30 overflow-hidden"
+                                        onClick={() => isEditable && fileInputRef.current?.click()}
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                        <div className="relative z-10 flex flex-col items-center gap-4">
+                                            <div className="h-16 w-16 rounded-full bg-background shadow-sm border border-border flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                <Upload className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <h3 className="text-lg font-semibold text-foreground">Upload Syllabus PDF</h3>
+                                                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                                                    Drag & drop your PDF here or click to browse. The AI will analyze this document to generate context-aware questions.
+                                                </p>
+                                            </div>
 
                                             {isEditable && (
-                                                <div className="flex justify-center relative z-10">
-                                                    <Button
-                                                        variant="default"
-                                                        size="lg"
-                                                        className="rounded-full px-8 shadow-lg shadow-primary/20 hover:shadow-primary/40"
-                                                        disabled={uploadMutation.isPending}
-                                                    >
-                                                        {uploadMutation.isPending ? (
-                                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
-                                                        ) : (
-                                                            <><Upload className="w-4 h-4 mr-2" /> Upload Syllabus PDF</>
-                                                        )}
-                                                    </Button>
-                                                </div>
+                                                <Button
+                                                    size="lg"
+                                                    className="mt-4 rounded-full px-8 gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all font-semibold"
+                                                    disabled={uploadMutation.isPending}
+                                                >
+                                                    {uploadMutation.isPending ? (
+                                                        <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+                                                    ) : (
+                                                        <>Choose File</>
+                                                    )}
+                                                </Button>
                                             )}
                                         </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                    {/* STATE 2: Processing — AI is ingesting the syllabus */}
-                                    {kbStatus === KBStatus.PROCESSING && (
-                                        <div className="space-y-6">
-                                            <div className="flex items-center justify-between p-5 border border-amber-500/20 rounded-2xl bg-amber-500/5 backdrop-blur-sm">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-3 bg-amber-500/20 rounded-full ring-1 ring-amber-500/30">
-                                                        <Loader2 className="h-6 w-6 text-amber-500 animate-spin" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-foreground text-lg">Processing Syllabus</p>
-                                                        <p className="text-sm text-amber-500/80 font-medium">
-                                                            AI is analyzing and indexing your document. This may take a moment...
-                                                        </p>
-                                                    </div>
+                                {/* STATE 2: Processing — AI is ingesting the syllabus */}
+                                {kbStatus === KBStatus.PROCESSING && (
+                                    <div className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-8">
+                                        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent,rgba(245,158,11,0.05),transparent)] animate-[shimmer_2s_italic_infinite]" />
+                                        <div className="relative flex items-center gap-6">
+                                            <div className="relative">
+                                                <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
+                                                <div className="relative h-14 w-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                                    <Loader2 className="h-7 w-7 text-amber-500 animate-spin" />
                                                 </div>
-                                                <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600">
-                                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" /> In Progress
-                                                </Badge>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h3 className="text-lg font-semibold text-amber-600 dark:text-amber-500 flex items-center gap-2">
+                                                    Processing Document
+                                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 animate-pulse">
+                                                        Indexing
+                                                    </Badge>
+                                                </h3>
+                                                <p className="text-amber-600/80 dark:text-amber-500/80">
+                                                    AI is currently analyzing the structure and content of your syllabus. This usually takes less than a minute.
+                                                </p>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                    {/* STATE 3: Ready — AI has processed the syllabus */}
-                                    {kbStatus === KBStatus.READY && exam.syllabus_url && (
-                                        <div className="space-y-6">
-                                            <div className="flex items-center justify-between p-5 border border-emerald-500/20 rounded-2xl bg-emerald-500/5 backdrop-blur-sm">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-3 bg-emerald-500/20 rounded-full ring-1 ring-emerald-500/30">
-                                                        <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-foreground text-lg">Syllabus Active</p>
-                                                        <p className="text-sm text-emerald-500/80 font-medium">
-                                                            AI has processed this document successfully.
-                                                        </p>
-                                                    </div>
+                                {/* STATE 3: Ready — AI has processed the syllabus */}
+                                {kbStatus === KBStatus.READY && exam.syllabus_url && (
+                                    <div className="space-y-8">
+                                        <div className="relative rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-12 w-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                                    <CheckCircle2 className="h-6 w-6 text-emerald-500" />
                                                 </div>
-                                                <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-600">
-                                                    <CheckCircle2 className="h-3 w-3 mr-1" /> Ready
-                                                </Badge>
+                                                <div>
+                                                    <h3 className="font-semibold text-emerald-700 dark:text-emerald-500 flex items-center gap-2">
+                                                        Knowledge Base Active
+                                                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                                            Ready
+                                                        </Badge>
+                                                    </h3>
+                                                    <p className="text-sm text-emerald-600/80 dark:text-emerald-500/80">
+                                                        Your syllabus has been successfully indexed and is ready for question generation.
+                                                    </p>
+                                                </div>
                                             </div>
 
-                                            <KnowledgeBaseViewer examId={examId} />
-
                                             {isEditable && (
-                                                <div className="flex justify-between items-center pt-4 border-t border-border/50">
+                                                <div className="flex items-center gap-3">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        className="text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                                                        className="gap-2 border-dashed"
                                                         onClick={() => fileInputRef.current?.click()}
                                                     >
-                                                        <Upload className="w-4 h-4 mr-2" />
-                                                        Replace Syllabus
+                                                        <RotateCcw className="w-4 h-4" />
+                                                        Replace PDF
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                         disabled={deleteMutation.isPending}
                                                         onClick={() => {
                                                             if (confirm('Are you sure you want to delete the syllabus? This will remove all generated questions context.')) {
@@ -352,123 +378,102 @@ export default function ManageExamPage() {
                                                             }
                                                         }}
                                                     >
-                                                        <Trash2 className="w-4 h-4 mr-2" />
-                                                        {deleteMutation.isPending ? 'Deleting...' : 'Delete Syllabus'}
+                                                        <Trash2 className="w-4 h-4" />
                                                     </Button>
                                                 </div>
                                             )}
                                         </div>
-                                    )}
 
-                                    {/* STATE 4: Failed — RAG ingestion failed */}
-                                    {kbStatus === KBStatus.FAILED && (
-                                        <div className="space-y-6">
-                                            <div className="flex items-center justify-between p-5 border border-red-500/20 rounded-2xl bg-red-500/5 backdrop-blur-sm">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-3 bg-red-500/20 rounded-full ring-1 ring-red-500/30">
-                                                        <XCircle className="h-6 w-6 text-red-500" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-foreground text-lg">Processing Failed</p>
-                                                        <p className="text-sm text-red-500/80 font-medium">
-                                                            AI could not process the syllabus. You can retry or upload a different file.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <Badge variant="outline" className="bg-red-500/10 border-red-500/30 text-red-600">
-                                                    <XCircle className="h-3 w-3 mr-1" /> Failed
-                                                </Badge>
+                                        <KnowledgeBaseViewer examId={examId} />
+                                    </div>
+                                )}
+
+                                {/* STATE 4: Failed — RAG ingestion failed */}
+                                {kbStatus === KBStatus.FAILED && (
+                                    <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-8 text-center space-y-4">
+                                        <div className="mx-auto h-14 w-14 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+                                            <XCircle className="h-7 w-7 text-destructive" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h3 className="text-lg font-semibold text-destructive">Ingestion Failed</h3>
+                                            <p className="text-muted-foreground max-w-md mx-auto">
+                                                We couldn't process this PDF. It might be corrupted or password protected. Please try uploading a different file.
+                                            </p>
+                                        </div>
+
+                                        {isEditable && (
+                                            <div className="flex justify-center gap-4 pt-2">
+                                                <Button
+                                                    variant="default"
+                                                    className="gap-2"
+                                                    disabled={retryMutation.isPending}
+                                                    onClick={() => retryMutation.mutate()}
+                                                >
+                                                    {retryMutation.isPending ? (
+                                                        <><Loader2 className="h-4 w-4 animate-spin" /> Retrying...</>
+                                                    ) : (
+                                                        <><RotateCcw className="h-4 w-4" /> Retry Action</>
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    className="gap-2"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                >
+                                                    <Upload className="h-4 w-4" /> New Upload
+                                                </Button>
                                             </div>
-
-                                            {isEditable && (
-                                                <div className="flex items-center gap-3 pt-2">
-                                                    <Button
-                                                        variant="default"
-                                                        size="sm"
-                                                        className="gap-2"
-                                                        disabled={retryMutation.isPending}
-                                                        onClick={() => retryMutation.mutate()}
-                                                    >
-                                                        {retryMutation.isPending ? (
-                                                            <><Loader2 className="h-4 w-4 animate-spin" /> Retrying...</>
-                                                        ) : (
-                                                            <><RotateCcw className="h-4 w-4" /> Retry Ingestion</>
-                                                        )}
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="gap-2"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                    >
-                                                        <Upload className="h-4 w-4" /> Upload Different PDF
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors gap-2"
-                                                        disabled={deleteMutation.isPending}
-                                                        onClick={() => {
-                                                            if (confirm('Delete the syllabus?')) {
-                                                                deleteMutation.mutate();
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                        {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-
-                {/* Danger Zone */}
-                {isEditable && (
-                    <div className="pt-12 pb-6">
-                        <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 backdrop-blur-sm">
-                            <div className="space-y-1">
-                                <h3 className="text-lg font-bold text-red-500 flex items-center gap-2">
-                                    <AlertTriangle className="w-5 h-5" />
-                                    Danger Zone
-                                </h3>
-                                <p className="text-red-500/60 text-sm max-w-md">
-                                    Deleting this exam will permanently remove all associated data, including candidate results and generated questions. This action cannot be undone.
-                                </p>
-                            </div>
-                            <Button
-                                variant="destructive"
-                                className="bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 transition-all whitespace-nowrap"
-                                onClick={() => setShowDeleteDialog(true)}
-                            >
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete Exam
-                            </Button>
-                        </div>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
-                )}
+                </TabsContent>
+            </Tabs>
 
-                {/* Dialogs */}
-                <DeleteExamDialog
-                    open={showDeleteDialog}
-                    onOpenChange={setShowDeleteDialog}
-                    examId={examId}
-                    examTitle={exam.title}
-                    onDeleted={() => router.push('/instructor')}
-                />
-                <ShareExamDialog
-                    open={showShareDialog}
-                    onOpenChange={setShowShareDialog}
-                    examTitle={exam.title}
-                    examCode={exam.exam_code || ''}
-                    startTime={exam.start_time}
-                    endTime={exam.end_time}
-                    durationMinutes={exam.settings?.duration_minutes}
-                />
-            </div>
+            {/* Danger Zone */}
+            {isEditable && (
+                <div className="pt-8 pb-6">
+                    <div className="relative overflow-hidden rounded-xl border border-destructive/20 bg-destructive/5 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 backdrop-blur-sm transition-all hover:bg-destructive/10">
+                        <div className="absolute inset-0 bg-gradient-to-r from-destructive/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="space-y-1 relative z-10">
+                            <h3 className="text-lg font-semibold text-destructive flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5" />
+                                Danger Zone
+                            </h3>
+                            <p className="text-destructive/70 text-sm max-w-md">
+                                Deleting this exam will permanently remove all associated data, including candidate results and generated questions. This action cannot be undone.
+                            </p>
+                        </div>
+                        <Button
+                            variant="destructive"
+                            className="shadow-lg transition-all whitespace-nowrap relative z-10"
+                            onClick={() => setShowDeleteDialog(true)}
+                        >
+                            <Trash2 className="h-4 w-4" /> Delete Exam
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Dialogs */}
+            <DeleteExamDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                examId={examId}
+                examTitle={exam.title}
+                onDeleted={() => router.push('/instructor')}
+            />
+            <ShareExamDialog
+                open={showShareDialog}
+                onOpenChange={setShowShareDialog}
+                examTitle={exam.title}
+                examCode={exam.exam_code || ''}
+                startTime={exam.start_time}
+                endTime={exam.end_time}
+                durationMinutes={exam.settings?.duration_minutes}
+            />
         </main>
     );
 }

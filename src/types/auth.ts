@@ -59,6 +59,21 @@ export interface TenantSettings {
         retain_transcripts?: boolean;
         data_residency?: string;
     };
+    additional_domains?: string[]; // Allowed email domains for auto-join
+    allow_guests?: boolean;        // Allow public access to exams
+}
+
+/**
+ * User object with multi-tenant context.
+ * Matches backend UserResponse + tenant fields from JWT claims.
+ */
+/**
+ * Subscription tiers (matches backend SubscriptionPlan enum).
+ */
+export enum SubscriptionTier {
+    STARTER = 'STARTER',
+    PRO = 'PRO',
+    ENTERPRISE = 'ENTERPRISE',
 }
 
 /**
@@ -79,6 +94,7 @@ export interface User {
     tenant_status?: TenantStatus;
     tenant_logo_url?: string;
     tenant_primary_color?: string;
+    subscription_tier?: SubscriptionTier | string;
     created_at: string;
     updated_at: string;
 }
@@ -120,6 +136,7 @@ export interface SSOProvider {
     id: 'google' | 'microsoft';
     name: string;
     login_url: string;
+    // ...
 }
 
 export interface SSOProvidersResponse {
@@ -141,4 +158,5 @@ export interface VerifiedUser {
     tenant_slug?: string;
     tenant_name?: string;
     tenant_status?: TenantStatus;
+    subscription_tier?: SubscriptionTier | string;
 }

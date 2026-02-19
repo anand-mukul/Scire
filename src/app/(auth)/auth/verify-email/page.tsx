@@ -70,8 +70,8 @@ function WaitingForVerification({ email }: { email: string }) {
             transition={{ duration: 0.5 }}
             className="w-full max-w-md"
         >
-            <div className="relative overflow-hidden rounded-3xl border border-primary/10 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl shadow-2xl">
-                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:shadow-primary/10">
+                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
 
                 <div className="p-8 md:p-10 text-center">
                     {/* Animated mail icon */}
@@ -188,8 +188,8 @@ function TokenVerification({ token }: { token: string }) {
             transition={{ duration: 0.5 }}
             className="w-full max-w-md"
         >
-            <div className="relative overflow-hidden rounded-3xl border border-primary/10 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl shadow-2xl">
-                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:shadow-primary/10">
+                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
 
                 <div className="p-8 md:p-10 text-center">
                     {status === 'loading' && (
@@ -270,8 +270,8 @@ function VerifyEmailContent() {
             transition={{ duration: 0.5 }}
             className="w-full max-w-md"
         >
-            <div className="relative overflow-hidden rounded-3xl border border-primary/10 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl shadow-2xl">
-                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:shadow-primary/10">
+                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
                 <div className="p-8 md:p-10 text-center">
                     <div className="mx-auto w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6">
                         <XCircle className="w-8 h-8 text-red-500" />

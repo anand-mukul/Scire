@@ -25,7 +25,7 @@ export default function TenantSuspendedPage() {
 
                 <div className="mt-8 space-y-3">
                     <Link
-                        href="mailto:support@scira.ai"
+                        href="mailto:support@scire.in"
                         className="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
                     >
                         Contact Support

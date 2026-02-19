@@ -2,6 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
 import { LoginCredentials, RegisterData, User, AuthTokens, SSOProvidersResponse } from '@/types/auth';
 import { Exam, ExamStatus, ExamSettings, VivaSession, Rubric, GradingDetail } from '@/types/backend';
+import { AdminStats, AuditLog } from '@/types/admin';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -168,6 +169,10 @@ export const api = {
             const { data } = await authClient.post<{ message: string }>('/auth/resend-verification', { email });
             return data;
         },
+        updateProfile: async (data: { full_name?: string; email?: string }) => {
+            const { data: response } = await authClient.patch<User>('/auth/me', data);
+            return response;
+        },
     },
 
     sso: {
@@ -286,6 +291,13 @@ export const api = {
         },
     },
 
+    subjects: {
+        getAll: async () => {
+            const { data } = await apiClient.get<any[]>('/subjects');
+            return data;
+        }
+    },
+
     analytics: {
         getStats: async () => {
             try {
@@ -295,11 +307,22 @@ export const api = {
                 return null;
             }
         },
+        getAdvancedStats: async (params?: { start_date?: string; end_date?: string; category?: string }) => {
+            const { data } = await apiClient.get('/analytics/advanced', { params });
+            return data;
+        },
+        exportReport: async (params?: { start_date?: string; end_date?: string; category?: string }) => {
+            const { data } = await apiClient.get('/analytics/export', {
+                params,
+                responseType: 'blob'
+            });
+            return data;
+        },
     },
 
     admin: {
-        getStats: async () => {
-            const { data } = await apiClient.get('/tenants/me/stats');
+        getStats: async (): Promise<AdminStats> => {
+            const { data } = await apiClient.get<AdminStats>('/tenants/me/stats');
             return data;
         },
         listUsers: async (params?: { skip?: number; limit?: number; role?: string; is_active?: boolean }) => {
@@ -314,8 +337,8 @@ export const api = {
             const { data } = await apiClient.patch(`/tenants/me/users/${userId}`, userData);
             return data;
         },
-        getAuditLogs: async (params?: { skip?: number; limit?: number; user_id?: string; action?: string }) => {
-            const { data } = await apiClient.get('/tenants/me/audit-logs', { params });
+        getAuditLogs: async (params?: { skip?: number; limit?: number; user_id?: string; action?: string }): Promise<AuditLog[]> => {
+            const { data } = await apiClient.get<AuditLog[]>('/tenants/me/audit-logs', { params });
             return data;
         },
     },
@@ -358,10 +381,9 @@ export const api = {
     },
 
     reviewer: {
-        getQueue: async (params?: { exam_code?: string; status?: string }) => {
-            const { data } = await apiClient.get('/sessions', {
+        getQueue: async (params?: { exam_code?: string }) => {
+            const { data } = await apiClient.get('/sessions/reviewer/queue', {
                 params: {
-                    review_status: params?.status || 'PENDING',
                     exam_code: params?.exam_code
                 }
             });
@@ -445,7 +467,7 @@ export const api = {
     },
 
     payments: {
-        createOrder: async (data: { plan_id: string; currency?: string; receipt?: string; notes?: Record<string, unknown> }) => {
+        createOrder: async (data: { plan_id: string; billing_cycle?: 'monthly' | 'yearly'; currency?: string; receipt?: string; notes?: Record<string, unknown> }) => {
             const { data: response } = await apiClient.post('/payments/order', data);
             return response;
         },
@@ -464,10 +486,30 @@ export const api = {
 
     platform: {
         listTenants: async (params?: { status?: string; skip?: number; limit?: number }) => {
+            // MOCK DATA INJECTION
+            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
+                return [
+                    { id: '1', name: 'Acme Corp', slug: 'acme', status: 'ACTIVE', subscription_tier: 'ENTERPRISE', max_students: 5000 },
+                    { id: '2', name: 'TechStart', slug: 'techstart', status: 'TRIAL', subscription_tier: 'STARTER', max_students: 50 },
+                    { id: '3', name: 'EduGlobal', slug: 'eduglobal', status: 'ACTIVE', subscription_tier: 'PRO', max_students: 1000 },
+                    { id: '4', name: 'University of Innovation', slug: 'uoi', status: 'ACTIVE', subscription_tier: 'ENTERPRISE', max_students: 10000 },
+                    { id: '5', name: 'Startup Inc', slug: 'startup', status: 'SUSPENDED', subscription_tier: 'STARTER', max_students: 100 },
+                ];
+            }
             const { data } = await apiClient.get('/tenants', { params });
             return data;
         },
-        createTenant: async (tenantData: { name: string; slug: string; domain?: string; subscription_tier?: string; max_students?: number; max_exams_per_month?: number }) => {
+        createTenant: async (tenantData: {
+            name: string;
+            slug: string;
+            domain?: string;
+            subscription_tier: string;
+            max_students?: number;
+            max_exams_per_month?: number;
+            trial_days?: number;
+            provisioning_note?: string;
+            override_limits?: boolean;
+        }) => {
             const { data } = await apiClient.post('/tenants', tenantData);
             return data;
         },
@@ -488,9 +530,111 @@ export const api = {
             const { data } = await apiClient.post(`/onboarding/admin/requests/${requestId}/approve`);
             return data;
         },
-        rejectRequest: async (requestId: string) => {
-            const { data } = await apiClient.post(`/onboarding/admin/requests/${requestId}/reject`);
+        rejectRequest: async (requestId: string, reason?: string) => {
+            const { data } = await apiClient.post(`/onboarding/admin/requests/${requestId}/reject`, { reason });
             return data;
-        }
+        },
+        // Stats & Analytics
+        getStats: async () => {
+            // MOCK DATA INJECTION
+            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
+                return {
+                    total_users: 1250,
+                    active_sessions: 42,
+                    total_exams: 156,
+                    avg_score: 78,
+                    flagged_sessions: 3,
+                    users_by_role: { INSTRUCTOR: 45, STUDENT: 1200, REVIEWER: 5 },
+                    active_exams: 12,
+                    completed_sessions: 850
+                };
+            }
+            const { data } = await apiClient.get('/admin/stats');
+            return data;
+        },
+        getAnalytics: async () => {
+            // MOCK DATA INJECTION
+            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
+                return {
+                    sessions_by_day: Array.from({ length: 30 }, (_, i) => ({
+                        date: new Date(Date.now() - (29 - i) * 86400000).toISOString(),
+                        count: Math.floor(Math.random() * 50) + 10
+                    })),
+                    exams_by_status: [
+                        { status: 'PUBLISHED', count: 45 },
+                        { status: 'DRAFT', count: 12 },
+                        { status: 'ARCHIVED', count: 8 },
+                        { status: 'ACTIVE', count: 5 }
+                    ],
+                    score_distribution: [
+                        { range: '0-20', count: 5 },
+                        { range: '21-40', count: 15 },
+                        { range: '41-60', count: 45 },
+                        { range: '61-80', count: 120 },
+                        { range: '81-100', count: 80 }
+                    ],
+                    error_reports: { total: 12, new: 2, investigating: 5, resolved: 4, ignored: 1 }
+                };
+            }
+            const { data } = await apiClient.get('/admin/analytics');
+            return data;
+        },
+        // Audit Logs
+        getAuditLogs: async (params?: { skip?: number; limit?: number; action?: string; user_id?: string; start_date?: string; end_date?: string }) => {
+            const { data } = await apiClient.get('/admin/audit-logs', { params });
+            return data;
+        },
+    },
+
+    billing: {
+        getPlans: async () => {
+            const { data } = await apiClient.get('/billing/plans');
+            return data;
+        },
+        getHistory: async (params?: { skip?: number; limit?: number }) => {
+            const { data } = await apiClient.get('/billing/history', { params });
+            return data;
+        },
+    },
+
+    notifications: {
+        list: async (params?: { skip?: number; limit?: number; unread_only?: boolean }) => {
+            const { data } = await apiClient.get('/notifications', { params });
+            return data;
+        },
+        markRead: async (notificationId: string) => {
+            const { data } = await apiClient.post(`/notifications/${notificationId}/read`);
+            return data;
+        },
+        markAllRead: async () => {
+            const { data } = await apiClient.post('/notifications/read-all');
+            return data;
+        },
+    },
+
+    errorReports: {
+        submit: async (payload: {
+            error_message: string;
+            stack_trace?: string;
+            url?: string;
+            user_description?: string;
+            steps_to_reproduce?: string;
+            urgency?: 'low' | 'medium' | 'high' | 'critical';
+            browser_info?: Record<string, string>;
+        }) => {
+            const { data } = await apiClient.post<{ success: boolean; report_id: string; message: string }>(
+                '/error-reports',
+                payload
+            );
+            return data;
+        },
+        list: async (params?: { status?: string; urgency?: string; skip?: number; limit?: number }) => {
+            const { data } = await apiClient.get('/error-reports/all', { params });
+            return data;
+        },
+        updateStatus: async (reportId: string, newStatus: string) => {
+            const { data } = await apiClient.patch(`/error-reports/${reportId}/status`, { status: newStatus });
+            return data;
+        },
     },
 };

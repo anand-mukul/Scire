@@ -1,208 +1,393 @@
 'use client';
 
-/**
- * Platform Admin Dashboard
- * 
- * Cross-tenant management for PLATFORM_ADMIN users only.
- * Displays tenant list, system metrics, and management actions.
- */
-
-import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
-import { redirect } from 'next/navigation';
-import { Building2, Users, Activity, Plus, Settings, BarChart3, LucideIcon } from 'lucide-react';
+import {
+    Users,
+    Building2,
+    AlertTriangle,
+    TrendingUp,
+    Activity,
+    DollarSign,
+    Server,
+    Globe,
+    Shield,
+    Zap,
+    CheckCircle2,
+    XCircle,
+    Clock,
+    BookOpen,
+    BarChart3,
+    Bug,
+    ArrowRight,
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/dashboard/page-header';
+import { KPICard } from '@/components/dashboard/kpi-card';
+import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { UserRole } from '@/types/auth';
-import { TenantStatus } from '@/types/backend';
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    ChartLegend,
+    ChartLegendContent,
+} from '@/components/ui/chart';
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Pie,
+    PieChart,
+    XAxis,
+    YAxis,
+} from 'recharts';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
-export default function PlatformAdminPage() {
-    const { user, isLoading: authLoading } = useAuth();
+const STATUS_COLORS: Record<string, string> = {
+    DRAFT: 'hsl(220, 14%, 60%)',
+    PUBLISHED: 'hsl(210, 100%, 56%)',
+    ACTIVE: 'hsl(142, 71%, 45%)',
+    COMPLETED: 'hsl(262, 83%, 58%)',
+    ARCHIVED: 'hsl(30, 80%, 55%)',
+};
 
-    // Fetch tenant list
-    const { data: tenants, isLoading: tenantsLoading } = useQuery({
-        queryKey: ['platform', 'tenants'],
-        queryFn: () => api.platform.listTenants({ limit: 50 }),
-        enabled: user?.role === UserRole.PLATFORM_ADMIN,
+const SCORE_COLORS = [
+    'hsl(0, 72%, 51%)',
+    'hsl(25, 95%, 53%)',
+    'hsl(45, 93%, 47%)',
+    'hsl(142, 71%, 45%)',
+    'hsl(160, 84%, 39%)',
+];
+
+export default function PlatformPage() {
+    const { data: stats, isLoading: statsLoading } = useQuery({
+        queryKey: ['platform-stats'],
+        queryFn: () => api.platform.getStats(),
     });
 
-    // Loading state
-    if (authLoading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 animate-pulse rounded-full bg-gradient-to-r from-blue-600 to-purple-600" />
-                    <p className="text-muted-foreground">Loading...</p>
-                </div>
-            </div>
-        );
-    }
+    const { data: analytics, isLoading: analyticsLoading } = useQuery({
+        queryKey: ['platform-analytics'],
+        queryFn: () => api.platform.getAnalytics(),
+    });
 
-    // Unauthorized check
-    if (!user || user.role !== UserRole.PLATFORM_ADMIN) {
-        redirect('/unauthorized');
-    }
+    const { data: tenants } = useQuery({
+        queryKey: ['platform-tenants'],
+        queryFn: () => api.platform.listTenants(),
+    });
 
-    // Stats from tenant data
-    const totalTenants = tenants?.length || 0;
-    const activeTenants = tenants?.filter((t: { status: TenantStatus }) => t.status === TenantStatus.ACTIVE).length || 0;
-    const trialTenants = tenants?.filter((t: { status: TenantStatus }) => t.status === TenantStatus.TRIAL).length || 0;
+    const safeTenants = Array.isArray(tenants) ? tenants : [];
+    const isLoading = statsLoading || analyticsLoading;
+
+    // Chart configs
+    const sessionsChartConfig = {
+        count: { label: 'Sessions', color: 'hsl(210, 100%, 56%)' },
+    };
+
+    const examStatusChartConfig = (analytics?.exams_by_status || []).reduce(
+        (acc: Record<string, { label: string; color: string }>, item: { status: string }, i: number) => {
+            acc[item.status] = {
+                label: item.status,
+                color: STATUS_COLORS[item.status] || `hsl(${i * 72}, 70%, 50%)`,
+            };
+            return acc;
+        },
+        {}
+    );
+
+    const scoreChartConfig = {
+        count: { label: 'Students', color: 'hsl(262, 83%, 58%)' },
+    };
+
+
 
     return (
-        <div className="container py-8">
-            {/* Header */}
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Platform Administration</h1>
-                    <p className="mt-1 text-muted-foreground">
-                        Manage tenants, monitor system health, and configure platform settings
-                    </p>
-                </div>
-                <Link
-                    href="/platform/tenants/new"
-                    className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-                >
-                    <Plus className="h-4 w-4" />
-                    New Tenant
-                </Link>
-            </div>
+        <div className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in w-full max-w-[1600px] mx-auto">
+            <PageHeader
+                title="Platform Overview"
+                description="Monitor your SaaS platform health and manage operations."
+                badge={{
+                    label: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+                    icon: Clock,
+                    variant: "date"
+                }}
+            />
 
-            {/* Stats Grid */}
-            <div className="mb-8 grid gap-4 md:grid-cols-4">
-                <StatCard
-                    icon={Building2}
-                    label="Total Tenants"
-                    value={totalTenants}
-                    color="blue"
-                />
-                <StatCard
-                    icon={Activity}
-                    label="Active"
-                    value={activeTenants}
-                    color="green"
-                />
-                <StatCard
+            {/* KPI Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <KPICard
+                    title="Total Users"
+                    value={isLoading ? '—' : (stats?.total_users ?? 0)}
                     icon={Users}
-                    label="Trial"
-                    value={trialTenants}
-                    color="purple"
+                    description={stats?.users_by_role
+                        ? `${stats.users_by_role.INSTRUCTOR || 0} instructors, ${stats.users_by_role.STUDENT || 0} students`
+                        : undefined
+                    }
                 />
-                <StatCard
-                    icon={BarChart3}
-                    label="This Month"
-                    value={totalTenants}
-                    color="orange"
+                <KPICard
+                    title="Active Sessions"
+                    value={isLoading ? '—' : (stats?.active_sessions ?? 0)}
+                    icon={Activity}
+                    description="Live right now"
+                />
+                <KPICard
+                    title="Total Exams"
+                    value={isLoading ? '—' : (stats?.total_exams ?? 0)}
+                    icon={BookOpen}
+                    description={stats ? `${stats.active_exams ?? 0} active` : undefined}
+                />
+                <KPICard
+                    title="Avg Score"
+                    value={isLoading ? '—' : `${stats?.avg_score ?? 0}%`}
+                    icon={TrendingUp}
+                    description={stats ? `${stats.completed_sessions ?? 0} completed` : undefined}
+                />
+                <KPICard
+                    title="Flagged"
+                    value={isLoading ? '—' : (stats?.flagged_sessions ?? 0)}
+                    icon={AlertTriangle}
+                    description="Integrity issues"
                 />
             </div>
 
-            {/* Tenant List */}
-            <div className="rounded-2xl border border-white/10 bg-card/40 p-6 shadow-xl backdrop-blur-xl">
-                <h2 className="mb-4 text-xl font-semibold">Tenants</h2>
 
-                {tenantsLoading ? (
-                    <div className="flex h-40 items-center justify-center">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    </div>
-                ) : !tenants?.length ? (
-                    <div className="flex h-40 flex-col items-center justify-center text-muted-foreground">
-                        <Building2 className="mb-2 h-8 w-8" />
-                        <p>No tenants found</p>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-white/10 text-left text-sm text-muted-foreground">
-                                    <th className="pb-3 font-medium">Tenant</th>
-                                    <th className="pb-3 font-medium">Slug</th>
-                                    <th className="pb-3 font-medium">Status</th>
-                                    <th className="pb-3 font-medium">Plan</th>
-                                    <th className="pb-3 font-medium">Created</th>
-                                    <th className="pb-3 font-medium">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {tenants.map((tenant: { id: string; name: string; slug: string; status: string; subscription_tier: string; created_at: string }) => (
-                                    <tr key={tenant.id} className="border-b border-white/5 hover:bg-white/5">
-                                        <td className="py-4 font-medium">{tenant.name}</td>
-                                        <td className="py-4 text-muted-foreground">{tenant.slug}</td>
-                                        <td className="py-4">
-                                            <StatusBadge status={tenant.status} />
-                                        </td>
-                                        <td className="py-4 capitalize text-muted-foreground">
-                                            {tenant.subscription_tier}
-                                        </td>
-                                        <td className="py-4 text-muted-foreground">
-                                            {new Date(tenant.created_at).toLocaleDateString()}
-                                        </td>
-                                        <td className="py-4">
-                                            <Link
-                                                href={`/platform/tenants/${tenant.id}`}
-                                                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+
+            {/* Charts 2x2 Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Sessions Trend */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4 text-primary" />
+                            Sessions (Last 30 Days)
+                        </CardTitle>
+                        <CardDescription>Daily exam session activity</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {analyticsLoading ? (
+                            <div className="h-[250px] flex items-center justify-center">
+                                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            </div>
+                        ) : (
+                            <ChartContainer config={sessionsChartConfig} className="h-[250px] w-full">
+                                <AreaChart data={analytics?.sessions_by_day || []} accessibilityLayer>
+                                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(v) => new Date(v).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                                        tick={{ fontSize: 11 }}
+                                    />
+                                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <defs>
+                                        <linearGradient id="sessionsFill" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="hsl(210, 100%, 56%)" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="hsl(210, 100%, 56%)" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <Area
+                                        type="monotone"
+                                        dataKey="count"
+                                        stroke="hsl(210, 100%, 56%)"
+                                        strokeWidth={2}
+                                        fill="url(#sessionsFill)"
+                                    />
+                                </AreaChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Exam Status Breakdown */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-primary" />
+                            Exam Status Breakdown
+                        </CardTitle>
+                        <CardDescription>Distribution by lifecycle stage</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {analyticsLoading ? (
+                            <div className="h-[250px] flex items-center justify-center">
+                                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            </div>
+                        ) : (
+                            <ChartContainer config={examStatusChartConfig} className="h-[250px] w-full">
+                                <PieChart accessibilityLayer>
+                                    <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
+                                    <Pie
+                                        data={(analytics?.exams_by_status || []).map((item: { status: string; count: number }) => ({
+                                            ...item,
+                                            fill: STATUS_COLORS[item.status] || 'hsl(220, 14%, 60%)',
+                                        }))}
+                                        dataKey="count"
+                                        nameKey="status"
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={55}
+                                        outerRadius={90}
+                                        paddingAngle={3}
+                                        strokeWidth={2}
+                                    >
+                                        {(analytics?.exams_by_status || []).map((item: { status: string }, i: number) => (
+                                            <Cell key={item.status} fill={STATUS_COLORS[item.status] || `hsl(${i * 72}, 70%, 50%)`} />
+                                        ))}
+                                    </Pie>
+                                    <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+                                </PieChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Score Distribution */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            Score Distribution
+                        </CardTitle>
+                        <CardDescription>How students are performing across all exams</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {analyticsLoading ? (
+                            <div className="h-[250px] flex items-center justify-center">
+                                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            </div>
+                        ) : (
+                            <ChartContainer config={scoreChartConfig} className="h-[250px] w-full">
+                                <BarChart data={analytics?.score_distribution || []} accessibilityLayer>
+                                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                                    <XAxis dataKey="range" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                                        {(analytics?.score_distribution || []).map((_: unknown, i: number) => (
+                                            <Cell key={i} fill={SCORE_COLORS[i] || 'hsl(262, 83%, 58%)'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Error Reports Summary */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <Bug className="h-4 w-4 text-primary" />
+                            Error Reports
+                        </CardTitle>
+                        <CardDescription>Current bug report status</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {analyticsLoading ? (
+                            <div className="h-[250px] flex items-center justify-center">
+                                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4 pt-2">
+                                {[
+                                    { label: 'New', key: 'new', color: 'bg-blue-500' },
+                                    { label: 'Investigating', key: 'investigating', color: 'bg-amber-500' },
+                                    { label: 'Resolved', key: 'resolved', color: 'bg-emerald-500' },
+                                    { label: 'Ignored', key: 'ignored', color: 'bg-zinc-400' },
+                                ].map((item) => {
+                                    const count = analytics?.error_reports?.[item.key] ?? 0;
+                                    const total = analytics?.error_reports?.total || 1;
+                                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                    return (
+                                        <div key={item.key} className="flex items-center gap-3">
+                                            <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                                            <span className="text-sm font-medium w-28">{item.label}</span>
+                                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full ${item.color} transition-all`}
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-sm font-mono text-muted-foreground w-8 text-right">{count}</span>
+                                        </div>
+                                    );
+                                })}
+                                <div className="flex items-center justify-between pt-3 border-t mt-2">
+                                    <span className="text-sm text-muted-foreground">Total Reports</span>
+                                    <span className="text-lg font-bold">{analytics?.error_reports?.total ?? 0}</span>
+                                </div>
+                                <Link
+                                    href="/platform/reported-errors"
+                                    className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
+                                >
+                                    View all reports <ArrowRight className="h-3 w-3" />
+                                </Link>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Tenants Table */}
+            {/* Tenants Table */}
+            <Card className="border-border/50 shadow-sm overflow-hidden bg-card/40 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-primary" />
+                        Organizations
+                    </CardTitle>
+                    <CardDescription>Active tenants on the platform</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                    {!safeTenants.length ? (
+                        <p className="text-sm text-muted-foreground text-center py-10">No tenants found.</p>
+                    ) : (
+                        <Table>
+                            <TableHeader className="bg-muted/30">
+                                <TableRow className="hover:bg-transparent border-border/50">
+                                    <TableHead className="w-[200px] pl-6">Organization</TableHead>
+                                    <TableHead>Slug</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Plan</TableHead>
+                                    <TableHead>Limits</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {safeTenants.slice(0, 10).map((t: any) => (
+                                    <TableRow key={t.id} className="hover:bg-muted/40 border-border/40 transition-colors">
+                                        <TableCell className="pl-6 font-medium">{t.name}</TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground">{t.slug}</TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={t.status === 'ACTIVE' ? 'default' : t.status === 'TRIAL' ? 'outline' : 'secondary'}
+                                                className="capitalize text-xs"
                                             >
-                                                <Settings className="h-4 w-4" />
-                                                Manage
-                                            </Link>
-                                        </td>
-                                    </tr>
+                                                {t.status?.toLowerCase()}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="capitalize text-xs">{t.subscription_tier}</TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">
+                                            {t.max_students ? `${t.max_students} students` : '—'}
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
         </div>
-    );
-}
-
-// Stat Card Component
-function StatCard({
-    icon: Icon,
-    label,
-    value,
-    color,
-}: {
-    icon: any;
-    label: string;
-    value: number;
-    color: 'blue' | 'green' | 'purple' | 'orange';
-}) {
-    const colorClasses = {
-        blue: 'bg-blue-500/10 text-blue-500',
-        green: 'bg-green-500/10 text-green-500',
-        purple: 'bg-purple-500/10 text-purple-500',
-        orange: 'bg-orange-500/10 text-orange-500',
-    };
-
-    return (
-        <div className="rounded-xl border border-white/10 bg-card/40 p-4 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-                <div className={`rounded-lg p-2 ${colorClasses[color]}`}>
-                    <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-2xl font-bold">{value}</p>
-                    <p className="text-sm text-muted-foreground">{label}</p>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Status Badge Component
-function StatusBadge({ status }: { status: string }) {
-    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-        [TenantStatus.ACTIVE]: { bg: 'bg-green-500/10', text: 'text-green-500', label: 'Active' },
-        [TenantStatus.SUSPENDED]: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Suspended' },
-        [TenantStatus.TRIAL]: { bg: 'bg-purple-500/10', text: 'text-purple-500', label: 'Trial' },
-        [TenantStatus.CHURNED]: { bg: 'bg-gray-500/10', text: 'text-gray-500', label: 'Churned' },
-    };
-
-    const config = statusConfig[status] || { bg: 'bg-secondary', text: 'text-muted-foreground', label: status };
-
-    return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}>
-            {config.label}
-        </span>
     );
 }

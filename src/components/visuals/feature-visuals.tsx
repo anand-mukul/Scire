@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
     Mic,
@@ -8,6 +9,7 @@ import {
     Fingerprint
 } from 'lucide-react';
 import { Orb } from './Orb';
+import { cn } from '@/lib/utils';
 
 const GridPattern = () => (
     <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none opacity-50" />
@@ -28,73 +30,91 @@ export const AiExaminerVisual = () => {
 };
 
 export const IntegrityVisual = () => {
+    const events = [
+        { time: '10:42:15', event: 'Tab Switch', status: 'Flagged', color: 'text-red-500 bg-red-500/10 border-red-500/20' },
+        { time: '10:45:30', event: 'Multiple Voices', status: 'Warning', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' },
+    ];
+
     return (
-        <div className="relative flex w-full h-full justify-center items-center bg-cyan-50/50 dark:bg-card/50 rounded-xl border border-cyan-500/20 overflow-hidden">
+        <div className="relative flex flex-col w-full h-full p-6 pt-8 pb-32 bg-cyan-50/50 dark:bg-card/50 rounded-xl border border-cyan-500/20 overflow-hidden font-sans text-left">
             <GridPattern />
 
-            {/* Central Icon */}
-            <div className="relative z-10 p-4 rounded-full bg-cyan-100/80 dark:bg-cyan-950/30 border border-cyan-500/20 backdrop-blur-sm">
-                <Fingerprint className="w-12 h-12 text-cyan-600 dark:text-cyan-400" />
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-3 relative z-10 opacity-80">
+                <Shield className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-900 dark:text-cyan-100">Live Monitor</span>
+                <div className="ml-auto flex gap-1 items-center">
+                    <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-[9px] font-medium text-red-500">REC</span>
+                </div>
             </div>
 
-            {/* Rotating Ring */}
-            <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                className="absolute w-40 h-40 rounded-full border border-cyan-500/30 dark:border-cyan-500/10 border-t-cyan-500/80 dark:border-t-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-            />
-            {/* Pulsing Ring */}
-            <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0, 0.1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute w-32 h-32 rounded-full border border-cyan-500/40 dark:border-cyan-500/20"
-            />
+            {/* Log Table Mockup */}
+            <div className="w-full space-y-2 relative z-10">
+                {events.map((item, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.5 }}
+                        className="flex items-center justify-between p-1.5 rounded-md bg-white/60 dark:bg-black/40 border border-cyan-500/10 backdrop-blur-sm"
+                    >
+                        <span className="text-[9px] font-mono text-muted-foreground">{item.time}</span>
+                        <span className="text-[10px] font-medium text-foreground">{item.event}</span>
+                        <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${item.color}`}>
+                            {item.status}
+                        </span>
+                    </motion.div>
+                ))}
+            </div>
         </div>
     );
 };
 
 export const GradingVisual = () => {
     return (
-        <div className="flex flex-col w-full h-full justify-center px-8 bg-amber-50/50 dark:bg-card/50 rounded-xl border border-amber-500/20 overflow-hidden font-mono text-[10px] text-muted-foreground relative">
+        <div className="flex flex-col w-full h-full p-6 pt-8 pb-32 bg-amber-50/50 dark:bg-card/50 rounded-xl border border-amber-500/20 overflow-hidden font-mono text-[10px] text-muted-foreground relative text-left">
             <GridPattern />
-            <div className="space-y-3 w-full relative z-10">
-                {['Technical Knowledge', 'Communication', 'Critical Thinking'].map((criterion, i) => (
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3 relative z-10 w-full border-b border-amber-500/20 pb-2">
+                <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center border border-amber-500/30">
+                        <span className="font-sans font-bold text-amber-700 dark:text-amber-400 text-[10px]">A+</span>
+                    </div>
+                    <div>
+                        <div className="text-[10px] font-bold text-foreground">Result</div>
+                    </div>
+                </div>
+                <div className="text-[10px] font-bold text-amber-600 dark:text-amber-500">98%</div>
+            </div>
+
+            <div className="space-y-2 w-full relative z-10">
+                {[
+                    { label: 'Knowledge', score: '10/10', bar: 100 },
+                    { label: 'Clarity', score: '9/10', bar: 90 },
+                ].map((item, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.8 }}
-                        className="flex items-center justify-between"
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.3 }}
+                        className="space-y-0.5"
                     >
-                        <span className="tracking-tight font-medium text-amber-900/70 dark:text-muted-foreground">{criterion}</span>
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: i * 0.8 + 0.4, type: "spring" }}
-                            className="flex items-center gap-1.5"
-                        >
-                            <div className="bg-amber-100 dark:bg-amber-500/20 rounded-full p-0.5">
-                                <Check className="w-2 h-2 text-amber-600 dark:text-amber-500" />
-                            </div>
-                            <span className="text-amber-950 dark:text-foreground font-semibold">10/10</span>
-                        </motion.div>
+                        <div className="flex justify-between text-[9px]">
+                            <span className="font-medium text-foreground">{item.label}</span>
+                            <span className="font-mono text-amber-700 dark:text-amber-400">{item.score}</span>
+                        </div>
+                        <div className="h-1 w-full bg-amber-200/30 dark:bg-amber-900/20 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${item.bar}%` }}
+                                transition={{ delay: 0.5 + (i * 0.2), duration: 1 }}
+                                className="h-full bg-amber-500 rounded-full"
+                            />
+                        </div>
                     </motion.div>
                 ))}
-                <motion.div
-                    initial={{ width: '0%' }}
-                    animate={{ width: '100%' }}
-                    transition={{ delay: 2.5, duration: 0.5 }}
-                    className="h-px bg-amber-500/20 w-full my-2"
-                />
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 3 }}
-                    className="flex justify-between items-center text-xs"
-                >
-                    <span className="text-amber-900/70 dark:text-muted-foreground font-semibold tracking-wide">FINAL SCORE</span>
-                    <span className="bg-amber-500 text-white dark:text-black px-2 py-0.5 rounded text-[10px] font-bold shadow-[0_0_10px_rgba(245,158,11,0.3)]">A+</span>
-                </motion.div>
             </div>
         </div>
     );
@@ -102,7 +122,7 @@ export const GradingVisual = () => {
 
 export const ScaleVisual = () => {
     return (
-        <div className="relative w-full h-full bg-blue-50/50 dark:bg-card/50 rounded-xl border border-blue-500/20 overflow-hidden flex items-center p-6">
+        <div className="relative w-full h-full bg-blue-50/50 dark:bg-card/50 rounded-xl border border-blue-500/20 overflow-hidden flex items-start p-6 pb-20 pt-10">
             <GridPattern />
             <div className="flex-1 space-y-6 relative z-10">
 
@@ -151,22 +171,69 @@ export const ScaleVisual = () => {
     )
 }
 
+
+
 export const AnalyticsVisual = () => {
+    const [range, setRange] = useState<'7d' | '30d'>('7d');
+
+    const data = {
+        '7d': [20, 45, 35, 60, 50, 75, 55, 85, 80, 95],
+        '30d': [50, 30, 45, 35, 60, 40, 70, 55, 90, 65]
+    };
+
     return (
-        <div className="flex items-end justify-center w-full h-full gap-2 p-6 bg-fuchsia-50/50 dark:bg-card/50 rounded-xl border border-fuchsia-500/20 overflow-hidden relative">
+        <div className="flex flex-col w-full h-full p-6 pt-10 pb-34 bg-fuchsia-50/50 dark:bg-card/50 rounded-xl border border-fuchsia-500/20 overflow-hidden relative font-sans text-left group/chart">
             <GridPattern />
-            {[40, 70, 50, 90, 65].map((height, i) => (
-                <motion.div
-                    key={i}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${height}%` }}
-                    transition={{ duration: 1, delay: i * 0.1 + 0.5, ease: "backOut" }}
-                    className="w-full bg-fuchsia-500/20 dark:bg-fuchsia-900/40 rounded-t-sm relative group hover:bg-fuchsia-500/40 dark:hover:bg-fuchsia-800/60 transition-colors z-10 overflow-hidden"
-                >
-                    <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-fuchsia-500/30 dark:from-fuchsia-500/50 to-transparent opacity-80" />
-                    <div className="absolute inset-x-0 top-0 h-[1px] bg-fuchsia-500/50 dark:bg-fuchsia-400/50" />
-                </motion.div>
-            ))}
+
+            {/* Chart Header */}
+            <div className="flex items-center justify-between mb-6 relative z-10 w-full">
+                <div className="flex flex-col">
+                    <span className="text-lg font-bold text-foreground flex items-center gap-1">
+                        {range === '7d' ? '+24%' : '+12%'} <span className="text-emerald-500 text-xs bg-emerald-500/10 px-1 rounded">▲</span>
+                    </span>
+                </div>
+                {/* Mock Tabs */}
+                <div className="flex bg-fuchsia-500/5 dark:bg-fuchsia-500/10 rounded-md p-0.5 border border-fuchsia-500/10">
+                    {(['7d', '30d'] as const).map((r) => (
+                        <button
+                            key={r}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setRange(r);
+                            }}
+                            className={cn(
+                                "px-2 py-0.5 rounded text-[9px] font-medium transition-all cursor-pointer relative z-20",
+                                range === r
+                                    ? "bg-background shadow-sm text-foreground"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-fuchsia-500/5"
+                            )}
+                        >
+                            {r}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Mock Area Chart */}
+            <div className="flex items-end justify-between w-full h-full gap-1.5 relative z-10">
+                {data[range].map((height, i) => (
+                    <motion.div
+                        key={`${range}-${i}`}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${height}%` }}
+                        transition={{ duration: 0.4, delay: i * 0.03, ease: "easeOut" }}
+                        className="w-full bg-gradient-to-t from-fuchsia-500/80 to-fuchsia-400/80 dark:from-fuchsia-600 dark:to-fuchsia-500 rounded-t-sm relative group cursor-pointer hover:opacity-100 opacity-90 transition-opacity"
+                    >
+                        {/* Tooltip Overlay */}
+                        <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[9px] px-1.5 py-0.5 rounded shadow-sm border border-border whitespace-nowrap transition-opacity pointer-events-none z-30">
+                            {height * 10} users
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+            {/* X-Axis Line */}
+            <div className="absolute bottom-20 left-6 right-6 h-px bg-fuchsia-500/20 z-0" />
         </div>
     )
 }

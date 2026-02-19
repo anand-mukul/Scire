@@ -1,48 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Activity, Users, Server, AlertTriangle, Shield, FileText, BarChart3, BookOpen } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Activity, Users, Server, AlertTriangle, Shield, FileText, BarChart3, BookOpen, Clock, CheckCircle2, Zap, ArrowRight, MousePointerClick } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { formatToLocalDateTime } from '@/lib/date-utils';
-
-
-interface AdminStats {
-    total_users: number;
-    users_by_role: Record<string, number>;
-    active_sessions: number;
-    flagged_sessions: number;
-    total_exams: number;
-    active_exams: number;
-    completed_sessions: number;
-    avg_score: number;
-}
-
-interface AuditLog {
-    id: string;
-    action: string;
-    user_id?: string;
-    created_at: string;
-    metadata?: Record<string, unknown>;
-}
-
-function StatCardSkeleton() {
-    return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-4 rounded" />
-            </CardHeader>
-            <CardContent>
-                <Skeleton className="h-8 w-16 mb-2" />
-                <Skeleton className="h-3 w-32" />
-            </CardContent>
-        </Card>
-    );
-}
+import { KPICard } from '@/components/dashboard/kpi-card';
+import { Button } from '@/components/ui/button';
+import { AdminStats, AuditLog } from '@/types/admin';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { PageHeader } from '@/components/dashboard/page-header';
 
 export default function AdminDashboard() {
 
@@ -56,56 +28,6 @@ export default function AdminDashboard() {
         queryFn: () => api.admin.getAuditLogs({ limit: 5 }),
     });
 
-    const statCards = [
-        {
-            title: 'Total Users',
-            value: stats?.total_users ?? 0,
-            icon: Users,
-            description: `${stats?.users_by_role?.STUDENT ?? 0} students`,
-            color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20',
-        },
-        {
-            title: 'Active Sessions',
-            value: stats?.active_sessions ?? 0,
-            icon: Activity,
-            description: `${stats?.active_exams ?? 0} active exams`,
-            isLive: true,
-            color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20',
-        },
-        {
-            title: 'System Health',
-            value: '99.9%',
-            icon: Server,
-            description: 'All systems operational',
-            color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20',
-        },
-        {
-            title: 'Flagged Sessions',
-            value: stats?.flagged_sessions ?? 0,
-            icon: AlertTriangle,
-            description: stats?.flagged_sessions ? 'Requires review' : 'No issues detected',
-            color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20',
-        },
-    ];
-
-    const additionalStats = [
-        {
-            title: 'Total Exams',
-            value: stats?.total_exams ?? 0,
-            icon: FileText,
-        },
-        {
-            title: 'Completed Sessions',
-            value: stats?.completed_sessions ?? 0,
-            icon: Shield,
-        },
-        {
-            title: 'Average Score',
-            value: stats?.avg_score ? `${stats.avg_score}%` : 'N/A',
-            icon: BarChart3,
-        },
-    ];
-
     if (error) {
         return (
             <div className="p-8 flex items-center justify-center min-h-[50vh] text-muted-foreground">
@@ -117,210 +39,274 @@ export default function AdminDashboard() {
         );
     }
 
+    const QuickAction = ({ icon: Icon, title, desc, href, colorClass }: { icon: any, title: string, desc: string, href: string, colorClass: string }) => (
+        <Link href={href}>
+            <div className="group flex items-center gap-4 p-3.5 rounded-xl hover:bg-muted/50 transition-all duration-300 cursor-pointer border border-transparent hover:border-border/40 hover:shadow-sm">
+                <div className={cn("p-2.5 rounded-lg flex-shrink-0 transition-colors duration-300", colorClass, "group-hover:bg-white group-hover:text-foreground dark:group-hover:bg-card/80")}>
+                    <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm text-foreground/90 group-hover:text-foreground transition-colors">{title}</h3>
+                    <p className="text-xs text-muted-foreground truncate group-hover:text-muted-foreground/80">{desc}</p>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+            </div>
+        </Link>
+    );
+
     return (
-        <main className="relative min-h-screen w-full bg-background overflow-hidden text-foreground">
-            <div className="container mx-auto p-6 md:p-8 space-y-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
+        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
+
+            {/* 1. Header Section: Clean & Minimal with Greetings */}
+            <PageHeader
+                title="Overview"
+                description="Here's what's happening in your academy today."
+                badge={{
+                    label: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+                    icon: Clock,
+                    variant: "date"
+                }}
+            />
+
+            {/* 2. KPI Section: Clean Row with Better Contrast */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <KPICard
+                    title="Total Users"
+                    value={stats?.total_users || 0}
+                    icon={Users}
+                    change={`${stats?.users_by_role?.STUDENT || 0} students enrolled`}
+                    trend="neutral"
+                    loading={isLoadingStats}
+                    className="shadow-sm border-border/60 bg-gradient-to-br from-card to-card/50"
+                />
+                <KPICard
+                    title="Active Sessions"
+                    value={stats?.active_sessions || 0}
+                    icon={Activity}
+                    change={`${stats?.active_exams || 0} exams in progress`}
+                    trend="up"
+                    loading={isLoadingStats}
+                    className="shadow-sm border-border/60 bg-gradient-to-br from-card to-card/50"
+                />
+                <KPICard
+                    title="Flagged Sessions"
+                    value={stats?.flagged_sessions || 0}
+                    icon={AlertTriangle}
+                    change={stats?.flagged_sessions === 0 ? "No issues detected" : "Requires attention"}
+                    trend={stats?.flagged_sessions === 0 ? "neutral" : "down"}
+                    loading={isLoadingStats}
+                    className="shadow-sm border-border/60 bg-gradient-to-br from-card to-card/50"
+                />
+                <KPICard
+                    title="Avg Score"
+                    value={stats?.avg_score ? `${stats.avg_score.toFixed(1)}%` : 'N/A'}
+                    icon={CheckCircle2}
+                    change={`Based on ${stats?.completed_sessions || 0} completions`}
+                    trend="up"
+                    loading={isLoadingStats}
+                    className="shadow-sm border-border/60 bg-gradient-to-br from-card to-card/50"
+                />
+            </div>
+
+            {/* 3. Main Content: Asymmetrical Grid (2/3 + 1/3) */}
+            <div className="grid gap-10 lg:grid-cols-3">
+
+                {/* Left Column: Activity & Monitoring (Span 2) */}
+                <div className="lg:col-span-2 space-y-10">
+
+                    {/* Live Monitoring Section */}
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-                            Admin Console
-                        </h1>
-                        <p className="text-muted-foreground mt-2 max-w-2xl">
-                            Command center for system monitoring, user management, and platform analytics.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    {isLoadingStats
-                        ? Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
-                        : statCards.map((stat) => (
-                            <Card key={stat.title} className="h-full group transition-colors hover:border-primary/50">
-                                <div className="flex flex-col justify-between h-full p-6">
-                                    <div className="flex justify-between items-start">
-                                        <div className={`p-3 rounded-xl ${stat.bg} border ${stat.border}`}>
-                                            <stat.icon className={`h-5 w-5 ${stat.color}`} aria-hidden="true" />
-                                        </div>
-                                        {stat.isLive && (
-                                            <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-6">
-                                        <div className="text-3xl font-semibold text-foreground tracking-tight">{stat.value}</div>
-                                        <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
-                                    </div>
-
-                                    <div className="mt-4 pt-4 border-t border-border/50">
-                                        <p className="text-xs text-muted-foreground">{stat.description}</p>
-                                    </div>
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2.5">
+                                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                                    <Activity className="w-4 h-4" />
                                 </div>
-                            </Card>
-                        ))}
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-4">
-                    <AdminActionCard
-                        href="/instructor/monitor"
-                        icon={Activity}
-                        title="Live Monitor"
-                        desc="Watch active exams"
-                        delay={0.4}
-                    />
-                    <AdminActionCard
-                        href="/reviewer"
-                        icon={Shield}
-                        title="Review Hub"
-                        desc="Audit flagged sessions"
-                        delay={0.5}
-                    />
-                    <AdminActionCard
-                        href="/instructor"
-                        icon={FileText}
-                        title="Manage Exams"
-                        desc="Create & Edit Exams"
-                        delay={0.6}
-                    />
-                    <AdminActionCard
-                        href="/admin/users"
-                        icon={Users}
-                        title="User Management"
-                        desc="Manage Accounts"
-                        delay={0.7}
-                    />
-                    <AdminActionCard
-                        href="/admin/subjects"
-                        icon={BookOpen}
-                        title="Subjects"
-                        desc="Departments & Courses"
-                        delay={0.8}
-                    />
-                </div>
-
-
-                <div className="grid gap-8 lg:grid-cols-3">
-                    <div className="lg:col-span-1 space-y-4">
-                        {isLoadingStats
-                            ? Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-xl opacity-20" />)
-                            : additionalStats.map((stat) => (
-                                <Card key={stat.title} className="group hover:border-primary/30 transition-colors">
-                                    <div className="p-6 flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">{stat.title}</p>
-                                            <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
-                                        </div>
-                                        <div className="p-3 rounded-xl bg-primary/10 text-primary">
-                                            <stat.icon className="w-5 h-5" />
-                                        </div>
-                                    </div>
-                                </Card>
-                            ))}
-                    </div>
-
-                    <div className="lg:col-span-2 grid gap-6 md:grid-cols-2">
-                        <Card className="p-6 h-full flex flex-col">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2.5 bg-primary/10 rounded-lg text-primary border border-primary/20"><Server className="w-4 h-4" /></div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-foreground">System Logs</h3>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Latest events</p>
-                                    </div>
+                                Live Status
+                            </h2>
+                            <Link href="/admin/monitor" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hover:underline">View All</Link>
+                        </div>
+                        <div className="grid gap-5 sm:grid-cols-2">
+                            <div className="group relative overflow-hidden p-6 rounded-2xl border border-border/50 bg-card/40 flex items-center gap-5 hover:bg-card/60 hover:shadow-md transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="p-3.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300 relative z-10 border border-emerald-500/10">
+                                    <Server className="w-6 h-6" />
                                 </div>
-                                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-medium">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    LIVE
+                                <div className="relative z-10">
+                                    <p className="text-xs font-semibold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider mb-1">System Health</p>
+                                    <div className="flex items-center gap-2.5">
+                                        <h3 className="text-2xl font-bold text-foreground">Operational</h3>
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                            <div className="group relative overflow-hidden p-6 rounded-2xl border border-border/50 bg-card/40 flex items-center gap-5 hover:bg-card/60 hover:shadow-md transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="p-3.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300 relative z-10 border border-blue-500/10">
+                                    <Zap className="w-6 h-6" />
+                                </div>
+                                <div className="relative z-10">
+                                    <p className="text-xs font-semibold text-blue-600/80 dark:text-blue-400/80 uppercase tracking-wider mb-1">Real-time Load</p>
+                                    <div className="flex items-center gap-2.5">
+                                        <h3 className="text-2xl font-bold text-foreground">Optimal</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* System Activity Feed */}
+                    <div className="space-y-5">
+                        <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                                <FileText className="w-4 h-4" />
+                            </div>
+                            Recent Activity
+                        </h2>
+                        <div className="bg-card/30 border border-border/40 rounded-2xl overflow-hidden shadow-sm">
+                            <div className="divide-y divide-border/40">
                                 {isLoadingLogs ? (
                                     Array(3).fill(0).map((_, i) => (
-                                        <div key={i} className="flex gap-4"><Skeleton className="h-2 w-2 rounded-full mt-2" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/4" /></div></div>
+                                        <div key={i} className="p-5 flex gap-4">
+                                            <Skeleton className="w-9 h-9 rounded-full" />
+                                            <div className="space-y-2.5 flex-1">
+                                                <Skeleton className="h-3.5 w-3/4" />
+                                                <Skeleton className="h-3 w-1/2" />
+                                            </div>
+                                        </div>
                                     ))
                                 ) : auditLogs && auditLogs.length > 0 ? (
                                     auditLogs.map((log) => (
-                                        <div key={log.id} className="relative pl-6 border-l border-border last:border-0 pb-8 last:pb-0 group">
-                                            <div className="absolute left-[-5px] top-0 h-2.5 w-2.5 rounded-full bg-muted-foreground ring-4 ring-background group-hover:bg-primary transition-colors" />
-                                            <div className="flex flex-col gap-1.5 -mt-1 group-hover:translate-x-1 transition-transform duration-300">
-                                                <span className="text-sm text-foreground font-medium group-hover:text-primary transition-colors">{log.action}</span>
-                                                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider group-hover:text-primary/70 transition-colors">
-                                                    {formatToLocalDateTime(log.created_at)}
-                                                </span>
+                                        <div key={log.id} className="p-5 flex items-center gap-4 hover:bg-muted/30 transition-colors group relative">
+                                            <div className="absolute inset-y-0 left-0 w-1 bg-primary/0 group-hover:bg-primary/40 transition-colors" />
+                                            <div className={`
+                                                w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-border/60 shadow-sm
+                                                ${log.action.includes('CREATE') ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}
+                                                ${log.action.includes('UPDATE') ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : ''}
+                                                ${log.action.includes('DELETE') ? 'bg-red-500/10 text-red-600 border-red-500/20' : ''}
+                                                ${!log.action.includes('CREATE') && !log.action.includes('UPDATE') && !log.action.includes('DELETE') ? 'bg-muted/40 text-muted-foreground' : ''}
+                                           `}>
+                                                {log.action.includes('CREATE') && <CheckCircle2 className="w-4 h-4" />}
+                                                {log.action.includes('UPDATE') && <Activity className="w-4 h-4" />}
+                                                {log.action.includes('DELETE') && <AlertTriangle className="w-4 h-4" />}
+                                                {!log.action.includes('CREATE') && !log.action.includes('UPDATE') && !log.action.includes('DELETE') && <FileText className="w-4 h-4" />}
+                                            </div>
+                                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-foreground truncate max-w-[80%]">{log.action.replace(/_/g, ' ')}</p>
+                                                    <span className="text-xs text-muted-foreground/60 font-mono group-hover:text-muted-foreground transition-colors">
+                                                        {formatToLocalDateTime(log.created_at)}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                                    by <span className="font-semibold text-foreground/80 bg-muted/30 px-1.5 py-0.5 rounded border border-border/30">{log.user_id || 'System'}</span>
+                                                </p>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                                        <Activity className="w-8 h-8 mb-2 opacity-20" />
-                                        <p className="text-sm">No recent system activity</p>
+                                    <div className="p-10 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
+                                        <FileText className="w-8 h-8 opacity-20" />
+                                        <span>No recent activity recorded.</span>
                                     </div>
                                 )}
                             </div>
-                        </Card>
+                        </div>
+                    </div>
 
-                        <Card className="p-6 h-full flex flex-col">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-muted rounded-lg text-muted-foreground border border-border"><Users className="w-4 h-4" /></div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-foreground">User Base</h3>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Role distribution</p>
-                                    </div>
-                                </div>
-                            </div>
+                </div>
 
-                            <div className="space-y-5 flex-1">
+                {/* Right Column: Quick Actions & Distribution (Span 1) */}
+                <div className="space-y-10">
+
+                    {/* Quick Actions Panel */}
+                    <div className="space-y-5">
+                        <h2 className="text-lg font-semibold tracking-tight">Quick Actions</h2>
+                        <div className="bg-card/30 border border-border/40 rounded-2xl p-2.5 space-y-1.5 shadow-sm backdrop-blur-sm">
+                            <QuickAction
+                                title="Manage Exams"
+                                desc="Create, edit or publish"
+                                href="/admin/exams"
+                                icon={BookOpen}
+                                colorClass="bg-orange-500/10 text-orange-600 border border-orange-500/20"
+                            />
+                            <QuickAction
+                                title="User Management"
+                                desc="Add students or instructors"
+                                href="/admin/users"
+                                icon={Users}
+                                colorClass="bg-indigo-500/10 text-indigo-600 border border-indigo-500/20"
+                            />
+                            <QuickAction
+                                title="Review Sessions"
+                                desc="Audit flagged exams"
+                                href="/admin/reviews"
+                                icon={Shield}
+                                colorClass="bg-rose-500/10 text-rose-600 border border-rose-500/20"
+                            />
+                        </div>
+                    </div>
+
+                    {/* User Distribution Widget */}
+                    <div className="space-y-5">
+                        <h2 className="text-lg font-semibold tracking-tight">Demographics</h2>
+                        <Card className="border-border/40 shadow-none bg-card/30 rounded-2xl overflow-hidden backdrop-blur-sm">
+                            <CardContent className="p-6 space-y-7">
                                 {isLoadingStats ? (
-                                    Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
-                                ) : stats?.users_by_role ? (
-                                    Object.entries(stats.users_by_role).map(([role, count], i) => {
-                                        const total = Object.values(stats.users_by_role).reduce((a, b) => a + b, 0);
-                                        const percent = Math.round((count / total) * 100);
+                                    <div className="space-y-5">
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-full" />
+                                    </div>
+                                ) : (
+                                    Object.entries(stats?.users_by_role || {}).map(([role, count]) => {
+                                        const total = stats?.total_users || 1;
+                                        const percentage = Math.round((count / total) * 100);
+                                        // Match StatusBadge colors
+                                        const color = role === 'STUDENT' ? 'bg-emerald-500' :
+                                            role === 'INSTRUCTOR' ? 'bg-purple-500' :
+                                                role === 'ADMIN' ? 'bg-blue-500' :
+                                                    role === 'REVIEWER' ? 'bg-amber-500' : 'bg-gray-500';
 
                                         return (
-                                            <div key={role} className="group">
-                                                <div className="flex justify-between items-end mb-2">
-                                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{role}</span>
-                                                    <span className="text-sm font-mono text-foreground">{count} <span className="text-muted-foreground">/ {percent}%</span></span>
+                                            <div key={role} className="space-y-2.5 group">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm ring-2 ring-background`}></span>
+                                                        <span className="font-semibold text-foreground/90 capitalize">{role.toLowerCase().replace('_', ' ')}</span>
+                                                    </div>
+                                                    <span className="text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded text-[10px]">{count}</span>
                                                 </div>
-                                                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                                <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden border border-border/20">
                                                     <div
-                                                        style={{ width: `${percent}%` }}
-                                                        className="h-full rounded-full bg-primary transition-all duration-700"
+                                                        className={cn("h-full rounded-full transition-all duration-700 ease-out", color, "opacity-90 group-hover:opacity-100 shadow-[0_0_10px_rgba(0,0,0,0.1)]")}
+                                                        style={{ width: `${percentage}%` }}
                                                     />
                                                 </div>
                                             </div>
                                         );
                                     })
-                                ) : (
-                                    <p className="text-muted-foreground text-sm italic">No user data available</p>
                                 )}
-                            </div>
+                            </CardContent>
                         </Card>
                     </div>
+
+                    {/* Helpful Link / Guide */}
+                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 rounded-2xl border border-primary/10 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <BookOpen className="w-16 h-16 text-primary" />
+                        </div>
+                        <h3 className="font-semibold text-sm text-primary mb-1.5 relative z-10">Need Help?</h3>
+                        <p className="text-xs text-muted-foreground mb-4 relative z-10 leading-relaxed">Check out our documentation for guides on managing your exams and users.</p>
+                        <Button size="sm" variant="outline" className="w-full h-9 text-xs font-medium bg-background/50 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 relative z-10">
+                            View Documentation
+                        </Button>
+                    </div>
+
                 </div>
             </div>
         </main>
-    );
-}
-
-// Helper component for quick actions
-function AdminActionCard({ href, icon: Icon, title, desc }: { href: string; icon: any; title: string; desc: string; delay: number }) {
-    return (
-        <Link href={href} className="block h-full" aria-label={`${title}: ${desc}`}>
-            <Card className="h-full p-6 flex flex-col items-center text-center justify-center gap-3 hover:border-primary/50 transition-colors group">
-                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary">
-                    <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                    <h3 className="font-semibold text-foreground mb-0.5">{title}</h3>
-                    <p className="text-xs text-muted-foreground">{desc}</p>
-                </div>
-            </Card>
-        </Link>
     );
 }

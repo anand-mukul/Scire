@@ -30,7 +30,7 @@ export function useMySessions() {
     });
 }
 
-export function useReviewQueue(filters?: { status?: string; exam_code?: string }) {
+export function useReviewQueue(filters?: { exam_code?: string }) {
     return useQuery({
         queryKey: ['review-queue', filters],
         queryFn: () => api.reviewer.getQueue(filters),

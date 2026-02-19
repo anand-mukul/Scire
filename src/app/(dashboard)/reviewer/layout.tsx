@@ -9,7 +9,7 @@ export default function ReviewerLayout({
     children: React.ReactNode;
 }) {
     return (
-        <AuthGuard allowedRoles={[UserRole.REVIEWER, UserRole.ADMIN, UserRole.PLATFORM_ADMIN]}>
+        <AuthGuard allowedRoles={[UserRole.INSTRUCTOR, UserRole.REVIEWER, UserRole.ADMIN]}>
             {children}
         </AuthGuard>
     );

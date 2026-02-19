@@ -1,254 +1,457 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
+import { Exam, ExamStatus } from '@/types/backend';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
-import { AlertCircle, Save, Check, Globe } from 'lucide-react';
-import { toast } from 'sonner';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+
+import {
+    Save,
+    Clock,
+    Hash,
+    RotateCcw,
+    ShieldAlert,
+    Globe,
+    BarChart3,
+    AlertCircle,
+    CheckCircle2,
+    Loader2,
+    Lock
+} from 'lucide-react';
 import { getTimezoneAbbreviation } from '@/lib/date-utils';
-import { ExamStatus } from '@/types/backend';
+
+const examSettingsSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    max_attempts: z.number().min(1).max(10),
+    duration_minutes: z.number().min(5).max(180),
+    number_of_questions: z.number().min(1).max(50),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    strict_mode: z.boolean(),
+    is_public: z.boolean(),
+});
+
+type ExamSettingsValues = z.infer<typeof examSettingsSchema>;
 
 interface ExamSettingsProps {
-    exam: any;
+    exam: Exam;
 }
 
 export default function ExamSettings({ exam }: ExamSettingsProps) {
     const queryClient = useQueryClient();
-    const [formData, setFormData] = useState({
-        title: exam.title,
-        max_attempts: exam.max_attempts,
-        status: exam.status,
-        duration_minutes: exam.settings?.duration_minutes || 30,
-        number_of_questions: exam.settings?.number_of_questions || 5,
-        strict_mode: exam.settings?.strict_mode || false,
-        is_public: exam.is_public || false,
-        difficulty: exam.settings?.difficulty || 'medium',
-    });
-
-    // Reset form when prop changes
-    useEffect(() => {
-        if (!exam) return;
-        setFormData(prev => ({
-            ...prev,
-            title: exam.title,
-            max_attempts: exam.max_attempts,
-            status: exam.status,
-            duration_minutes: exam.settings?.duration_minutes || 30,
-            number_of_questions: exam.settings?.number_of_questions || 5,
-            strict_mode: exam.settings?.strict_mode || false,
-            is_public: exam.is_public || false,
-            difficulty: exam.settings?.difficulty || 'medium',
-        }));
-    }, [exam]);
-
     const isPublished = exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE;
 
+    const form = useForm<ExamSettingsValues>({
+        resolver: zodResolver(examSettingsSchema),
+        defaultValues: {
+            title: exam.title || '',
+            max_attempts: exam.max_attempts || 1,
+            duration_minutes: exam.settings?.duration_minutes || 30,
+            number_of_questions: exam.settings?.number_of_questions || 5,
+            difficulty: exam.settings?.difficulty || 'medium',
+            strict_mode: exam.settings?.strict_mode || false,
+            is_public: exam.is_public || false,
+        },
+    });
+
+    // Update form when exam data changes (e.g. after refetch)
+    useEffect(() => {
+        if (exam) {
+            form.reset({
+                title: exam.title,
+                max_attempts: exam.max_attempts,
+                duration_minutes: exam.settings?.duration_minutes,
+                number_of_questions: exam.settings?.number_of_questions,
+                difficulty: exam.settings?.difficulty || 'medium',
+                strict_mode: exam.settings?.strict_mode,
+                is_public: exam.is_public,
+            });
+        }
+    }, [exam, form]);
+
     const updateMutation = useMutation({
-        mutationFn: (data: any) => api.exams.update(exam.id, data),
-        onSuccess: (updatedExam) => {
+        mutationFn: async (values: ExamSettingsValues) => {
+            return api.exams.update(exam.id, {
+                title: values.title,
+                max_attempts: values.max_attempts,
+                is_public: values.is_public,
+                settings: {
+                    duration_minutes: values.duration_minutes,
+                    number_of_questions: values.number_of_questions,
+                    strict_mode: values.strict_mode,
+                    difficulty: values.difficulty,
+                }
+            });
+        },
+        onSuccess: (updatedExam: Exam) => {
             queryClient.invalidateQueries({ queryKey: ['exam', exam.id] });
             queryClient.setQueryData(['exam', exam.id], updatedExam);
-            toast.success('Exam settings updated');
+            toast.success('Exam settings updated successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error(error.message || 'Failed to update exam');
         },
     });
 
-    const handleSave = () => {
-        updateMutation.mutate({
-            title: formData.title,
-            max_attempts: Number(formData.max_attempts),
-            is_public: formData.is_public,
-            settings: {
-                duration_minutes: parseInt(String(formData.duration_minutes)),
-                number_of_questions: parseInt(String(formData.number_of_questions)),
-                strict_mode: formData.strict_mode,
-                difficulty: formData.difficulty,
-            }
-        });
-    };
+    const statusMutation = useMutation({
+        mutationFn: async (status: ExamStatus) => {
+            return api.exams.update(exam.id, { status });
+        },
+        onSuccess: (updatedExam) => {
+            queryClient.invalidateQueries({ queryKey: ['exam', exam.id] });
+            queryClient.setQueryData(['exam', exam.id], updatedExam);
+            toast.success(`Exam ${updatedExam.status.toLowerCase()}`);
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to update status');
+        },
+    });
 
-    const handlePublish = () => {
-        // Confirmation could be added here
-        updateMutation.mutate({
-            status: ExamStatus.PUBLISHED,
-        });
-    };
-
-    const handleArchive = () => {
-        updateMutation.mutate({
-            status: ExamStatus.ARCHIVED,
-        });
+    const onSubmit = (values: ExamSettingsValues) => {
+        updateMutation.mutate(values);
     };
 
     return (
-        <div className="space-y-6">
-            <Card className="bg-card/40 border-border backdrop-blur-md">
-                <CardHeader>
-                    <CardTitle>Exam Configuration</CardTitle>
-                    <CardDescription>
-                        Manage the core settings for this exam.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="title">Exam Title</Label>
-                        <Input
-                            id="title"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            disabled={isPublished} // Lock title if published
-                        />
-                        {isPublished && <p className="text-xs text-muted-foreground">Title cannot be changed after publishing.</p>}
-                    </div>
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
+            {/* Main Configuration Form */}
+            <div className="flex-1 w-full space-y-6">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="max_attempts">Max Attempts</Label>
-                            <Input
-                                id="max_attempts"
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={formData.max_attempts}
-                                onChange={(e) => setFormData({ ...formData, max_attempts: parseInt(e.target.value) || 1 })}
-                                disabled={isPublished}
-                            />
-                            <p className="text-xs text-muted-foreground">Limit attempts per student.</p>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="duration">Duration (minutes)</Label>
-                            <Input
-                                id="duration"
-                                type="number"
-                                min="10"
-                                max="180"
-                                value={formData.duration_minutes}
-                                onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) || 30 })}
-                                disabled={isPublished}
-                            />
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">Time limit for the exam. <Globe className="inline h-3 w-3" /><span className="font-mono">{getTimezoneAbbreviation()}</span></p>
-                        </div>
-                    </div>
+                        {/* General Information Card */}
+                        <Card className="border-border/60 shadow-sm bg-card/40 backdrop-blur-sm">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    General Information
+                                </CardTitle>
+                                <CardDescription>
+                                    Basic details and configuration for this assessment.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="title"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Exam Title</FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input {...field} disabled={isPublished} className="pl-3" />
+                                                    {isPublished && <Lock className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground opacity-50" />}
+                                                </div>
+                                            </FormControl>
+                                            <FormDescription>
+                                                The visible name of the exam for students.
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="num_questions">Number of Questions</Label>
-                        <Input
-                            id="num_questions"
-                            type="number"
-                            min="3"
-                            max="15"
-                            className="max-w-[120px]"
-                            value={formData.number_of_questions}
-                            onChange={(e) => setFormData({ ...formData, number_of_questions: parseInt(e.target.value) || 5 })}
-                            disabled={isPublished}
-                        />
-                        <p className="text-xs text-muted-foreground">The AI examiner will ask exactly this many questions.</p>
-                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                        control={form.control}
+                                        name="difficulty"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Difficulty Level</FormLabel>
+                                                <Select
+                                                    onValueChange={field.onChange}
+                                                    defaultValue={field.value}
+                                                    disabled={isPublished}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <div className="flex items-center gap-2">
+                                                                <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                                                                <SelectValue placeholder="Select difficulty" />
+                                                            </div>
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="easy">Easy</SelectItem>
+                                                        <SelectItem value="medium">Medium</SelectItem>
+                                                        <SelectItem value="hard">Hard</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                    <div className="grid gap-2">
-                        <Label>Difficulty Level</Label>
-                        <Select
-                            value={formData.difficulty}
-                            onValueChange={(v) => setFormData({ ...formData, difficulty: v })}
-                            disabled={isPublished}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select difficulty" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="easy">Easy</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="hard">Hard</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">Influences the complexity of AI follow-up questions.</p>
-                    </div>
+                                    <FormField
+                                        control={form.control}
+                                        name="max_attempts"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Max Attempts</FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <RotateCcw className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            value={field.value}
+                                                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 1)}
+                                                            onBlur={field.onBlur}
+                                                            ref={field.ref}
+                                                            name={field.name}
+                                                            disabled={isPublished}
+                                                            className="pl-9"
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                    <div className="flex items-center space-x-2 pt-2 p-3 border border-border rounded-lg bg-accent/5">
-                        <Switch
-                            id="public-access"
-                            checked={formData.is_public}
-                            onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
-                            disabled={isPublished}
-                        />
-                        <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="public-access" className="cursor-pointer font-medium">
-                                Public Guest Access
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                                Allow users from outside your organization to take this exam via Exam Code (Guest Mode).
-                            </p>
-                        </div>
-                    </div>
+                        {/* Parameters Card */}
+                        <Card className="border-border/60 shadow-sm bg-card/40 backdrop-blur-sm">
+                            <CardHeader>
+                                <CardTitle>Exam Parameters</CardTitle>
+                                <CardDescription>
+                                    Define the structure and limits of the exam session.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                        control={form.control}
+                                        name="duration_minutes"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Duration (Minutes)</FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Clock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            value={field.value}
+                                                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 5)}
+                                                            onBlur={field.onBlur}
+                                                            ref={field.ref}
+                                                            name={field.name}
+                                                            disabled={isPublished}
+                                                            className="pl-9"
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                    Allocated time • {getTimezoneAbbreviation()}
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                    <div className="flex items-center space-x-2 pt-2 p-3 border border-border rounded-lg bg-accent/5">
-                        <Switch
-                            id="strict-mode"
-                            checked={formData.strict_mode}
-                            onCheckedChange={(checked) => setFormData({ ...formData, strict_mode: checked })}
-                            disabled={isPublished}
-                        />
-                        <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="strict-mode" className="cursor-pointer font-medium">
-                                Strict Mode
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                                Enforce full-screen validation and anti-cheat measures.
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-                <CardFooter className="justify-end">
-                    {!isPublished && (
-                        <Button onClick={handleSave} disabled={updateMutation.isPending} className="bg-primary hover:bg-primary/90">
-                            <Save className="h-4 w-4 mr-2" />
-                            Save Changes
-                        </Button>
-                    )}
-                </CardFooter>
-            </Card>
+                                    <FormField
+                                        control={form.control}
+                                        name="number_of_questions"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Number of Questions</FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Hash className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            value={field.value}
+                                                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 1)}
+                                                            onBlur={field.onBlur}
+                                                            ref={field.ref}
+                                                            name={field.name}
+                                                            disabled={isPublished}
+                                                            className="pl-9"
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                    Questions generated per exam.
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
-            <Card className={isPublished ? "border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm" : "border-amber-500/20 bg-amber-500/5 backdrop-blur-sm"}>
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">Exam Status: <span className={`uppercase font-mono px-2 py-0.5 rounded text-xs ${isPublished ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>{formData.status}</span></CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {!isPublished ? (
-                        <div className="space-y-4">
-                            <Alert variant="default" className="bg-amber-500/10 border-amber-500/20">
-                                <AlertCircle className="h-4 w-4 text-amber-500" />
-                                <AlertTitle className="text-amber-500">Draft Mode</AlertTitle>
-                                <AlertDescription className="text-amber-500/80">
-                                    Students cannot see or join this exam yet. Once published, you cannot edit the syllabus or rubrics.
-                                </AlertDescription>
-                            </Alert>
-                            <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white" onClick={handlePublish} disabled={updateMutation.isPending}>
-                                Publish Exam
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <Alert variant="default" className="bg-emerald-500/10 border-emerald-500/20">
-                                <Check className="h-4 w-4 text-emerald-500" />
-                                <AlertTitle className="text-emerald-500">Live</AlertTitle>
-                                <AlertDescription className="text-emerald-500/80">
-                                    Exam is live and accessible to students. Most settings are locked to ensure integrity.
-                                </AlertDescription>
-                            </Alert>
-                            {/* <Button variant="destructive" className="w-full" onClick={handleArchive}>Archive Exam</Button> */}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                                <Separator />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="strict_mode"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/60 p-4 shadow-sm bg-card/30">
+                                                <div className="space-y-0.5">
+                                                    <FormLabel className="text-base flex items-center gap-2">
+                                                        <ShieldAlert className="w-4 h-4 text-primary" />
+                                                        Strict Mode
+                                                    </FormLabel>
+                                                    <FormDescription>
+                                                        Enforce fullscreen & tab monitoring
+                                                    </FormDescription>
+                                                </div>
+                                                <FormControl>
+                                                    <Switch
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                        disabled={isPublished}
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="is_public"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/60 p-4 shadow-sm bg-card/30">
+                                                <div className="space-y-0.5">
+                                                    <FormLabel className="text-base flex items-center gap-2">
+                                                        <Globe className="w-4 h-4 text-primary" />
+                                                        Guest Access
+                                                    </FormLabel>
+                                                    <FormDescription>
+                                                        Allow external users via code
+                                                    </FormDescription>
+                                                </div>
+                                                <FormControl>
+                                                    <Switch
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                        disabled={isPublished}
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </CardContent>
+                            <CardFooter className="bg-muted/10 border-t border-border/60 px-6 py-4 flex justify-end">
+                                <Button
+                                    type="submit"
+                                    size="lg"
+                                    className="shadow-md font-semibold min-w-[140px]"
+                                    disabled={isPublished || !form.formState.isDirty || updateMutation.isPending}
+                                >
+                                    {updateMutation.isPending ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="w-4 h-4" />
+                                            Save Changes
+                                        </>
+                                    )}
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </form>
+                </Form>
+            </div>
+
+            {/* Side Status Panel */}
+            <div className="w-full xl:w-80 space-y-6 shrink-0">
+                <Card className={isPublished
+                    ? "border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm shadow-sm"
+                    : "border-amber-500/20 bg-amber-500/5 backdrop-blur-sm shadow-sm"
+                }>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center justify-between">
+                            Status
+                            <Badge variant={isPublished ? "default" : "secondary"} className={isPublished ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20" : "bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 border-amber-500/20"}>
+                                {exam.status}
+                            </Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {isPublished ? (
+                            <>
+                                <Alert className="bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-200">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    <AlertTitle>Exam is Live</AlertTitle>
+                                    <AlertDescription className="text-xs mt-1 opacity-90">
+                                        Settings is locked to preserve integrity.
+                                    </AlertDescription>
+                                </Alert>
+                                <p className="text-xs text-muted-foreground">
+                                    To make changes, you must archive or duplicate this exam.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <Alert className="bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200">
+                                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                    <AlertTitle>Draft Mode</AlertTitle>
+                                    <AlertDescription className="text-xs mt-1 opacity-90">
+                                        Visible only to instructors. Publish to make it available to students.
+                                    </AlertDescription>
+                                </Alert>
+                                <Button
+                                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-md border-0"
+                                    onClick={() => statusMutation.mutate(ExamStatus.PUBLISHED)}
+                                    disabled={statusMutation.isPending || updateMutation.isPending}
+                                >
+                                    {statusMutation.isPending ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        "Publish Exam"
+                                    )}
+                                </Button>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Additional Actions or Info could go here */}
+                {!isPublished && (
+                    <div className="text-center text-xs text-muted-foreground p-2">
+                        <p>Need to delete?</p>
+                        <p className="mt-1">Delete using the "Danger Zone" below the tabs.</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

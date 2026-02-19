@@ -2,13 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// motion removed — using CSS transitions
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { api } from '@/lib/network/api';
 import { PremiumLoader } from '@/components/ui/premium-loader';
-// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { cn } from '@/lib/utils';
 import {
     CheckCircle, AlertCircle,
@@ -19,17 +17,14 @@ import { AxiosError } from 'axios';
 import { CameraOverlay } from '@/components/viva/CameraOverlay';
 import MobileBlockScreen from '@/components/viva/MobileBlockScreen';
 
-// Removed: slideVariants (motion) — using CSS transitions instead
+
 
 export default function OnboardingPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
     const { id: sessionId } = React.use(params);
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    // Steps: 1 = Terms, 2 = Identity
     const [step, setStep] = useState(1);
-    const [direction, setDirection] = useState(0);
-
     // Media State
     const [hasMediaAccess, setHasMediaAccess] = useState(false);
     const streamRef = useRef<MediaStream | null>(null);
@@ -93,13 +88,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
     // --- Actions ---
     const goToStep = (newStep: number) => {
-        setDirection(newStep > step ? 1 : -1);
         setStep(newStep);
     };
 
     const handleSmartRetry = () => {
         setError(null);
-        // Only restart media if the stream is actually dead no broken
+        // Only restart media if the stream is actually active and not broken
         if (streamRef.current && streamRef.current.active && videoRef.current) {
             // Just resume
             videoRef.current.play().catch(console.error);
@@ -126,7 +120,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         // --- INTELLIGENT VALIDATION ---
         const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = frame.data;
-        // const length = data.length; // Unused
+
 
         let r, g, b, avg;
         let brightnessSum = 0;
@@ -166,7 +160,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         const avgBrightness = brightnessSum / pixelCount;
         const avgVariance = varianceSum / pixelCount;
 
-        console.log(`[Face Check] B: ${avgBrightness.toFixed(2)}, V: ${avgVariance.toFixed(2)}`);
+
 
         // Check 1: Too Dark
         if (avgBrightness < 20) {
@@ -188,8 +182,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
         const dataUrl = canvas.toDataURL('image/png');
 
-        // Start Simulation with Confidence
-        // setIsScanning(true);
         setScanStatus('scanning');
         setScanMessage("Analyzing facial features...");
 
@@ -199,7 +191,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         setCapturedImage(dataUrl);
         setScanStatus('success');
         setScanMessage("Identity Verified");
-        // setIsScanning(false);
     };
 
     const handleRetake = () => {
@@ -232,11 +223,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
     };
 
     return (
-        <div className="relative h-full api min-h-screen w-full overflow-hidden bg-background flex items-center justify-center font-sans p-4 md:p-6 text-foreground">
+        <div className="relative h-full min-h-screen w-full overflow-hidden bg-background flex items-center justify-center font-sans p-4 md:p-6 text-foreground">
             {/* Mobile Device Blocker — must be first */}
             <MobileBlockScreen />
 
-            {/* <AmbientGlow /> */}
+
 
             {/* Main Card Container */}
             <div

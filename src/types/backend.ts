@@ -65,6 +65,20 @@ export interface User {
     updated_at: string;
 }
 
+export interface Tenant {
+    id: string;
+    name: string;
+    slug: string;
+    domain?: string;
+    status: TenantStatus;
+    subscription_tier: string;
+    max_students?: number;
+    max_exams_per_month?: number;
+    trial_ends_at?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Rubric {
     id: string;
     exam_id: string;
@@ -79,6 +93,7 @@ export interface ExamSettings {
     duration_minutes: number;
     strict_mode: boolean;
     number_of_questions?: number;
+    difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 export interface Exam {

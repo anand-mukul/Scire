@@ -23,6 +23,7 @@ export interface TenantContextType {
     tenantStatus: TenantStatus | null;
     tenantLogoUrl: string | null;
     tenantPrimaryColor: string | null;
+    subscriptionTier: string | null;
     tenantSettings: TenantSettings | null;
     isLoading: boolean;
     isSuspended: boolean;
@@ -50,6 +51,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
                 tenantStatus: null,
                 tenantLogoUrl: null,
                 tenantPrimaryColor: null,
+                subscriptionTier: null,
                 tenantSettings: null,
                 isLoading: authLoading,
                 isSuspended: false,
@@ -68,6 +70,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
             tenantStatus,
             tenantLogoUrl: user.tenant_logo_url || null,
             tenantPrimaryColor: user.tenant_primary_color || null,
+            subscriptionTier: user.subscription_tier || null, // Ensure this exists in User type or JWT
             tenantSettings: null, // Fetched separately if needed via API
             isLoading: authLoading,
             isSuspended: tenantStatus === TenantStatus.SUSPENDED,

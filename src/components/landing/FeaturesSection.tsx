@@ -22,7 +22,7 @@ export const FeaturesSection = () => {
 
     const items = [
         {
-            title: "Autonomous AI Examiner",
+            title: "AI Examiner",
             description: "Advanced LLMs conduct natural, dynamic conversations that adapt to the student's responses.",
             header: <AiExaminerVisual />,
             icon: <BrainCircuit className="h-4 w-4 text-primary" />,
@@ -54,15 +54,15 @@ export const FeaturesSection = () => {
     ];
 
     return (
-        <section id="features" className="py-20 bg-background relative z-20">
-            <div className="container mx-auto px-4">
-                <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+        <section id="features" className="py-24 md:py-32 bg-white dark:bg-neutral-950 relative z-20 overflow-hidden">
+            <div className="container mx-auto px-4 relative z-10">
+                <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
-                        className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground pb-2"
+                        className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-white dark:to-neutral-400 pb-2"
                     >
                         Intelligence at Scale
                     </motion.h2>
@@ -71,7 +71,7 @@ export const FeaturesSection = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="text-lg text-muted-foreground"
+                        className="text-lg text-neutral-600 dark:text-neutral-400"
                     >
                         Everything you need to conduct world-class oral assessments.
                     </motion.p>

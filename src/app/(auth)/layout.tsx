@@ -1,37 +1,35 @@
 import { ReactNode } from 'react';
 import { GuestGuard } from '@/components/auth/AuthGuard';
-// import { AmbientGlow } from '@/components/ui/ambient-glow';
+import { AuthBackground } from '@/components/auth/AuthBackground';
 import { Logo } from '@/components/ui/logo';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
         <GuestGuard>
-            <div className="min-h-screen bg-background flex flex-col relative overflow-hidden transition-colors duration-300">
-                {/* Background Effects */}
-                {/* <AmbientGlow /> */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-20" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--primary)/0.05,transparent_60%)] pointer-events-none" />
+            <AuthBackground>
+                {/* Full-height flex column: logo at top, form centered, footer at bottom */}
+                <div className="flex flex-col min-h-dvh">
+                    {/* Logo Header — fixed at top */}
+                    <header className="shrink-0 p-5 md:p-6">
+                        <Logo textClassName="!bg-none !text-white/90" />
+                    </header>
 
-                {/* Logo Header */}
-                <header className="relative z-10 p-6 md:p-8">
-                    <Logo />
-                </header>
+                    {/* Main Content — takes remaining space, centers the form card */}
+                    <main className="flex-1 flex items-center justify-center px-4 py-4">
+                        {children}
+                    </main>
 
-                {/* Main Content */}
-                <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
-                    {children}
-                </main>
-
-                {/* Footer */}
-                <footer className="relative z-10 p-6 text-center text-sm text-muted-foreground flex flex-col md:flex-row justify-center items-center gap-4">
-                    <span>© 2026 Scire Inc. All rights reserved.</span>
-                    <span className="hidden md:inline text-border">|</span>
-                    <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span>Systems Operational</span>
-                    </div>
-                </footer>
-            </div>
+                    {/* Footer — fixed at bottom */}
+                    <footer className="shrink-0 px-6 py-4 text-center text-sm text-white/50 flex flex-col md:flex-row justify-center items-center gap-3">
+                        <span>© 2026 Scire Inc. All rights reserved.</span>
+                        <span className="hidden md:inline text-white/20">|</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>Systems Operational</span>
+                        </div>
+                    </footer>
+                </div>
+            </AuthBackground>
         </GuestGuard>
     );
 }

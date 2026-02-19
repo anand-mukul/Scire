@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https: ws: data:; object-src 'none'; frame-ancestors 'self';",
+              "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https: ws: data:; object-src 'none'; frame-src 'self' https://api.razorpay.com; frame-ancestors 'self';",
           },
         ],
       },
