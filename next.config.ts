@@ -5,8 +5,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: "standalone",
   compress: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@react-three/fiber', '@react-three/drei'],
+  },
 
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: "https",

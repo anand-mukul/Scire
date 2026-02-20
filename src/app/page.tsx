@@ -1,11 +1,14 @@
-'use client';
+// 'use client';
 
+import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/landing/Navbar';
 import { HeroSection } from '@/components/landing/HeroSection';
-import { FeaturesSection } from '@/components/landing/FeaturesSection';
-import { CTASection } from '@/components/landing/CTASection';
-import { Footer } from "@/components/landing/Footer";
-import { DashboardPreview } from "@/components/landing/DashboardPreview";
+
+const DashboardPreview = dynamic(() => import('@/components/landing/DashboardPreview').then((mod) => mod.DashboardPreview), { ssr: true });
+const FeaturesSection = dynamic(() => import('@/components/landing/FeaturesSection').then((mod) => mod.FeaturesSection), { ssr: true });
+const CTASection = dynamic(() => import('@/components/landing/CTASection').then((mod) => mod.CTASection), { ssr: true });
+const Footer = dynamic(() => import('@/components/landing/Footer').then((mod) => mod.Footer), { ssr: true });
+
 // import { HowItWorks } from "@/components/landing/HowItWorks";
 
 export default function Home() {

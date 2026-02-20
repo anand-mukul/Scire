@@ -1,13 +1,15 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+
 import { motion } from "motion/react";
-import { BackgroundBeams } from "@/components/visuals/BackgroundBeams";
+const BackgroundBeams = dynamic(() => import("@/components/visuals/BackgroundBeams").then(mod => mod.BackgroundBeams), { ssr: false });
 import { Button } from "@/components/ui/button";
 import { ChevronRight, PlayCircle } from "lucide-react";
 import Link from 'next/link';
 
 
-import { HeroOrb } from "@/components/visuals/HeroOrb";
+const HeroOrb = dynamic(() => import("@/components/visuals/HeroOrb").then(mod => mod.HeroOrb), { ssr: false });
 
 export const HeroSection = () => {
     return (
@@ -93,6 +95,9 @@ export const HeroSection = () => {
             </div>
 
             <BackgroundBeams className="opacity-20 top-0" />
+
+            {/* Fade out mask to blend into the next section smoothly */}
+            <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-white dark:from-neutral-950 to-transparent pointer-events-none z-20" />
         </section>
     );
 };

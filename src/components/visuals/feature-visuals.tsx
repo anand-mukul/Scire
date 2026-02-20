@@ -182,7 +182,7 @@ export const AnalyticsVisual = () => {
     };
 
     return (
-        <div className="flex flex-col w-full h-full p-6 pt-10 pb-34 bg-fuchsia-50/50 dark:bg-card/50 rounded-xl border border-fuchsia-500/20 overflow-hidden relative font-sans text-left group/chart">
+        <div className="flex flex-col w-full h-full p-6 pt-10 pb-28 md:pb-32 bg-fuchsia-50/50 dark:bg-card/50 rounded-xl border border-fuchsia-500/20 overflow-hidden relative font-sans text-left group/chart">
             <GridPattern />
 
             {/* Chart Header */}
