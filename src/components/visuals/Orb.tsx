@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import { usePerformance } from '@/hooks/use-performance';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -169,6 +169,13 @@ export const Orb = ({
 }: OrbProps) => {
     const groupRef = useRef<THREE.Group>(null);
     const { isLowPerformance } = usePerformance();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        // Yield main thread by delaying WebGL initialization
+        const timer = setTimeout(() => setIsMounted(true), 500);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Default layers if not provided
     const defaultP1 = { count: 300, radius: 1.5, size: 0.15, speed: 1.5 };
@@ -179,7 +186,7 @@ export const Orb = ({
     const layer2 = p2 || defaultP2;
     const layer3 = p3 || defaultP3;
 
-    if (isLowPerformance) {
+    if (isLowPerformance || !isMounted) {
         return (
             <div className={`w-full h-full min-h-[300px] flex items-center justify-center relative ${className}`}>
                 <div
@@ -195,7 +202,7 @@ export const Orb = ({
     }
 
     return (
-        <div className={`w-full h-full min-h-[300px] relative transition-opacity duration-1000 ${className}`}>
+        <div className={`w-full h-full min-h-[300px] relative animate-in fade-in duration-1000 ${className}`}>
             <Canvas camera={{ position: [0, 0, 8], fov: 45 }} gl={{ alpha: true, antialias: true }}>
                 <ambientLight intensity={0.5} />
                 <group ref={groupRef}>

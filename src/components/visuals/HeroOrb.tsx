@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { usePerformance } from '@/hooks/use-performance';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -104,6 +104,13 @@ export const HeroOrb = ({
     rotationSpeed = 0.05
 }) => {
     const { isLowPerformance } = usePerformance();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        // Yield main thread by delaying WebGL initialization
+        const timer = setTimeout(() => setIsMounted(true), 500);
+        return () => clearTimeout(timer);
+    }, []);
 
     return (
         <div className={`w-full h-full relative ${className}`}>
@@ -111,8 +118,8 @@ export const HeroOrb = ({
             <div className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-orange-500/20 blur-[100px] rounded-full pointer-events-none z-0" />
             <div className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-orange-600/10 blur-[120px] rounded-full pointer-events-none z-0" />
 
-            {!isLowPerformance && (
-                <Canvas camera={{ position: [0, 0, 8], fov: 45 }} gl={{ alpha: true, antialias: true }} className="relative z-10 transition-opacity duration-1000">
+            {!isLowPerformance && isMounted && (
+                <Canvas camera={{ position: [0, 0, 8], fov: 45 }} gl={{ alpha: true, antialias: true }} className="relative z-10 animate-in fade-in duration-1000">
                     <ambientLight intensity={0.5} />
                     <RotatingGroup speed={rotationSpeed}>
                         {/* Inner Dense Core - Fixed configuration for the Horizon effect */}
@@ -121,8 +128,8 @@ export const HeroOrb = ({
                 </Canvas>
             )}
 
-            {/* Fallback Core for low-end devices */}
-            {isLowPerformance && (
+            {/* Fallback Core for low-end devices or while WebGL is mounting */}
+            {(isLowPerformance || !isMounted) && (
                 <div className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-orange-500/30 blur-[60px] rounded-full pointer-events-none z-10 animate-pulse" />
             )}
         </div>
