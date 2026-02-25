@@ -83,6 +83,7 @@ export interface SessionState {
     addTranscript: (item: TranscriptItem) => void;
     updatePartialTranscript: (text: string | null) => void;
     setAudioStatus: (isPlaying: boolean) => void;
+    setAgentSpeaking: (isSpeaking: boolean) => void;
     setMicStatus: (isActive: boolean) => void;
     setUserVolume: (vol: number) => void;
     setAgentVolume: (vol: number) => void;
@@ -203,7 +204,11 @@ export const useSessionStore = create<SessionState>()(
         setAudioStatus: (isPlaying) =>
             set((state) => {
                 state.isAudioPlaying = isPlaying;
-                state.isAgentSpeaking = isPlaying;
+            }),
+
+        setAgentSpeaking: (isSpeaking) =>
+            set((state) => {
+                state.isAgentSpeaking = isSpeaking;
             }),
 
         setMicStatus: (isActive) =>

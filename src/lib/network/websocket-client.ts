@@ -29,6 +29,7 @@ const WS_CODES = {
 
 const ERROR_CODES = {
     VOICE_UNAVAILABLE: 'VOICE_UNAVAILABLE',
+    PROCESSING_CRASH: 'PROCESSING_CRASH',
 };
 
 class VivaWebSocketClient {
@@ -36,7 +37,7 @@ class VivaWebSocketClient {
     private url: string | null = null;
     private token: string | null = null;
     private reconnectAttempts = 0;
-    private maxReconnectAttempts = 10; // Increased for queueing scenarios
+    private maxReconnectAttempts = 10;
     private pingInterval: NodeJS.Timeout | null = null;
     private explicitClose = false;
     private isConnecting = false;
@@ -74,9 +75,13 @@ class VivaWebSocketClient {
         try {
             Logger.log("VivaWS: Initiating Secure Connection...");
 
-            // Auth via httpOnly cookie (access_token) — sent automatically with WS handshake.
-            // No longer exposing JWT in the URL query string (security risk: visible in logs/proxies).
-            this.ws = new WebSocket(this.url);
+            // Auth via subprotocol header — cookies don't work cross-origin (port 3000 → 8000).
+            // Backend extracts token from Sec-WebSocket-Protocol header.
+            if (this.token) {
+                this.ws = new WebSocket(this.url, [this.token]);
+            } else {
+                this.ws = new WebSocket(this.url);
+            }
 
             this.setupListeners();
 
@@ -287,7 +292,7 @@ class VivaWebSocketClient {
                 break;
 
             case 'agent_speaking':
-                store.setAudioStatus(message.status);
+                store.setAgentSpeaking(message.status);
                 if (!message.status) store.setAgentVolume(0); // Reset volume when stop speaking
                 break;
 
@@ -314,6 +319,11 @@ class VivaWebSocketClient {
                     Logger.warn(`VivaWS: ${message.message}`);
                     store.setAudioStatus(false);
                     store.setError(`${message.message} Switched to text-only mode.`);
+                    window.dispatchEvent(new CustomEvent('viva:voice_unavailable'));
+                } else if (message.code === ERROR_CODES.PROCESSING_CRASH) {
+                    Logger.error(`VivaWS Error [${message.code}]: ${message.message}`);
+                    store.setError(message.message);
+                    store.setAudioStatus(false);
                     window.dispatchEvent(new CustomEvent('viva:voice_unavailable'));
                 } else {
                     Logger.error(`VivaWS Error [${message.code}]: ${message.message}`);
@@ -342,6 +352,10 @@ class VivaWebSocketClient {
         }
     }
 
+    sendIntegritySnapshot(payload: { data: string;[key: string]: any }) {
+        this.send({ type: 'integrity_snapshot', ...payload });
+    }
+
     private flushQueue() {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
@@ -351,12 +365,7 @@ class VivaWebSocketClient {
         }
     }
 
-    sendIntegritySnapshot(data: { timestamp: string; data: string }) {
-        this.send({
-            type: 'integrity_snapshot',
-            data: data
-        });
-    }
+
 
     private startHeartbeat() {
         this.stopHeartbeat();

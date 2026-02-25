@@ -30,7 +30,7 @@ import AIOrb from '../visuals/AIOrb';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/network/api';
 import { vivaWebSocket } from '@/lib/network/websocket-client';
-import { TranscriptDrawer } from './TranscriptDrawer';
+import { TranscriptSheet } from './TranscriptSheet';
 import { PremiumLoader } from '@/components/ui/premium-loader';
 import { cn } from '@/lib/utils';
 
@@ -45,7 +45,7 @@ const EndPhase: React.FC = () => {
     const router = useRouter();
 
     const isTerminated = fsmState === DialogueState.TERMINATED;
-    const questionCount = transcripts.filter(t => t.speaker === TranscriptSpeaker.AI).length;
+    const questionCount = transcripts.filter(t => t.speaker === TranscriptSpeaker.ASSISTANT).length;
 
     return (
         <div className="text-center space-y-4 py-4">
@@ -264,6 +264,7 @@ export const VivaOrchestrator: React.FC = () => {
             setFsmState(DialogueState.END);
             try {
                 await api.sessions.end(sessionId);
+                vivaWebSocket.disconnect(false); // Disconnect but keep state
                 toast.success("Exam Submitted Successfully");
             } catch (err: any) {
                 if (err.message?.includes("completed") || err.message?.includes("finished")) {
@@ -462,7 +463,7 @@ export const VivaOrchestrator: React.FC = () => {
                             {statusBadge.text}
                         </div>
 
-                        <TranscriptDrawer transcripts={transcripts} />
+                        <TranscriptSheet transcripts={transcripts} />
 
                         {/* Submit with Confirmation */}
                         <AlertDialog>

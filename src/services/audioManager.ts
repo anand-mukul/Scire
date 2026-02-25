@@ -143,9 +143,7 @@ export class AudioManager {
         this.isProcessorLoaded = false;
     }
 
-    private handleMessage(msg: any) {
-        // Legacy stub if needed, but we use event listeners now
-    }
+
 
     private async playAudioChunk(base64Data: string) {
         if (!this.audioContext) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Bell,
@@ -29,22 +29,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-
-interface Notification {
-    id: string;
-    type: string;
-    title: string;
-    message: string | null;
-    is_read: boolean;
-    metadata: Record<string, unknown>;
-    created_at: string;
-}
-
-interface NotificationListResponse {
-    notifications: Notification[];
-    unread_count: number;
-    total: number;
-}
+import type { Notification, NotificationListResponse } from '@/types/backend';
 
 const TYPE_ICONS = {
     'payment.success': CreditCard,
@@ -86,13 +71,28 @@ export function NotificationSheet() {
     const [open, setOpen] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
+    const prevUnreadRef = useRef<number>(0);
 
     const { data, isLoading } = useQuery<NotificationListResponse>({
         queryKey: ['notifications'],
         queryFn: () => api.notifications.list({ limit: 40 }),
-        refetchInterval: 30000,
-        staleTime: 15000,
+        refetchInterval: 15000,
+        staleTime: 8000,
+        refetchOnWindowFocus: true,
     });
+
+    // F3: Play notification sound when new unread notifications arrive
+    useEffect(() => {
+        const currentUnread = data?.unread_count ?? 0;
+        if (currentUnread > prevUnreadRef.current && prevUnreadRef.current >= 0 && !open) {
+            try {
+                const audio = new Audio('/notification.mp3');
+                audio.volume = 0.3;
+                audio.play().catch(() => { }); // Swallow autoplay restrictions
+            } catch { } // eslint-disable-line no-empty
+        }
+        prevUnreadRef.current = currentUnread;
+    }, [data?.unread_count, open]);
 
     const markReadMutation = useMutation({
         mutationFn: (id: string) => api.notifications.markRead(id),

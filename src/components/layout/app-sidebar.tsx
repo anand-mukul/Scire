@@ -28,6 +28,7 @@ import {
     Blocks,
     Lock,
     ChartBar,
+    Target,
 } from 'lucide-react';
 import { Palette } from 'lucide-react';
 
@@ -83,6 +84,7 @@ interface NavItem {
     href: string;
     icon: LucideIcon;
     minTier?: 'PRO' | 'ENTERPRISE';
+    comingSoon?: boolean;
 }
 
 interface NavSection {
@@ -142,6 +144,7 @@ const ROLE_NAV: Record<string, NavSection> = {
         items: [
             { label: 'Home', href: '/student', icon: LayoutDashboard },
             { label: 'Join Exam', href: '/student/join', icon: Video },
+            { label: 'Practice', href: '/student/practice', icon: Target, comingSoon: true },
             { label: 'History', href: '/student/history', icon: FileText },
             { label: 'Help & Rules', href: '/student/help', icon: HelpCircle },
         ],
@@ -261,26 +264,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 {primarySection.items.map((item) => {
                                     const active = isActive(item.href);
                                     const locked = item.minTier && !hasAccess(item.minTier);
+                                    const disabled = locked || item.comingSoon;
 
                                     return (
                                         <SidebarMenuItem key={item.href}>
                                             <SidebarMenuButton
-                                                asChild={!locked}
+                                                asChild={!disabled}
                                                 isActive={active}
-                                                tooltip={item.label}
+                                                tooltip={item.comingSoon ? `${item.label} (Coming Soon)` : item.label}
                                                 onClick={(e) => {
-                                                    if (locked) {
+                                                    if (item.comingSoon) {
+                                                        e.preventDefault();
+                                                    } else if (locked) {
                                                         e.preventDefault();
                                                         setUpgradeModalOpen(true);
                                                     }
                                                 }}
-                                                className={`transition-all duration-150 ${locked ? 'opacity-70 hover:bg-transparent hover:text-muted-foreground cursor-pointer' : ''}`}
+                                                className={`transition-all duration-150 ${disabled ? 'opacity-60 hover:bg-transparent hover:text-muted-foreground cursor-not-allowed' : ''}`}
                                             >
-                                                {locked ? (
+                                                {disabled ? (
                                                     <div className="flex items-center w-full">
                                                         <item.icon className="h-4 w-4" />
                                                         <span className="flex-1 ml-2">{item.label}</span>
-                                                        <Lock className="h-3 w-3 text-muted-foreground ml-auto" />
+                                                        {item.comingSoon ? (
+                                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-500/80 bg-orange-500/10 px-1.5 py-0.5 rounded ml-auto">Soon</span>
+                                                        ) : (
+                                                            <Lock className="h-3 w-3 text-muted-foreground ml-auto" />
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <Link href={item.href}>

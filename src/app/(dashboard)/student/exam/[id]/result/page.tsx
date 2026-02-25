@@ -79,9 +79,9 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
                     </h1>
 
                     <div className="flex flex-wrap items-center justify-center gap-4">
-                        {session.exam?.code && (
+                        {session.exam?.exam_code && (
                             <Badge variant="outline" className="text-sm px-3 py-1 border-primary/20 uppercase tracking-widest bg-primary/5 text-foreground">
-                                {session.exam.code}
+                                {session.exam.exam_code}
                             </Badge>
                         )}
                         {!isPending && (

@@ -166,10 +166,10 @@ export default function ReviewSessionPage() {
                                                 .sort((a, b) => a.turn_index - b.turn_index)
                                                 .map((turn) => (
                                                     <div key={turn.id} className={`flex gap-4 ${turn.speaker === TranscriptSpeaker.STUDENT ? 'flex-row-reverse' : ''}`}>
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${turn.speaker === TranscriptSpeaker.AI ? 'bg-muted text-muted-foreground border border-border' : 'bg-muted text-foreground border border-border'}`}>
-                                                            {turn.speaker === TranscriptSpeaker.AI ? 'AI' : 'U'}
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${turn.speaker === TranscriptSpeaker.ASSISTANT ? 'bg-muted text-muted-foreground border border-border' : 'bg-muted text-foreground border border-border'}`}>
+                                                            {turn.speaker === TranscriptSpeaker.ASSISTANT ? 'AI' : 'U'}
                                                         </div>
-                                                        <div className={`p-4 rounded-2xl max-w-[80%] text-sm ${turn.speaker === TranscriptSpeaker.AI ? 'bg-muted border border-border rounded-tl-none' : 'bg-muted/50 border border-border text-foreground rounded-tr-none'}`}>
+                                                        <div className={`p-4 rounded-2xl max-w-[80%] text-sm ${turn.speaker === TranscriptSpeaker.ASSISTANT ? 'bg-muted border border-border rounded-tl-none' : 'bg-muted/50 border border-border text-foreground rounded-tr-none'}`}>
                                                             <p>{turn.text_content}</p>
                                                             <div className="mt-2 text-[10px] opacity-50 flex items-center gap-2">
                                                                 <span>{new Date(turn.created_at).toLocaleTimeString()}</span>

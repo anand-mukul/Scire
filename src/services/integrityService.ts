@@ -93,14 +93,18 @@ class IntegrityService {
 
     /**
      * Estimate noise score from ambient audio level.
+     * Uses AudioAnalysisService for real microphone RMS data.
      * Returns null if AudioContext is not available.
-     * This is a placeholder — future biometrics integration can replace this
-     * with real noise analysis from AudioAnalysisService.
      */
     private estimateNoiseScore(): number | null {
-        // Placeholder: returns null until AudioAnalysisService integration.
-        // The backend handles null gracefully (skips noise_score in risk calculation).
-        return null;
+        try {
+            const { AudioAnalysisService } = require('@/services/AudioAnalysisService');
+            const levels = AudioAnalysisService.getInstance().getLevels();
+            // Return user's ambient mic level as noise score (0-1)
+            return levels.user > 0 ? Math.round(levels.user * 100) / 100 : null;
+        } catch {
+            return null;
+        }
     }
 }
 

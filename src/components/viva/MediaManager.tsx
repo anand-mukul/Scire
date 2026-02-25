@@ -109,10 +109,11 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
     // Manage Audio Transmission
     const isAgentSpeaking = useSessionStore(s => s.isAgentSpeaking);
+    const isAudioPlaying = useSessionStore(s => s.isAudioPlaying);
     useEffect(() => {
         if (!stream) return;
 
-        const shouldRecord = !isAgentSpeaking && (
+        const shouldRecord = !isAgentSpeaking && !isAudioPlaying && (
             fsmState === DialogueState.CALIBRATION ||
             fsmState === DialogueState.QUESTION ||
             fsmState === DialogueState.LISTENING ||
@@ -134,7 +135,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                 audioManager.stopRecording();
             }
         }
-    }, [stream, fsmState, isAgentSpeaking]);
+    }, [stream, fsmState, isAgentSpeaking, isAudioPlaying]);
 
     // Reuse a persistent video element for snapshot capture instead of creating new ones each call
     const captureAndSendSnapshot = useCallback(() => {

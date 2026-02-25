@@ -195,8 +195,8 @@ export const api = {
             const { data: response } = await apiClient.post<Exam>('/exams', data);
             return response;
         },
-        list: async () => {
-            const { data } = await apiClient.get<Exam[]>('/exams');
+        list: async (params?: { exam_status?: ExamStatus; created_by?: string; skip?: number; limit?: number }) => {
+            const { data } = await apiClient.get<Exam[]>('/exams', { params });
             return data;
         },
         get: async (id: string) => {
@@ -271,7 +271,7 @@ export const api = {
             const { data } = await apiClient.get(`/sessions/${sessionId}`);
             return data;
         },
-        list: async (params?: { student_id?: string; status?: string; exam_id?: string; exam_code?: string; review_status?: string; integrity_flag?: boolean }) => {
+        list: async (params?: { status?: string; exam_id?: string; exam_code?: string; review_status?: string; integrity_flag?: boolean; skip?: number; limit?: number }) => {
             const { data } = await apiClient.get('/sessions', { params });
             return data;
         },
@@ -287,6 +287,18 @@ export const api = {
         },
         verifyResult: async (token: string) => {
             const { data } = await apiClient.get<VivaSession>(`/sessions/verify-result/${token}`);
+            return data;
+        },
+        gradeOverride: async (sessionId: string, data: { final_score: number; confidence_score: number; reason: string }) => {
+            const { data: response } = await apiClient.put(`/sessions/${sessionId}/grade`, data);
+            return response;
+        },
+        assignReviewer: async (sessionId: string, reviewerId: string) => {
+            const { data } = await apiClient.post(`/sessions/${sessionId}/assign`, { reviewer_id: reviewerId });
+            return data;
+        },
+        sendReminder: async (sessionId: string) => {
+            const { data } = await apiClient.post(`/sessions/${sessionId}/send-reminder`);
             return data;
         },
     },
@@ -372,6 +384,14 @@ export const api = {
     grading: {
         getDetails: async (sessionId: string) => {
             const { data } = await apiClient.get<GradingDetail[]>(`/grading/sessions/${sessionId}/details`);
+            return data;
+        },
+        getSummary: async (sessionId: string) => {
+            const { data } = await apiClient.get(`/grading/sessions/${sessionId}/summary`);
+            return data;
+        },
+        regrade: async (sessionId: string) => {
+            const { data } = await apiClient.post(`/grading/sessions/${sessionId}/regrade`);
             return data;
         },
         submitReview: async (sessionId: string, data: { status: string; notes?: string; final_score_override?: number }) => {
@@ -634,6 +654,56 @@ export const api = {
         },
         updateStatus: async (reportId: string, newStatus: string) => {
             const { data } = await apiClient.patch(`/error-reports/${reportId}/status`, { status: newStatus });
+            return data;
+        },
+    },
+
+    // ────────────────── Practice Viva ──────────────────
+    practice: {
+        getStatus: async () => {
+            const { data } = await apiClient.get('/practice/status');
+            return data;
+        },
+        createExam: async (payload: { title: string; instructions?: string; syllabus_url?: string }) => {
+            const { data } = await apiClient.post('/practice/exams', payload);
+            return data;
+        },
+        listExams: async () => {
+            const { data } = await apiClient.get('/practice/exams');
+            return data;
+        },
+        getExam: async (examId: string) => {
+            const { data } = await apiClient.get(`/practice/exams/${examId}`);
+            return data;
+        },
+        startSession: async (examId: string, paymentOrderId?: string) => {
+            const { data } = await apiClient.post(`/practice/exams/${examId}/start`, {
+                payment_order_id: paymentOrderId || null,
+            });
+            return data;
+        },
+        listSessions: async () => {
+            const { data } = await apiClient.get('/practice/sessions');
+            return data;
+        },
+        getReport: async (sessionId: string) => {
+            const { data } = await apiClient.get(`/practice/sessions/${sessionId}/report`);
+            return data;
+        },
+        createPaymentOrder: async () => {
+            const { data } = await apiClient.post('/practice/payment/order');
+            return data;
+        },
+        verifyPayment: async (payload: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+        }) => {
+            const { data } = await apiClient.post('/practice/payment/verify', payload);
+            return data;
+        },
+        presignSyllabus: async () => {
+            const { data } = await apiClient.post<{ upload_url: string; file_url: string; expires_in: number }>('/practice/media/presign');
             return data;
         },
     },

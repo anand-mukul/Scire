@@ -13,6 +13,7 @@ export default function SessionPage() {
     const sessionId = params.id as string;
     const setSessionInfo = useSessionStore((state) => state.setSessionInfo);
     const resetSession = useSessionStore((state) => state.resetSession);
+    const setError = useSessionStore((state) => state.setError);
 
     useEffect(() => {
         const initSession = async () => {
@@ -38,8 +39,10 @@ export default function SessionPage() {
                     } else {
                         console.error('No auth token found - please re-login');
                     }
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error('Failed to initialize session:', error);
+                    const msg = error instanceof Error ? error.message : 'Failed to initialize session. Please try again.';
+                    setError(msg);
                 }
             }
         };

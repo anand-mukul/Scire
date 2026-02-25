@@ -1,12 +1,11 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { api } from '@/lib/network/api';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle, XCircle, Linkedin } from 'lucide-react';
 import Link from 'next/link';
-import { GrainyBackground } from '@/components/ui/grainy-background';
-import { motion } from 'motion/react';
+import Image from 'next/image';
+import { Logo } from '@/components/ui/logo';
+import { PrintButton } from '@/components/ui/print-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +13,6 @@ type Props = {
     params: Promise<{ token: string }>;
 };
 
-// 1. Dynamic Metadata for Social Sharing
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { token } = await params;
 
@@ -23,29 +21,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     try {
         const session = await api.sessions.verifyResult(token);
-        if (session && session.student) {
+        if (session?.student) {
             title = `Credential Verified – ${session.student.full_name}`;
-            description = `Officially verified result issued by SCIRE. Exam: ${session.exam?.title}.`;
+            description = `Officially verified credential issued by SCIRE. Assessment: ${session.exam?.title}.`;
         }
-    } catch {
-        // Fallback if fetch fails (e.g. invalid token)
-    }
+    } catch { }
 
     return {
         title,
         description,
-        openGraph: {
-            title,
-            description,
-            type: 'article',
-            // images: ['/images/credential-og.png'], 
-        },
+        openGraph: { title, description, type: 'article' },
     };
 }
 
-// 2. Main Page Component
 export default async function VerifyResultPage({ params }: Props) {
     const { token } = await params;
+
     let session;
     let error = false;
 
@@ -57,35 +48,30 @@ export default async function VerifyResultPage({ params }: Props) {
 
     if (error || !session) {
         return (
-            <GrainyBackground className="relative flex flex-col min-h-screen items-center justify-center p-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md relative z-10"
-                >
-                    <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-8 text-center space-y-4">
-                        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
-                        <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-                        <h1 className="text-xl font-semibold text-foreground">Credential Not Found</h1>
-                        <p className="text-muted-foreground">
-                            This verification link is invalid, expired, or has been revoked.
-                        </p>
-                        <Link href="/">
-                            <Button variant="outline" className="mt-4 border-white/10 hover:bg-white/5">
-                                Return to Home
-                            </Button>
-                        </Link>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+                <div className="text-center max-w-md">
+                    <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
+                        <XCircle className="text-red-500" size={32} />
                     </div>
-                </motion.div>
-            </GrainyBackground>
+                    <h1 className="text-2xl font-semibold text-gray-900 mb-2">Credential Not Found</h1>
+                    <p className="text-gray-500 mb-8 leading-relaxed">
+                        This verification link is invalid, expired, or has been revoked.
+                    </p>
+                    <Link
+                        href="/results/verify"
+                        className="inline-block bg-orange-500 text-white px-7 py-2.5 rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors"
+                    >
+                        Try Another Credential
+                    </Link>
+                </div>
+            </div>
         );
     }
 
     const passed = (session.final_score ?? 0) >= 50;
     const issueDate = session.end_time ? new Date(session.end_time) : new Date();
+    const scorePercent = Math.round(session.final_score ?? 0);
 
-    // Construct LinkedIn Add-to-Profile URL
     const linkedInUrl = new URL('https://www.linkedin.com/profile/add');
     linkedInUrl.searchParams.set('startTask', 'CERTIFICATION_NAME');
     linkedInUrl.searchParams.set('name', session.exam?.title || 'Exam Credential');
@@ -94,106 +80,221 @@ export default async function VerifyResultPage({ params }: Props) {
     linkedInUrl.searchParams.set('issueMonth', (issueDate.getMonth() + 1).toString());
     linkedInUrl.searchParams.set('certId', token);
 
+    const formattedDate = issueDate.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+    });
+
+    const sealDots = [0, 45, 90, 135, 180, 225, 270, 315];
+
     return (
-        <GrainyBackground className="relative flex flex-col min-h-screen font-sans text-foreground">
+        <div className="min-h-screen bg-[#f0f2f5] flex flex-col items-center justify-center py-10 px-4">
 
-            {/* Minimal Header */}
-            <header className="relative z-10 py-6 px-6 md:px-12 flex items-center justify-between border-b border-white/10 bg-black/5 backdrop-blur-sm">
-                <Link href="/" className="font-bold text-xl tracking-tight">SCIRE</Link>
-                <div className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Official Credential Verification</div>
-            </header>
+            {/* Toolbar */}
+            <div id="certificate-toolbar" className="flex items-center gap-3 mb-7">
+                <PrintButton />
+                {passed && (
+                    <a
+                        href={linkedInUrl.toString()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-[#0A66C2] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#004182] transition-colors shadow-sm cursor-pointer"
+                    >
+                        <Linkedin size={15} />
+                        Add to LinkedIn
+                    </a>
+                )}
+            </div>
 
-            <main className="relative z-10 flex-1 flex items-center justify-center p-4 md:p-8">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-3xl"
-                >
-                    <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl transition-all duration-300">
-                        {/* Glow Effect */}
-                        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
+            {/* Certificate */}
+            <div
+                id="certificate-printable"
+                className="relative w-full bg-white overflow-hidden"
+                style={{
+                    maxWidth: '860px',
+                    boxShadow: '0 4px 32px rgba(0,0,0,0.10)',
+                    borderRadius: '4px',
+                }}
+            >
+                {/* Left brand stripe */}
+                <div
+                    className="absolute left-0 top-0 bottom-0 w-[6px]"
+                    style={{ background: 'linear-gradient(180deg, #fb923c 0%, #ea580c 100%)' }}
+                />
 
-                        {/* Top Decorative Bar */}
-                        <div className={`h-1.5 w-full ${passed ? 'bg-[#0077B5]' : 'bg-muted'}`} />
+                {/* Top accent line */}
+                <div className="absolute top-0 left-[6px] right-0 h-[3px] bg-gradient-to-r from-orange-400 to-orange-100" />
 
-                        <div className="p-8 md:p-12 space-y-10">
+                {/* Corner marks */}
+                <div className="absolute top-4 left-5 w-5 h-5 border-t-2 border-l-2 border-orange-300 rounded-tl-sm" />
+                <div className="absolute top-4 right-4 w-5 h-5 border-t-2 border-r-2 border-orange-300 rounded-tr-sm" />
+                <div className="absolute bottom-4 left-5 w-5 h-5 border-b-2 border-l-2 border-orange-300 rounded-bl-sm" />
+                <div className="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-orange-300 rounded-br-sm" />
 
-                            {/* Trust & Status */}
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-full">
-                                        <ShieldCheck className="w-5 h-5 text-muted-foreground" />
-                                    </div>
-                                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Verified by SCIRE</span>
+                <div className="pl-12 pr-10 pt-9 pb-10">
+
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-7">
+                        <div className="flex items-center gap-3.5">
+                            <Logo size="md" showText={false} href={undefined} />
+                            <div>
+                                <div className="text-[15px] font-black tracking-[0.2em] text-gray-900 uppercase leading-tight">
+                                    SCIRE
                                 </div>
+                                <div className="text-[10px] text-gray-400 tracking-[0.18em] uppercase mt-0.5">
+                                    Assessment Platform
+                                </div>
+                            </div>
+                        </div>
 
+                        <div className="flex flex-col items-end gap-1.5 pt-0.5">
+                            <div
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border ${passed
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-red-50 text-red-600 border-red-200'
+                                    }`}
+                            >
                                 {passed ? (
-                                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20 px-4 py-1.5 flex w-fit items-center gap-2 text-sm">
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span>Active Credential</span>
-                                    </Badge>
+                                    <><CheckCircle size={11} strokeWidth={2.5} /> Verified &amp; Active</>
                                 ) : (
-                                    <Badge variant="outline" className="text-muted-foreground border-white/10 px-4 py-1.5 text-sm">
-                                        Attempt Recorded
-                                    </Badge>
+                                    <><XCircle size={11} strokeWidth={2.5} /> Not Passed</>
                                 )}
                             </div>
-
-                            {/* Credential Details */}
-                            <div className="space-y-8">
-                                <div>
-                                    <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
-                                        {session.exam?.title}
-                                    </h1>
-                                    <p className="text-xl text-muted-foreground">
-                                        Issued to <span className="font-semibold text-foreground">{session.student?.full_name}</span>
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-white/10">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-2">Issue Date</p>
-                                        <p className="text-lg font-medium">
-                                            {issueDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-2">Final Result</p>
-                                        <p className="text-lg font-medium">
-                                            {Math.round(session.final_score ?? 0)}% Score
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Footer / Actions */}
-                            <div className="pt-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                <div className="space-y-1.5">
-                                    <p className="text-xs text-muted-foreground font-mono uppercase">Credential ID</p>
-                                    <p className="text-xs text-foreground/70 font-mono select-all font-medium bg-white/5 px-2 py-1 rounded border border-white/10 w-fit">{token}</p>
-                                </div>
-
-                                {passed && (
-                                    <Link href={linkedInUrl.toString()} target="_blank" rel="noopener noreferrer">
-                                        <Button className="bg-[#0077B5] hover:bg-[#006097] text-white font-medium h-11 px-6 rounded-xl shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02]">
-                                            <svg className="w-5 h-5 mr-2 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 21.227.792 22 1.771 22h20.451C23.2 22 24 21.227 24 20.271V1.729C24 .774 23.2 0 22.227 0z" />
-                                            </svg>
-                                            Add to LinkedIn
-                                        </Button>
-                                    </Link>
-                                )}
+                            <div className="text-[10px] text-gray-400 tracking-[0.16em] uppercase">
+                                Certificate of Completion
                             </div>
                         </div>
                     </div>
-                </motion.div>
 
-                {/* Footer Seal */}
-                <div className="absolute bottom-6 text-center w-full z-0 pointer-events-none opacity-50">
-                    <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} SCIRE Assessment Platform. All rights reserved.</p>
+                    {/* Divider */}
+                    <div className="h-px bg-gradient-to-r from-orange-200 via-orange-100 to-transparent mb-9" />
+
+                    {/* Body */}
+                    <div className="text-center px-4 mb-10">
+                        <p className="text-sm italic text-gray-400 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                            This is to certify that
+                        </p>
+
+                        <h1
+                            className="text-[42px] font-bold text-gray-900 leading-tight mb-5"
+                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: '-0.01em' }}
+                        >
+                            {session.student?.full_name}
+                        </h1>
+
+                        <p className="text-[13.5px] text-gray-500 max-w-lg mx-auto mb-5 leading-relaxed">
+                            has successfully demonstrated proficiency and passed the AI-powered oral assessment for
+                        </p>
+
+                        <div className="inline-block">
+                            <h2
+                                className="text-[22px] font-bold text-orange-500 tracking-wide"
+                                style={{ fontFamily: 'Georgia, serif' }}
+                            >
+                                {session.exam?.title}
+                            </h2>
+                            <div className="mt-1.5 h-[2px] w-full bg-gradient-to-r from-orange-300 via-orange-400 to-orange-300 rounded-full" />
+                        </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-px bg-gray-100 mb-8" />
+
+                    {/* Footer */}
+                    <div className="flex items-end justify-between gap-6">
+
+                        {/* Metadata */}
+                        <div className="flex gap-10">
+                            <div>
+                                <div className="text-[9px] uppercase tracking-[0.15em] text-gray-400 mb-1.5">
+                                    Date of Issue
+                                </div>
+                                <div className="text-[13px] text-gray-800 font-semibold whitespace-nowrap">
+                                    {formattedDate}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] uppercase tracking-[0.15em] text-gray-400 mb-1.5">
+                                    Assessment Score
+                                </div>
+                                <div className={`text-[13px] font-semibold ${passed ? 'text-emerald-600' : 'text-red-500'}`}>
+                                    {scorePercent}%
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] uppercase tracking-[0.15em] text-gray-400 mb-1.5">
+                                    Credential ID
+                                </div>
+                                <div className="text-[11px] text-gray-600 font-mono tracking-tight">
+                                    {token.slice(0, 26)}…
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Signature + Seal */}
+                        <div className="flex items-end gap-7 flex-shrink-0">
+                            <div className="text-center">
+                                <Image
+                                    src="/brand-sign.png"
+                                    alt="Authorized signature"
+                                    width={108}
+                                    height={44}
+                                    className="mb-2"
+                                    unoptimized
+                                />
+                                <div className="border-t border-gray-300 pt-2">
+                                    <div className="text-[11px] font-semibold text-gray-700">SCIRE Platform</div>
+                                    <div className="text-[10px] text-gray-400 mt-0.5">Authorized Issuing Authority</div>
+                                </div>
+                            </div>
+
+                            {/* Official seal */}
+                            <div className="relative w-[88px] h-[88px] flex-shrink-0">
+                                <svg viewBox="0 0 88 88" className="w-full h-full">
+                                    <circle cx="44" cy="44" r="40" fill="none" stroke="#f97316" strokeWidth="1.5" opacity="0.9" />
+                                    <circle cx="44" cy="44" r="33" fill="none" stroke="#f97316" strokeWidth="0.8" strokeDasharray="3 2.5" opacity="0.7" />
+
+                                    <path id="sealTopArc" d="M 10,44 A 34,34 0 0,1 78,44" fill="none" />
+                                    <text fontSize="6" fill="#f97316" fontWeight="700" letterSpacing="2">
+                                        <textPath href="#sealTopArc" startOffset="50%" textAnchor="middle">
+                                            SCIRE · VERIFIED · OFFICIAL
+                                        </textPath>
+                                    </text>
+
+                                    <path id="sealBottomArc" d="M 13,50 A 34,34 0 0,0 75,50" fill="none" />
+                                    <text fontSize="5.5" fill="#f97316" letterSpacing="2" opacity="0.85">
+                                        <textPath href="#sealBottomArc" startOffset="50%" textAnchor="middle">
+                                            ASSESSMENT · PLATFORM
+                                        </textPath>
+                                    </text>
+
+                                    {sealDots.map((angle) => {
+                                        const r = 38;
+                                        const x = 44 + r * Math.cos((angle - 90) * Math.PI / 180);
+                                        const y = 44 + r * Math.sin((angle - 90) * Math.PI / 180);
+                                        return <circle key={angle} cx={x} cy={y} r="1.4" fill="#f97316" opacity="0.8" />;
+                                    })}
+                                </svg>
+
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Logo size="sm" showText={false} href={undefined} />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-            </main>
-        </GrainyBackground>
+            </div>
+
+            {/* Footer note */}
+            <p className="mt-5 text-xs text-gray-400">
+                Independently verify credentials at{' '}
+                <Link href="/results/verify" className="text-orange-500 font-medium hover:underline">
+                    scire.in/results/verify
+                </Link>
+            </p>
+
+        </div>
     );
 }

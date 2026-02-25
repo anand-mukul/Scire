@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { cn } from '@/lib/utils'; // Assuming you have a utils file for merging classes
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 interface LogoProps {
     className?: string;
@@ -20,44 +21,41 @@ export const Logo = ({
     showIcon = true,
     href = '/'
 }: LogoProps) => {
-    // Size maps
     const sizeMap = {
-        sm: {
-            container: 'w-8 h-8 rounded-lg text-sm',
-            text: 'text-xl',
-        },
-        md: {
-            container: 'w-10 h-10 rounded-xl text-lg',
-            text: 'text-2xl',
-        },
-        lg: {
-            container: 'w-12 h-12 rounded-xl text-xl',
-            text: 'text-3xl',
-        },
-        xl: {
-            container: 'w-16 h-16 rounded-2xl text-2xl',
-            text: 'text-4xl',
-        },
+        sm: { icon: 28, container: 'rounded-lg', text: 'text-xl', gap: 'gap-1.5' },
+        md: { icon: 36, container: 'rounded-xl', text: 'text-2xl', gap: 'gap-2' },
+        lg: { icon: 44, container: 'rounded-xl', text: 'text-3xl', gap: 'gap-2.5' },
+        xl: { icon: 56, container: 'rounded-2xl', text: 'text-4xl', gap: 'gap-3' },
     };
 
+    const s = sizeMap[size];
+
     const Content = () => (
-        <div className={cn('inline-flex items-center gap-2 group', className)}>
+        <div className={cn('inline-flex items-center group', s.gap, className)}>
             {showIcon && (
                 <div
                     className={cn(
-                        'bg-[image:var(--brand-gradient-bg)] flex items-center justify-center text-white font-bold shadow-[var(--brand-glow)] group-hover:scale-105 transition-transform duration-300',
-                        sizeMap[size].container,
+                        'relative flex-shrink-0 group-hover:scale-105 transition-transform duration-300',
+                        s.container,
                         iconClassName
                     )}
+                    style={{ width: s.icon, height: s.icon }}
                 >
-                    S
+                    <Image
+                        src="/brand-logo.png"
+                        alt="Scire"
+                        fill
+                        className="object-contain"
+                        unoptimized
+                    />
                 </div>
             )}
             {showText && (
                 <span
                     className={cn(
-                        'font-bold bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)] tracking-tight group-hover:brightness-110 transition-all',
-                        sizeMap[size].text,
+                        'font-bold tracking-tight group-hover:brightness-110 transition-all',
+                        'bg-clip-text text-transparent bg-[image:var(--brand-gradient-text)]',
+                        s.text,
                         textClassName
                     )}
                 >

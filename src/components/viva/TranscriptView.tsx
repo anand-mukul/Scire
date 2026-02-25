@@ -28,7 +28,7 @@ export const TranscriptView = () => {
 };
 
 const TranscriptBubble = ({ message }: { message: TranscriptItem }) => {
-    const isAssistant = message.speaker === TranscriptSpeaker.AI;
+    const isAssistant = message.speaker === TranscriptSpeaker.ASSISTANT;
 
     return (
         <div className={cn(

@@ -128,7 +128,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (verifiedUser?.tenant_status &&
-        verifiedUser.tenant_status !== TenantStatus.ACTIVE &&
+        !(verifiedUser.tenant_status === TenantStatus.ACTIVE || verifiedUser.tenant_status === TenantStatus.TRIAL) &&
         userRole !== UserRole.PLATFORM_ADMIN) {
         return NextResponse.redirect(new URL('/tenant-suspended', request.url));
     }

@@ -9,20 +9,20 @@ export const QuestionPhase = () => {
     const isAudioPlaying = useSessionStore((state) => state.isAudioPlaying);
 
     // Get the latest assistant message
-    const lastQuestion = [...transcripts].reverse().find(t => t.speaker === TranscriptSpeaker.AI)?.text || "Preparing next question...";
+    const lastQuestion = [...transcripts].reverse().find(t => t.speaker === TranscriptSpeaker.ASSISTANT)?.text || "Preparing next question...";
 
     // Reset timer when question changes
-    const [timeLeft, setTimeLeft] = React.useState(60);
+    const [timeLeft, setTimeLeft] = React.useState(90);
 
     React.useEffect(() => {
-        setTimeLeft(60);
+        setTimeLeft(90);
         const timer = setInterval(() => {
             setTimeLeft((prev) => Math.max(0, prev - 1));
         }, 1000);
         return () => clearInterval(timer);
     }, [lastQuestion]);
 
-    const progress = ((60 - timeLeft) / 60) * 100;
+    const progress = ((90 - timeLeft) / 90) * 100;
     const radius = 40;
     const stroke = 4;
     const normalizedRadius = radius - stroke * 2;

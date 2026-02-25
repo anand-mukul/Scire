@@ -11,11 +11,11 @@ export function useStats() {
 export function useExams() {
     return useQuery({
         queryKey: ['exams'],
-        queryFn: api.exams.list,
+        queryFn: () => api.exams.list(),
     });
 }
 
-export function useSessions(filters?: { student_id?: string; status?: string; exam_id?: string; exam_code?: string; review_status?: string; integrity_flag?: boolean }) {
+export function useSessions(filters?: { status?: string; exam_id?: string; exam_code?: string; review_status?: string; integrity_flag?: boolean; skip?: number; limit?: number }) {
     return useQuery({
         queryKey: ['sessions', filters],
         queryFn: () => api.sessions.list(filters),

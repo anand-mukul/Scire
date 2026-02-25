@@ -42,7 +42,7 @@ export enum ReviewStatus {
 }
 
 export enum TranscriptSpeaker {
-    AI = 'AI',
+    ASSISTANT = 'ASSISTANT',
     STUDENT = 'STUDENT',
     SYSTEM = 'SYSTEM'
 }
@@ -195,4 +195,20 @@ export interface Subject {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+}
+
+export interface Notification {
+    id: string;
+    type: string;
+    title: string;
+    message: string | null;
+    is_read: boolean;
+    metadata: Record<string, unknown>;
+    created_at: string;
+}
+
+export interface NotificationListResponse {
+    notifications: Notification[];
+    unread_count: number;
+    total: number;
 }
