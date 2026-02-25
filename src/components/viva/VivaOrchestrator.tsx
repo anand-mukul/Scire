@@ -42,10 +42,23 @@ const AuthPhase = () => <div className="text-center p-8 text-neutral-400 animate
 const EndPhase: React.FC = () => {
     const transcripts = useSessionStore((state) => state.transcripts);
     const fsmState = useSessionStore((state) => state.fsmState);
+    const examSettings = useSessionStore((state) => state.examSettings);
     const router = useRouter();
 
     const isTerminated = fsmState === DialogueState.TERMINATED;
-    const questionCount = transcripts.filter(t => t.speaker === TranscriptSpeaker.ASSISTANT).length;
+    // Use the actual questions_asked from exam flow, not transcript count
+    // Counting ASSISTANT transcripts is wrong — it includes calibration, scaffolds, system messages
+    const totalConfigured = examSettings?.number_of_questions || 0;
+    const questionCount = Math.min(
+        transcripts.filter(t =>
+            t.speaker === TranscriptSpeaker.ASSISTANT &&
+            t.text.length > 30 &&
+            !t.text.startsWith('Welcome to the exam') &&
+            !t.text.startsWith("The exam is now complete") &&
+            !t.text.startsWith("I didn't hear you")
+        ).length,
+        totalConfigured
+    );
 
     return (
         <div className="text-center space-y-4 py-4">
@@ -266,6 +279,10 @@ export const VivaOrchestrator: React.FC = () => {
                 await api.sessions.end(sessionId);
                 vivaWebSocket.disconnect(false); // Disconnect but keep state
                 toast.success("Exam Submitted Successfully");
+                // Auto-redirect to history after short delay
+                setTimeout(() => {
+                    router.push('/student/history');
+                }, 2000);
             } catch (err: any) {
                 if (err.message?.includes("completed") || err.message?.includes("finished")) {
                     // Already completed — treat as success

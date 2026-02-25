@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 interface StudentSession extends VivaSession {
     exam_title?: string;
     score?: number;
+    final_score?: number;
 }
 
 const StatusBadge = ({ status, label, index = 0 }: { status: SystemStatus, label: string, index?: number }) => {
@@ -366,13 +367,18 @@ export default function StudentDashboard() {
                                             </div>
                                             <div className="text-xs text-muted-foreground font-mono mt-1">ID: {session.id.slice(0, 8)}</div>
                                         </div>
-                                        <Badge variant="secondary" className="shrink-0">Passed</Badge>
+                                        <Badge variant="secondary" className={`shrink-0 ${(session.final_score ?? session.score ?? 0) >= 40
+                                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                : 'bg-destructive/10 text-destructive border-destructive/20'
+                                            }`}>
+                                            {(session.final_score ?? session.score ?? 0) >= 40 ? 'Passed' : 'Completed'}
+                                        </Badge>
                                     </div>
 
                                     <div className="flex items-end justify-between border-t border-border pt-4">
                                         <div>
                                             <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Score</div>
-                                            <div className="text-2xl font-semibold text-primary">{session.score || 0}%</div>
+                                            <div className="text-2xl font-semibold text-primary">{Math.round(session.final_score ?? session.score ?? 0)}%</div>
                                         </div>
                                         <Button asChild size="sm" variant="ghost" className="text-muted-foreground hover:text-primary group-hover:translate-x-1 transition-all">
                                             <Link href={`/student/exam/${session.id}/result`}>Details →</Link>
