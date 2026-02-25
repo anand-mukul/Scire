@@ -229,7 +229,7 @@ export default function AdminDashboard() {
                             <QuickAction
                                 title="Manage Exams"
                                 desc="Create, edit or publish"
-                                href="/admin/exams"
+                                href="/instructor/exams"
                                 icon={BookOpen}
                                 colorClass="bg-orange-500/10 text-orange-600 border border-orange-500/20"
                             />
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                             <QuickAction
                                 title="Review Sessions"
                                 desc="Audit flagged exams"
-                                href="/admin/reviews"
+                                href="/reviewer"
                                 icon={Shield}
                                 colorClass="bg-rose-500/10 text-rose-600 border border-rose-500/20"
                             />
