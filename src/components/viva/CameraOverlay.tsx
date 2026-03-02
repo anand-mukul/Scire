@@ -11,16 +11,16 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ status, message })
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             {/* Guide Frame */}
             <div className={`
-                relative w-64 h-80 rounded-[4rem] border-2 transition-all duration-500
+                relative w-64 h-80 rounded-2xl border-2 transition-all duration-500
                 ${status === 'success' ? 'border-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.3)]' :
                     status === 'error' ? 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.3)]' :
                         'border-white/30'}
             `}>
                 {/* Corner Markers */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/60 rounded-tl-3xl -mt-1 -ml-1" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/60 rounded-tr-3xl -mt-1 -mr-1" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/60 rounded-bl-3xl -mb-1 -ml-1" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white/60 rounded-br-3xl -mb-1 -mr-1" />
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/60 rounded-tl-xl -mt-1 -ml-1" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/60 rounded-tr-xl -mt-1 -mr-1" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/60 rounded-bl-xl -mb-1 -ml-1" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white/60 rounded-br-xl -mb-1 -mr-1" />
 
                 {/* Scanning Beam */}
                 {status === 'scanning' && (
@@ -43,7 +43,7 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ status, message })
                 <defs>
                     <mask id="mask">
                         <rect width="100%" height="100%" fill="white" />
-                        <rect x="50%" y="50%" width="256" height="320" rx="64" transform="translate(-128, -160)" fill="black" />
+                        <rect x="50%" y="50%" width="256" height="320" rx="16" transform="translate(-128, -160)" fill="black" />
                     </mask>
                 </defs>
                 <rect width="100%" height="100%" mask="url(#mask)" fill="currentColor" />
@@ -53,8 +53,8 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ status, message })
             {message && (
                 <div className="absolute bottom-8 left-0 right-0 text-center">
                     <p className={`inline-block px-4 py-2 rounded-lg backdrop-blur-md border text-sm font-medium ${status === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-200' :
-                            status === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' :
-                                'bg-black/40 border-white/10 text-white'
+                        status === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' :
+                            'bg-black/40 border-white/10 text-white'
                         }`}>
                         {message}
                     </p>

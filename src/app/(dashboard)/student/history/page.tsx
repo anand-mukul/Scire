@@ -55,7 +55,14 @@ export default function StudentHistoryPage() {
                         description="Once you finish an exam, it will appear here for you to review."
                     />
                 ) : (
-                    (sessions as unknown as HistorySession[])?.map((session, index) => {
+                    ([...(sessions as unknown as HistorySession[])]
+                        .sort((a, b) => {
+                            // Sort by start_time descending (most recently attempted first)
+                            const timeA = a.start_time ? new Date(a.start_time).getTime() : 0;
+                            const timeB = b.start_time ? new Date(b.start_time).getTime() : 0;
+                            return timeB - timeA;
+                        })
+                    )?.map((session, index) => {
                         const isPending = session.final_score === null || session.final_score === undefined;
                         const passed = (session.final_score || 0) >= 50;
 

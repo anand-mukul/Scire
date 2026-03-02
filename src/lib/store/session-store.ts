@@ -44,6 +44,7 @@ export interface SessionState {
     // Viva State (FSM)
     status: SessionStatus;
     fsmState: DialogueState;
+    questionsAsked: number;
 
     // Audio/Media State
     isMicActive: boolean;
@@ -78,7 +79,7 @@ export interface SessionState {
     setError: (error: string | null) => void;
     setOnboardingStatus: (accepted: boolean) => void;
 
-    setFsmState: (state: DialogueState) => void;
+    setFsmState: (state: DialogueState, questionsAsked?: number) => void;
     setStatus: (status: SessionStatus) => void;
     addTranscript: (item: TranscriptItem) => void;
     updatePartialTranscript: (text: string | null) => void;
@@ -107,6 +108,7 @@ export const useSessionStore = create<SessionState>()(
 
         status: SessionStatus.PENDING,
         fsmState: DialogueState.AUTH,
+        questionsAsked: 0,
 
         isMicActive: false,
         isAudioPlaying: false,
@@ -177,9 +179,12 @@ export const useSessionStore = create<SessionState>()(
                 state.onboardingAccepted = accepted;
             }),
 
-        setFsmState: (fsmState) =>
+        setFsmState: (fsmState, questionsAsked) =>
             set((state) => {
+                // Validate incoming FSM state against known enum values
+                if (!Object.values(DialogueState).includes(fsmState)) return;
                 state.fsmState = fsmState;
+                if (questionsAsked !== undefined) state.questionsAsked = questionsAsked;
             }),
 
         setStatus: (status) =>

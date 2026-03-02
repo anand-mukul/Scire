@@ -40,25 +40,14 @@ const AuthPhase = () => <div className="text-center p-8 text-neutral-400 animate
 
 // Proper End Phase with completion summary
 const EndPhase: React.FC = () => {
-    const transcripts = useSessionStore((state) => state.transcripts);
     const fsmState = useSessionStore((state) => state.fsmState);
     const examSettings = useSessionStore((state) => state.examSettings);
     const router = useRouter();
 
     const isTerminated = fsmState === DialogueState.TERMINATED;
-    // Use the actual questions_asked from exam flow, not transcript count
-    // Counting ASSISTANT transcripts is wrong — it includes calibration, scaffolds, system messages
     const totalConfigured = examSettings?.number_of_questions || 0;
-    const questionCount = Math.min(
-        transcripts.filter(t =>
-            t.speaker === TranscriptSpeaker.ASSISTANT &&
-            t.text.length > 30 &&
-            !t.text.startsWith('Welcome to the exam') &&
-            !t.text.startsWith("The exam is now complete") &&
-            !t.text.startsWith("I didn't hear you")
-        ).length,
-        totalConfigured
-    );
+    const questionsAsked = useSessionStore((state) => state.questionsAsked);
+    const questionCount = Math.min(questionsAsked, totalConfigured);
 
     return (
         <div className="text-center space-y-4 py-4">
@@ -91,11 +80,11 @@ const EndPhase: React.FC = () => {
             )}
 
             <Button
-                onClick={() => router.push('/student')}
+                onClick={() => router.push('/student/history')}
                 variant="outline"
                 className="mt-6 border-border hover:bg-muted text-foreground"
             >
-                Return to Dashboard
+                View Results
             </Button>
         </div>
     );
@@ -120,6 +109,7 @@ const useIsMobile = () => {
     return isMobile;
 };
 
+// Exam duration timer (overall session timer)
 const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
     const [timeLeft, setTimeLeft] = React.useState<string>("00:00");
     const [percent, setPercent] = React.useState(100);
@@ -154,14 +144,15 @@ const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
     if (!expiryTime) return null;
 
     return (
-        <div className="flex flex-col items-center gap-1 min-w-[100px]">
-            <div className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-medium bg-muted/40 px-3 py-1 rounded-full border border-border">
-                <TimerIcon className="w-3 h-3 text-primary" />
-                {timeLeft}
-            </div>
-            <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+        <div className="flex items-center gap-2 font-mono text-sm font-medium bg-muted/40 px-3 py-1.5 rounded-full border border-border text-muted-foreground">
+            <TimerIcon className="w-3.5 h-3.5 text-primary" />
+            <span>{timeLeft}</span>
+            <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
                 <div
-                    className="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
+                    className={cn(
+                        "h-full transition-all duration-1000 ease-linear rounded-full",
+                        percent < 20 ? "bg-red-500" : "bg-primary"
+                    )}
                     style={{ width: `${percent}%` }}
                 />
             </div>
@@ -169,25 +160,49 @@ const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
     );
 };
 
+// Phase elapsed timer — shows how long current phase has been active
+const PhaseTimer: React.FC<{ fsmState: DialogueState }> = ({ fsmState }) => {
+    const [elapsed, setElapsed] = React.useState(0);
+
+    React.useEffect(() => {
+        setElapsed(0);
+        const timer = setInterval(() => {
+            setElapsed(prev => prev + 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [fsmState]);
+
+    // Don't show for non-interactive phases
+    if (fsmState === DialogueState.AUTH || fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) {
+        return null;
+    }
+
+    return (
+        <span className="text-muted-foreground/50 font-mono text-xs tabular-nums">
+            {elapsed}s
+        </span>
+    );
+};
+
 // Get status badge text and color based on FSM state
 const getStatusBadge = (fsmState: DialogueState, isAgentSpeaking: boolean) => {
-    if (isAgentSpeaking) return { text: 'AI SPEAKING', color: 'border-blue-500/50 text-blue-400', dotColor: 'bg-blue-500 animate-pulse' };
+    if (isAgentSpeaking) return { text: 'AI SPEAKING', color: 'border-blue-500/30 text-blue-400', dotColor: 'bg-blue-500 animate-pulse' };
 
     switch (fsmState) {
         case DialogueState.LISTENING:
-            return { text: 'LISTENING', color: 'border-emerald-500/50 text-emerald-400', dotColor: 'bg-emerald-500 animate-pulse' };
+            return { text: 'LISTENING', color: 'border-emerald-500/30 text-emerald-400', dotColor: 'bg-emerald-500 animate-pulse' };
         case DialogueState.EVALUATION:
         case DialogueState.SCAFFOLD:
-            return { text: 'PROCESSING', color: 'border-amber-500/50 text-amber-400', dotColor: 'bg-amber-500 animate-pulse' };
+            return { text: 'PROCESSING', color: 'border-amber-500/30 text-amber-400', dotColor: 'bg-amber-500 animate-pulse' };
         case DialogueState.CALIBRATION:
-            return { text: 'CALIBRATING', color: 'border-purple-500/50 text-purple-400', dotColor: 'bg-purple-500 animate-pulse' };
+            return { text: 'CALIBRATING', color: 'border-purple-500/30 text-purple-400', dotColor: 'bg-purple-500 animate-pulse' };
         case DialogueState.QUESTION:
         case DialogueState.TRANSFER:
-            return { text: 'QUESTION', color: 'border-cyan-500/50 text-cyan-400', dotColor: 'bg-cyan-500' };
+            return { text: 'QUESTION', color: 'border-cyan-500/30 text-cyan-400', dotColor: 'bg-cyan-500' };
         case DialogueState.END:
-            return { text: 'COMPLETED', color: 'border-neutral-500/50 text-neutral-400', dotColor: 'bg-neutral-500' };
+            return { text: 'COMPLETED', color: 'border-neutral-500/30 text-neutral-400', dotColor: 'bg-neutral-500' };
         case DialogueState.TERMINATED:
-            return { text: 'TERMINATED', color: 'border-red-500/50 text-red-400', dotColor: 'bg-red-500' };
+            return { text: 'TERMINATED', color: 'border-red-500/30 text-red-400', dotColor: 'bg-red-500' };
         default:
             return { text: fsmState?.toUpperCase() || 'IDLE', color: 'text-neutral-500', dotColor: 'bg-neutral-600' };
     }
@@ -202,6 +217,7 @@ export const VivaOrchestrator: React.FC = () => {
     const transcripts = useSessionStore((state) => state.transcripts);
     const setFsmState = useSessionStore((state) => state.setFsmState);
     const violation = useSessionStore((state) => state.violation);
+    const questionsAsked = useSessionStore((state) => state.questionsAsked);
 
     // Audio stream for visualizer
     const [audioStream, setAudioStream] = React.useState<MediaStream | null>(null);
@@ -219,6 +235,23 @@ export const VivaOrchestrator: React.FC = () => {
     const [longConnect, setLongConnect] = React.useState(false);
     const [isFullscreen, setIsFullscreen] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    // Derive question info
+    const totalQuestions = examSettings?.number_of_questions || 0;
+
+    // Get the last question text for persistent subtitle
+    const lastQuestionText = React.useMemo(() => {
+        const lastAssistant = [...transcripts].reverse().find(t => t.speaker === TranscriptSpeaker.ASSISTANT);
+        return lastAssistant?.text || null;
+    }, [transcripts]);
+
+    // Show question subtitle in QUESTION, LISTENING, EVALUATION, SCAFFOLD phases
+    const showQuestionSubtitle = [
+        DialogueState.QUESTION,
+        DialogueState.LISTENING,
+        DialogueState.EVALUATION,
+        DialogueState.SCAFFOLD,
+    ].includes(fsmState) && lastQuestionText && questionsAsked > 0;
 
     // Strict Mode Enforcement
     React.useEffect(() => {
@@ -256,12 +289,13 @@ export const VivaOrchestrator: React.FC = () => {
 
     // Handle Leave Session — sends abandon signal to backend
     const handleLeaveSession = async () => {
+        // Stop all audio playback
+        window.dispatchEvent(new CustomEvent('viva:stop_audio'));
         if (sessionId) {
             try {
-                // Send leave signal through WS so backend marks session as ABANDONED
                 vivaWebSocket.send({ type: 'session_leave' });
             } catch {
-                // If WS send fails, that's fine — backend will auto-abandon on disconnect
+                // If WS send fails, backend will auto-abandon on disconnect
             }
         }
         router.push('/student');
@@ -275,23 +309,25 @@ export const VivaOrchestrator: React.FC = () => {
         if (sessionId) {
             setIsSubmitting(true);
             setFsmState(DialogueState.END);
+            // Stop all audio playback immediately
+            window.dispatchEvent(new CustomEvent('viva:stop_audio'));
             try {
                 await api.sessions.end(sessionId);
-                vivaWebSocket.disconnect(false); // Disconnect but keep state
+                // Full shutdown: disconnect WS and reset state
+                vivaWebSocket.disconnect(false);
+                useSessionStore.getState().resetSession();
                 toast.success("Exam Submitted Successfully");
-                // Auto-redirect to history after short delay
-                setTimeout(() => {
-                    router.push('/student/history');
-                }, 2000);
+                // Immediate redirect to history
+                router.push('/student/history');
             } catch (err: any) {
                 if (err.message?.includes("completed") || err.message?.includes("finished")) {
-                    // Already completed — treat as success
+                    // Already completed — still redirect
+                    router.push('/student/history');
                 } else {
                     console.error("Submission failed:", err);
                     toast.error("Submission Error. Please try again.");
+                    setIsSubmitting(false);
                 }
-            } finally {
-                setIsSubmitting(false);
             }
         }
     };
@@ -435,14 +471,14 @@ export const VivaOrchestrator: React.FC = () => {
                 )}
 
                 {/* --- Top Bar --- */}
-                <header className={cn("flex justify-between items-center px-6 py-4 z-50 bg-gradient-to-b from-black/80 to-transparent", isVoiceUnavailable && "mt-8")}>
+                <header className={cn("flex justify-between items-center px-6 py-3 z-50 bg-gradient-to-b from-black/60 to-transparent", isVoiceUnavailable && "mt-8")}>
                     {/* Left: Exit */}
                     <AlertDialog>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors">
-                                        <LogOut className="w-5 h-5" />
+                                    <Button variant="ghost" size="icon" className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors h-9 w-9">
+                                        <LogOut className="w-4 h-4" />
                                     </Button>
                                 </AlertDialogTrigger>
                             </TooltipTrigger>
@@ -466,18 +502,27 @@ export const VivaOrchestrator: React.FC = () => {
                         </AlertDialogContent>
                     </AlertDialog>
 
-                    {/* Center: Timer */}
-                    <div className="flex items-start gap-8">
-                        <div className="hidden md:flex items-center gap-4">
-                            <ExamTimer expiryTime={expiryTime} />
-                        </div>
+                    {/* Center: Timer + Question Counter */}
+                    <div className="flex items-center gap-3">
+                        <ExamTimer expiryTime={expiryTime} />
+
+                        {/* Question Number — always visible when exam has questions */}
+                        {totalQuestions > 0 && (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border text-xs font-mono text-muted-foreground">
+                                <span className="text-foreground font-bold">Q{questionsAsked || '-'}</span>
+                                <span>/</span>
+                                <span>{totalQuestions}</span>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Right: Actions */}
-                    <div className="flex items-center gap-3">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/50 border border-neutral-800 text-xs font-mono transition-colors ${statusBadge.color}`}>
+                    {/* Right: Status + Phase Timer + Transcript + Submit */}
+                    <div className="flex items-center gap-2">
+                        {/* Status Badge with Phase Timer */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/50 border text-xs font-mono transition-colors ${statusBadge.color}`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${statusBadge.dotColor}`} />
-                            {statusBadge.text}
+                            <span>{statusBadge.text}</span>
+                            <PhaseTimer fsmState={fsmState} />
                         </div>
 
                         <TranscriptSheet transcripts={transcripts} />
@@ -489,11 +534,11 @@ export const VivaOrchestrator: React.FC = () => {
                                     <AlertDialogTrigger asChild>
                                         <Button
                                             size="sm"
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 border-0"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 border-0 h-8 px-3 text-xs"
                                             disabled={isSubmitting || fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED}
                                         >
-                                            <span className="hidden sm:inline mr-2">Submit</span>
-                                            <CheckCircle className="w-4 h-4" />
+                                            <span className="hidden sm:inline mr-1.5">Submit</span>
+                                            <CheckCircle className="w-3.5 h-3.5" />
                                         </Button>
                                     </AlertDialogTrigger>
                                 </TooltipTrigger>
@@ -522,15 +567,26 @@ export const VivaOrchestrator: React.FC = () => {
                 {/* --- Main Content --- */}
                 <main className="flex-1 flex flex-col relative z-0">
                     {/* AI Orb - Center Stage */}
-                    <div className="flex-1 flex items-center justify-center relative z-10 -mt-10">
-                        <div className="w-[80vw] max-w-[400px] aspect-square relative cursor-default">
-                            <AIOrb />
+                    <div className="flex-1 flex items-center justify-center relative z-10 -mt-6">
+                        <div className="flex flex-col items-center gap-6">
+                            <div className="w-[70vw] max-w-[350px] aspect-square relative cursor-default">
+                                <AIOrb />
+                            </div>
+
+                            {/* Persistent Question Subtitle — visible across QUESTION → LISTENING → EVALUATION */}
+                            {showQuestionSubtitle && (
+                                <div className="max-w-2xl px-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                    <p className="text-base md:text-lg text-foreground/80 font-medium leading-relaxed italic">
+                                        &quot;{lastQuestionText}&quot;
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Dynamic Phase Content (Captions/Inputs) */}
-                    <div className="relative z-20 w-full max-w-3xl mx-auto px-6 pb-12 min-h-[120px] flex items-center justify-center">
-                        <div className="w-full backdrop-blur-sm bg-black/40 rounded-2xl p-6 border border-white/5 shadow-2xl transition-all duration-300">
+                    {/* Dynamic Phase Content (Captions/Inputs) — minimal bottom area */}
+                    <div className="relative z-20 w-full max-w-2xl mx-auto px-6 pb-8 min-h-[80px] flex items-center justify-center">
+                        <div className="w-full">
                             {renderPhase()}
                         </div>
                     </div>

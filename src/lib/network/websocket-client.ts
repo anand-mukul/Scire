@@ -3,7 +3,7 @@ import { Logger } from '@/lib/logger';
 import { TranscriptSpeaker } from '@/types/backend';
 
 type WebSocketMessage =
-    | { type: 'state_update'; state: DialogueState }
+    | { type: 'state_update'; state: DialogueState; questions_asked?: number }
     | { type: 'transcript'; text: string; is_final: boolean; role: 'STUDENT' | 'ASSISTANT' | 'SYSTEM'; timestamp: string }
     | { type: 'audio_chunk'; data: string } // base64
     | { type: 'ping' }
@@ -237,7 +237,7 @@ class VivaWebSocketClient {
         switch (message.type) {
             case 'state_update':
                 if (Object.values(DialogueState).includes(message.state)) {
-                    store.setFsmState(message.state);
+                    store.setFsmState(message.state, message.questions_asked);
                 }
                 break;
 

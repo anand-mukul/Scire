@@ -20,7 +20,9 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
     // Persistent video element for snapshot capture — avoids creating temp elements each time
     const snapshotVideoRef = useRef<HTMLVideoElement | null>(null);
 
-    // 1. Acquire Persistent Stream (Audio + Video)
+    // 1. Acquire Persistent Stream (Audio + Video) — ONCE
+    // Stream is acquired on mount and only released on unmount or session end.
+    // DO NOT include fsmState in deps — it causes repeated stream re-initialization.
     useEffect(() => {
         let mounted = true;
 
@@ -63,18 +65,22 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
             }
         };
 
-        if (fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END) {
-            initMedia();
-        }
+        initMedia();
 
         return () => {
             mounted = false;
-            // Stop all tracks on unmount to release camera/mic hardware
+        };
+    }, []); // Acquire ONCE — no fsmState dep
+
+    // Release stream on END/TERMINATED or unmount
+    useEffect(() => {
+        if (fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) {
             if (stream) {
+                Logger.log('MediaManager: Releasing stream on session end');
                 stream.getTracks().forEach(t => t.stop());
                 setStream(null);
             }
-        };
+        }
     }, [fsmState]);
 
     // Lifecycle: Cleanup & Integrity Monitoring
@@ -108,16 +114,19 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
     }, [stream, fsmState]);
 
     // Manage Audio Transmission
-    const isAgentSpeaking = useSessionStore(s => s.isAgentSpeaking);
-    const isAudioPlaying = useSessionStore(s => s.isAudioPlaying);
+    // IMPORTANT: Keep mic active at ALL TIMES during interactive phases.
+    // Stopping recording sends CloseStream to Deepgram, permanently killing the STT WebSocket.
+    // Echo filtering is handled server-side in websocket.py (stream_manager.is_speaking check).
     useEffect(() => {
         if (!stream) return;
 
-        const shouldRecord = !isAgentSpeaking && !isAudioPlaying && (
+        const shouldRecord = (
             fsmState === DialogueState.CALIBRATION ||
             fsmState === DialogueState.QUESTION ||
             fsmState === DialogueState.LISTENING ||
-            fsmState === DialogueState.SCAFFOLD
+            fsmState === DialogueState.SCAFFOLD ||
+            fsmState === DialogueState.EVALUATION ||
+            fsmState === DialogueState.TRANSFER
         );
 
         if (shouldRecord) {
@@ -135,7 +144,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                 audioManager.stopRecording();
             }
         }
-    }, [stream, fsmState, isAgentSpeaking, isAudioPlaying]);
+    }, [stream, fsmState]);
 
     // Reuse a persistent video element for snapshot capture instead of creating new ones each call
     const captureAndSendSnapshot = useCallback(() => {

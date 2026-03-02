@@ -81,8 +81,24 @@ export const TTSPlayer = () => {
 
         window.addEventListener('viva:audio_chunk', handleAudioChunk);
 
+        // Stop all audio playback on session end
+        const handleStopAudio = () => {
+            nextStartTimeRef.current = 0;
+            setAudioStatus(false);
+            if (audioContextRef.current && audioContextRef.current.state === 'running') {
+                // Suspend stops all scheduled playback immediately
+                audioContextRef.current.suspend().catch(() => { });
+                // Resume after a moment so the context can be reused if needed
+                setTimeout(() => {
+                    audioContextRef.current?.resume().catch(() => { });
+                }, 100);
+            }
+        };
+        window.addEventListener('viva:stop_audio', handleStopAudio);
+
         return () => {
             window.removeEventListener('viva:audio_chunk', handleAudioChunk);
+            window.removeEventListener('viva:stop_audio', handleStopAudio);
             // DO NOT close the singleton context here. 
             // It belongs to AudioAnalysisService.
             audioContextRef.current = null;

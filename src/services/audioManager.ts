@@ -82,7 +82,10 @@ export class AudioManager {
                 if (!this.isRecording) return;
 
                 const state = useSessionStore.getState();
-                if (state.isAgentSpeaking || !state.isMicActive) return;
+                if (!state.isMicActive) return;
+                // NOTE: We intentionally do NOT check isAgentSpeaking here.
+                // Stopping audio during TTS kills the Deepgram WebSocket (no audio = connection death).
+                // Echo filtering is handled server-side in websocket.py (stream_manager.is_speaking).
 
                 this.analyzeVolume(event.data);
 
