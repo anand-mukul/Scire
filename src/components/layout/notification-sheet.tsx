@@ -13,6 +13,15 @@ import {
     ShieldAlert,
     Megaphone,
     X,
+    GraduationCap,
+    Scale,
+    UserCog,
+    Brain,
+    Eye,
+    HandshakeIcon,
+    Gavel,
+    CircleAlert,
+    Zap,
 } from 'lucide-react';
 import {
     Sheet,
@@ -31,17 +40,30 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import type { Notification, NotificationListResponse } from '@/types/backend';
 
-const TYPE_ICONS = {
+const TYPE_ICONS: Record<string, React.ElementType> = {
     'payment.success': CreditCard,
     'payment.failed': CreditCard,
-    'plan.upgraded': CreditCard,
+    'plan.upgraded': Zap,
     'quota.warning': AlertTriangle,
     'quota.exceeded': AlertTriangle,
     'exam.created': BookOpen,
+    'session.completed': GraduationCap,
+    'session.terminated': CircleAlert,
+    'session.abandoned': CircleAlert,
     'session.flagged': ShieldAlert,
-    'user.role_changed': Check,
+    'grade.published': GraduationCap,
+    'grade.overridden': Scale,
+    'review.escalated': Eye,
+    'review.completed': Check,
+    'integrity.violation': ShieldAlert,
+    'appeal.submitted': Gavel,
+    'appeal.resolved': Gavel,
+    'consent.updated': HandshakeIcon,
+    'ai.low_confidence': Brain,
+    'ai.bias_detected': Brain,
+    'user.role_changed': UserCog,
     'system.announcement': Megaphone,
-} as const satisfies Partial<Record<string, React.ElementType>>;
+};
 
 const TYPE_COLORS: Record<string, { text: string; bg: string; ring: string }> = {
     'payment.success': { text: 'text-emerald-500', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/20' },
@@ -50,9 +72,27 @@ const TYPE_COLORS: Record<string, { text: string; bg: string; ring: string }> = 
     'quota.warning': { text: 'text-amber-500', bg: 'bg-amber-500/10', ring: 'ring-amber-500/20' },
     'quota.exceeded': { text: 'text-red-500', bg: 'bg-red-500/10', ring: 'ring-red-500/20' },
     'exam.created': { text: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/20' },
+    'session.completed': { text: 'text-emerald-500', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/20' },
+    'session.terminated': { text: 'text-red-500', bg: 'bg-red-500/10', ring: 'ring-red-500/20' },
+    'session.abandoned': { text: 'text-orange-500', bg: 'bg-orange-500/10', ring: 'ring-orange-500/20' },
     'session.flagged': { text: 'text-orange-500', bg: 'bg-orange-500/10', ring: 'ring-orange-500/20' },
+    'grade.published': { text: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/20' },
+    'grade.overridden': { text: 'text-amber-500', bg: 'bg-amber-500/10', ring: 'ring-amber-500/20' },
+    'review.escalated': { text: 'text-orange-500', bg: 'bg-orange-500/10', ring: 'ring-orange-500/20' },
+    'review.completed': { text: 'text-emerald-500', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/20' },
+    'integrity.violation': { text: 'text-red-500', bg: 'bg-red-500/10', ring: 'ring-red-500/20' },
+    'appeal.submitted': { text: 'text-amber-500', bg: 'bg-amber-500/10', ring: 'ring-amber-500/20' },
+    'appeal.resolved': { text: 'text-emerald-500', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/20' },
+    'consent.updated': { text: 'text-slate-500', bg: 'bg-slate-500/10', ring: 'ring-slate-500/20' },
+    'ai.low_confidence': { text: 'text-amber-500', bg: 'bg-amber-500/10', ring: 'ring-amber-500/20' },
+    'ai.bias_detected': { text: 'text-red-500', bg: 'bg-red-500/10', ring: 'ring-red-500/20' },
     'user.role_changed': { text: 'text-violet-500', bg: 'bg-violet-500/10', ring: 'ring-violet-500/20' },
     'system.announcement': { text: 'text-cyan-500', bg: 'bg-cyan-500/10', ring: 'ring-cyan-500/20' },
+};
+
+const PRIORITY_STYLES: Record<string, { badge: string; border: string }> = {
+    CRITICAL: { badge: 'bg-red-500/10 text-red-600 border-red-500/20', border: 'border-red-500/20 shadow-red-500/5' },
+    HIGH: { badge: 'bg-orange-500/10 text-orange-600 border-orange-500/20', border: 'border-orange-500/15' },
 };
 
 function timeAgo(dateString: string): string {
@@ -112,7 +152,7 @@ export function NotificationSheet() {
         if (!notification.is_read) {
             markReadMutation.mutate(notification.id);
         }
-        const link = notification.metadata?.link as string;
+        const link = notification.action_url || (notification.metadata?.link as string);
         if (link && typeof link === 'string' && link.startsWith('/')) {
             router.push(link);
             setOpen(false);
@@ -189,8 +229,9 @@ export function NotificationSheet() {
                     ) : (
                         <div className="p-4 space-y-2">
                             {notifications.map((n) => {
-                                const Icon = TYPE_ICONS[n.type as keyof typeof TYPE_ICONS] ?? Bell;
+                                const Icon = (TYPE_ICONS[n.type] ?? Bell) as React.FC<{ className?: string }>;
                                 const style = TYPE_COLORS[n.type] || { text: 'text-muted-foreground', bg: 'bg-muted/40', ring: 'ring-border/40' };
+                                const priorityStyle = PRIORITY_STYLES[n.priority];
 
                                 return (
                                     <button
@@ -199,7 +240,7 @@ export function NotificationSheet() {
                                         className={cn(
                                             "w-full flex items-start gap-4 p-4 rounded-2xl text-left transition-all border group relative",
                                             !n.is_read
-                                                ? "bg-primary/[0.02] border-primary/10 shadow-sm shadow-primary/5"
+                                                ? cn("bg-primary/[0.02] shadow-sm shadow-primary/5", priorityStyle?.border || "border-primary/10")
                                                 : "bg-background hover:bg-muted/30 border-transparent"
                                         )}
                                     >
@@ -221,6 +262,11 @@ export function NotificationSheet() {
                                                 <span className="text-[10px] font-medium text-muted-foreground/50 whitespace-nowrap flex items-center gap-1.5 underline-offset-4 decoration-primary/20 group-hover:underline">
                                                     <Clock className="h-2.5 w-2.5" />
                                                     {timeAgo(n.created_at)}
+                                                    {priorityStyle && (
+                                                        <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border ml-1', priorityStyle.badge)}>
+                                                            {n.priority}
+                                                        </span>
+                                                    )}
                                                 </span>
                                             </div>
                                             {n.message && (

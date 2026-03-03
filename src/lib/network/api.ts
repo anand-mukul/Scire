@@ -632,6 +632,26 @@ export const api = {
         },
     },
 
+    notificationPreferences: {
+        get: async () => {
+            const { data } = await apiClient.get('/notifications/preferences');
+            return data;
+        },
+        update: async (prefs: {
+            channel_in_app?: boolean;
+            channel_email?: boolean;
+            channel_push?: boolean;
+            quiet_hours_enabled?: boolean;
+            quiet_hours_start?: string | null;
+            quiet_hours_end?: string | null;
+            quiet_hours_tz?: string;
+            type_overrides?: Record<string, unknown>;
+        }) => {
+            const { data } = await apiClient.put('/notifications/preferences', prefs);
+            return data;
+        },
+    },
+
     errorReports: {
         submit: async (payload: {
             error_message: string;

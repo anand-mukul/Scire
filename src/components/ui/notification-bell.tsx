@@ -1,8 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Check, CheckCheck, Clock, CreditCard, AlertTriangle, BookOpen, ShieldAlert, Megaphone } from 'lucide-react';
+import {
+    Bell, Check, CheckCheck, Clock, CreditCard, AlertTriangle, BookOpen,
+    ShieldAlert, Megaphone, GraduationCap, Scale, UserCog, FileWarning,
+    Brain, Eye, HandshakeIcon, Gavel, CircleAlert, Zap,
+} from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,45 +14,61 @@ import { Separator } from '@/components/ui/separator';
 import { api } from '@/lib/network/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import type { Notification, NotificationListResponse } from '@/types/backend';
 
-interface Notification {
-    id: string;
-    type: string;
-    title: string;
-    message: string | null;
-    is_read: boolean;
-    metadata: Record<string, unknown>;
-    created_at: string;
-}
-
-interface NotificationListResponse {
-    notifications: Notification[];
-    unread_count: number;
-    total: number;
-}
-
-const TYPE_ICONS = {
+const TYPE_ICONS: Record<string, React.ElementType> = {
     'payment.success': CreditCard,
     'payment.failed': CreditCard,
-    'plan.upgraded': CreditCard,
+    'plan.upgraded': Zap,
     'quota.warning': AlertTriangle,
     'quota.exceeded': AlertTriangle,
     'exam.created': BookOpen,
+    'session.completed': GraduationCap,
+    'session.terminated': CircleAlert,
+    'session.abandoned': CircleAlert,
     'session.flagged': ShieldAlert,
-    'user.role_changed': Check,
+    'grade.published': GraduationCap,
+    'grade.overridden': Scale,
+    'review.escalated': Eye,
+    'review.completed': Check,
+    'integrity.violation': ShieldAlert,
+    'appeal.submitted': Gavel,
+    'appeal.resolved': Gavel,
+    'consent.updated': HandshakeIcon,
+    'ai.low_confidence': Brain,
+    'ai.bias_detected': Brain,
+    'user.role_changed': UserCog,
     'system.announcement': Megaphone,
-} as const satisfies Partial<Record<string, React.ElementType>>;
+};
 
 const TYPE_COLORS: Record<string, string> = {
-    'payment.success': 'text-green-500',
+    'payment.success': 'text-emerald-500',
     'payment.failed': 'text-red-500',
     'plan.upgraded': 'text-blue-500',
     'quota.warning': 'text-amber-500',
     'quota.exceeded': 'text-red-500',
     'exam.created': 'text-primary',
+    'session.completed': 'text-emerald-500',
+    'session.terminated': 'text-red-500',
+    'session.abandoned': 'text-orange-500',
     'session.flagged': 'text-orange-500',
+    'grade.published': 'text-primary',
+    'grade.overridden': 'text-amber-500',
+    'review.escalated': 'text-orange-500',
+    'review.completed': 'text-emerald-500',
+    'integrity.violation': 'text-red-500',
+    'appeal.submitted': 'text-amber-500',
+    'appeal.resolved': 'text-emerald-500',
+    'consent.updated': 'text-slate-500',
+    'ai.low_confidence': 'text-amber-500',
+    'ai.bias_detected': 'text-red-500',
     'user.role_changed': 'text-violet-500',
     'system.announcement': 'text-cyan-500',
+};
+
+const PRIORITY_STYLES: Record<string, string> = {
+    CRITICAL: 'bg-red-500/10 text-red-600 border-red-500/20',
+    HIGH: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
 };
 
 function timeAgo(dateString: string): string {
@@ -93,8 +113,8 @@ export default function NotificationBell() {
         if (!notification.is_read) {
             markReadMutation.mutate(notification.id);
         }
-        // Navigate if there's a link in metadata (relative paths only to prevent open redirect)
-        const link = notification.metadata?.link as string;
+        // Navigate via action_url (v2) or metadata.link (legacy), relative paths only
+        const link = notification.action_url || (notification.metadata?.link as string);
         if (link && typeof link === 'string' && link.startsWith('/')) {
             router.push(link);
             setOpen(false);
@@ -167,8 +187,9 @@ export default function NotificationBell() {
                     ) : (
                         <div className="divide-y divide-border/30">
                             {notifications.map((n) => {
-                                const Icon = (TYPE_ICONS[n.type as keyof typeof TYPE_ICONS] ?? Bell) as React.ElementType;
+                                const Icon = TYPE_ICONS[n.type] ?? Bell;
                                 const color = TYPE_COLORS[n.type] || 'text-muted-foreground';
+                                const priorityStyle = PRIORITY_STYLES[n.priority];
 
                                 return (
                                     <button
@@ -205,6 +226,11 @@ export default function NotificationBell() {
                                                 <span className="text-[10px] text-muted-foreground/50">
                                                     {timeAgo(n.created_at)}
                                                 </span>
+                                                {priorityStyle && (
+                                                    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border', priorityStyle)}>
+                                                        {n.priority}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         {!n.is_read && (

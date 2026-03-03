@@ -197,14 +197,22 @@ export interface Subject {
     updated_at: string;
 }
 
+export type NotificationPriority = 'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW';
+
 export interface Notification {
     id: string;
     type: string;
+    priority: NotificationPriority;
     title: string;
     message: string | null;
+    action_url: string | null;
     is_read: boolean;
+    read_at: string | null;
+    source_service: string | null;
+    correlation_id: string | null;
     metadata: Record<string, unknown>;
     created_at: string;
+    expires_at: string | null;
 }
 
 export interface NotificationListResponse {
@@ -212,3 +220,16 @@ export interface NotificationListResponse {
     unread_count: number;
     total: number;
 }
+
+export interface NotificationPreference {
+    id: string;
+    channel_in_app: boolean;
+    channel_email: boolean;
+    channel_push: boolean;
+    quiet_hours_enabled: boolean;
+    quiet_hours_start: string | null;
+    quiet_hours_end: string | null;
+    quiet_hours_tz: string;
+    type_overrides: Record<string, unknown>;
+}
+

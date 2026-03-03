@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { BillingTab } from '@/components/dashboard/settings/billing-tab';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { NotificationPreference } from '@/types/backend';
 
 export default function SettingsPage() {
     const { user, refetch } = useAuth();
@@ -36,9 +38,18 @@ export default function SettingsPage() {
         }
     }, [user?.full_name]);
 
-    // Notification preferences
-    const [emailNotifications, setEmailNotifications] = useState(true);
-    const [sessionAlerts, setSessionAlerts] = useState(true);
+    // Notification preferences (server-backed)
+    const queryClient = useQueryClient();
+    const { data: notifPrefs } = useQuery<NotificationPreference>({
+        queryKey: ['notification-preferences'],
+        queryFn: () => api.notificationPreferences.get(),
+        staleTime: 60000,
+    });
+
+    const prefsMutation = useMutation({
+        mutationFn: api.notificationPreferences.update,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notification-preferences'] }),
+    });
 
     const isValidPassword = newPassword.length >= 8;
     const passwordsMatch = newPassword === confirmPassword && newPassword !== '';
@@ -81,15 +92,15 @@ export default function SettingsPage() {
     };
 
     const handleToggleEmail = (checked: boolean) => {
-        setEmailNotifications(checked);
+        prefsMutation.mutate({ channel_email: checked });
         toast.dismiss();
         toast.success(checked ? 'Email notifications enabled' : 'Email notifications disabled');
     };
 
-    const handleToggleSession = (checked: boolean) => {
-        setSessionAlerts(checked);
+    const handleToggleInApp = (checked: boolean) => {
+        prefsMutation.mutate({ channel_in_app: checked });
         toast.dismiss();
-        toast.success(checked ? 'Session alerts enabled' : 'Session alerts disabled');
+        toast.success(checked ? 'In-app notifications enabled' : 'In-app notifications disabled');
     };
 
     const getInitials = (name: string) => {
@@ -372,6 +383,21 @@ export default function SettingsPage() {
                             <Card className="border-border/50 shadow-sm divide-y">
                                 <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
                                     <div className="space-y-0.5">
+                                        <Label htmlFor="inapp-notifs" className="text-base font-medium cursor-pointer">In-App Notifications</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Show notification bell and alerts within the platform.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="inapp-notifs"
+                                        checked={notifPrefs?.channel_in_app ?? true}
+                                        onCheckedChange={handleToggleInApp}
+                                        disabled={prefsMutation.isPending}
+                                        className="cursor-pointer"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
+                                    <div className="space-y-0.5">
                                         <Label htmlFor="email-notifs" className="text-base font-medium cursor-pointer">Email Notifications</Label>
                                         <p className="text-sm text-muted-foreground">
                                             Receive emails about your account activity and platform updates.
@@ -379,22 +405,9 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch
                                         id="email-notifs"
-                                        checked={emailNotifications}
+                                        checked={notifPrefs?.channel_email ?? true}
                                         onCheckedChange={handleToggleEmail}
-                                        className="cursor-pointer"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
-                                    <div className="space-y-0.5">
-                                        <Label htmlFor="session-alerts" className="text-base font-medium cursor-pointer">Session Alerts</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            Receive alerts 15 minutes before your scheduled live sessions.
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        id="session-alerts"
-                                        checked={sessionAlerts}
-                                        onCheckedChange={handleToggleSession}
+                                        disabled={prefsMutation.isPending}
                                         className="cursor-pointer"
                                     />
                                 </div>
