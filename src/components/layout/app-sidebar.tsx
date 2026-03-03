@@ -170,6 +170,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // Search state
     const [searchOpen, setSearchOpen] = React.useState(false);
     const [upgradeModalOpen, setUpgradeModalOpen] = React.useState(false);
+    const [isMac, setIsMac] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform));
+    }, []);
 
     const role = (user?.role || 'STUDENT').toUpperCase();
     const primarySection = ROLE_NAV[role] || ROLE_NAV.STUDENT;
@@ -244,11 +249,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         onClick={() => setSearchOpen(true)}
                                         tooltip="Search"
                                         className="h-9 bg-sidebar-accent/30 border border-sidebar-border hover:bg-sidebar-accent/50 transition-colors cursor-pointer"
+                                        aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
                                     >
                                         <Search className="h-4 w-4 text-muted-foreground" />
                                         <span className="text-sm text-muted-foreground">Search...</span>
                                         <span className="pointer-events-none ml-auto inline-flex h-5 select-none items-center rounded-md bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70 group-data-[collapsible=icon]:hidden">
-                                            K
+                                            {isMac ? '⌘' : 'Ctrl+'}K
                                         </span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>

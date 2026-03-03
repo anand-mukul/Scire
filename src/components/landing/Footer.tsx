@@ -91,10 +91,10 @@ export const Footer = () => {
                         <ul className="space-y-4">
                             {footerLinks.product.map((link) => (
                                 <li key={link.label}>
-                                    <Link href={link.href} className="text-neutral-600 dark:text-neutral-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors text-base group inline-flex items-center">
+                                    <Link href={link.href} className="text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-primary transition-colors text-base group inline-flex items-center">
                                         <span className="relative">
                                             {link.label}
-                                            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-orange-500 dark:bg-orange-400 transition-all duration-300 group-hover:w-full" />
+                                            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                                         </span>
                                     </Link>
                                 </li>
@@ -107,10 +107,10 @@ export const Footer = () => {
                         <ul className="space-y-4">
                             {footerLinks.company.map((link) => (
                                 <li key={link.label}>
-                                    <Link href={link.href} className="text-neutral-600 dark:text-neutral-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors text-base group inline-flex items-center">
+                                    <Link href={link.href} className="text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-primary transition-colors text-base group inline-flex items-center">
                                         <span className="relative">
                                             {link.label}
-                                            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-orange-500 dark:bg-orange-400 transition-all duration-300 group-hover:w-full" />
+                                            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                                         </span>
                                     </Link>
                                 </li>
@@ -123,10 +123,10 @@ export const Footer = () => {
                         <ul className="space-y-4">
                             {footerLinks.legal.map((link) => (
                                 <li key={link.label}>
-                                    <Link href={link.href} className="text-neutral-600 dark:text-neutral-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors text-base group inline-flex items-center">
+                                    <Link href={link.href} className="text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-primary transition-colors text-base group inline-flex items-center">
                                         <span className="relative">
                                             {link.label}
-                                            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-orange-500 dark:bg-orange-400 transition-all duration-300 group-hover:w-full" />
+                                            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                                         </span>
                                     </Link>
                                 </li>

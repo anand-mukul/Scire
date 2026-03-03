@@ -1,16 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Scire | Autonomous AI Viva Assessments",
@@ -32,9 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased scrollbar-thin`}
+        className="font-sans antialiased scrollbar-thin"
         suppressHydrationWarning
       >
+        <a href="#main-content" className="skip-to-content">Skip to content</a>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

@@ -29,7 +29,6 @@ export const Navbar = () => {
     }, []);
 
     const navLinks = [
-        { label: "How it works", href: "/#how-it-works" },
         { label: "Features", href: "/#features" },
         { label: "Pricing", href: "/pricing" },
     ];
@@ -91,7 +90,7 @@ export const Navbar = () => {
                             </Button>
                         </Link>
                         <Link href="/request-access">
-                            <Button className="font-medium rounded-full bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg hover:shadow-orange-500/20 transition-all">
+                            <Button className="font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all">
                                 Request Access
                                 <ChevronRight className="w-4 h-4 ml-0.5" />
                             </Button>
@@ -154,7 +153,7 @@ export const Navbar = () => {
                                                 </Button>
                                             </Link>
                                             <Link href="/request-access" className="w-full">
-                                                <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-full h-11">
+                                                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-11">
                                                     Request Access
                                                     <ChevronRight className="w-4 h-4 ml-1" />
                                                 </Button>

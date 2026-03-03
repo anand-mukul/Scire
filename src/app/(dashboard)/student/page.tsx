@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/dashboard/page-header';
 import { useSystemCheck, SystemStatus } from '@/hooks/use-system-check';
 import { Trophy, Zap, RefreshCw, CheckCircle, AlertCircle, Loader2, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { VivaSession, SessionStatus } from '@/types/backend';
 import { useMySessions } from '@/hooks/use-dashboard-data';
@@ -96,7 +97,9 @@ const StatusBadge = ({ status, label, index = 0 }: { status: SystemStatus, label
 export default function StudentDashboard() {
     const { data: sessions, isLoading } = useMySessions();
     const queryClient = useQueryClient();
+    const router = useRouter();
     const [sessionToTerminate, setSessionToTerminate] = React.useState<string | null>(null);
+    const [codeError, setCodeError] = React.useState<string | null>(null);
     const { status, checkSystem } = useSystemCheck();
 
     const terminateMutation = useMutation({
@@ -118,7 +121,7 @@ export default function StudentDashboard() {
     };
 
     const handleReport = (sessionId: string) => {
-        toast.info(`Ticket created for session ${sessionId.slice(0, 8)}. Support will contact you.`);
+        toast.info(`Reporting for session ${sessionId.slice(0, 8)} is coming soon.`);
     };
 
     const allSessions = (sessions || []) as StudentSession[];
@@ -175,23 +178,39 @@ export default function StudentDashboard() {
                                 e.preventDefault();
                                 const form = e.target as HTMLFormElement;
                                 const input = form.elements.namedItem('examCode') as HTMLInputElement;
-                                if (input.value) window.location.href = `/student/join?code=${input.value}`;
+                                const code = input.value.trim();
+                                if (!code) {
+                                    setCodeError('Please enter an exam code.');
+                                    return;
+                                }
+                                if (code.length < 4) {
+                                    setCodeError('Exam code must be at least 4 characters.');
+                                    return;
+                                }
+                                setCodeError(null);
+                                router.push(`/student/join?code=${code}`);
                             }} className="mt-8 space-y-6">
                                 <div className="relative max-w-lg">
                                     <Input
                                         name="examCode"
                                         placeholder="EXAM-CODE"
-                                        className="bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground/50 text-center font-mono text-2xl tracking-[0.2em] uppercase h-16 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                        className={`bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground/50 text-center font-mono text-2xl tracking-[0.2em] uppercase h-16 rounded-xl focus:border-primary/50 focus:ring-primary/20 transition-all ${codeError ? 'border-destructive focus:border-destructive' : ''}`}
                                         maxLength={10}
                                         autoComplete="off"
+                                        aria-describedby="exam-code-hint"
+                                        aria-invalid={!!codeError}
+                                        onChange={() => codeError && setCodeError(null)}
                                     />
+                                    {codeError && (
+                                        <p role="alert" className="text-sm text-destructive font-medium mt-2">{codeError}</p>
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     <Button type="submit" className="w-full max-w-lg h-12 text-base font-semibold">
                                         Verify & Join Exam
                                     </Button>
-                                    <p className="text-muted-foreground text-xs text-center max-w-lg">
-                                        By joining, you agree to the academic integrity policy.
+                                    <p id="exam-code-hint" className="text-muted-foreground text-xs text-center max-w-lg">
+                                        Enter the 8-character code provided by your examiner. By joining, you agree to the academic integrity policy.
                                     </p>
                                 </div>
                             </form>
@@ -300,7 +319,7 @@ export default function StudentDashboard() {
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">Duration</span>
-                                            <span className="text-foreground font-mono">~30m</span>
+                                            <span className="text-foreground font-mono">{session.exam?.settings?.duration_minutes ? `${session.exam.settings.duration_minutes}m` : 'Varies'}</span>
                                         </div>
                                     </div>
 
@@ -315,11 +334,12 @@ export default function StudentDashboard() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => handleReport(session.id)}
-                                                className="w-full border-border hover:bg-secondary text-muted-foreground hover:text-foreground"
+                                                disabled
+                                                className="w-full border-border text-muted-foreground opacity-60 cursor-not-allowed"
                                             >
                                                 <Flag className="mr-2 h-3 w-3" />
                                                 Report
+                                                <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-primary/80 bg-primary/10 px-1 py-0.5 rounded">Soon</span>
                                             </Button>
                                             <Button
                                                 variant="outline"
@@ -368,8 +388,8 @@ export default function StudentDashboard() {
                                             <div className="text-xs text-muted-foreground font-mono mt-1">ID: {session.id.slice(0, 8)}</div>
                                         </div>
                                         <Badge variant="secondary" className={`shrink-0 ${(session.final_score ?? session.score ?? 0) >= 40
-                                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                                : 'bg-destructive/10 text-destructive border-destructive/20'
+                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                            : 'bg-destructive/10 text-destructive border-destructive/20'
                                             }`}>
                                             {(session.final_score ?? session.score ?? 0) >= 40 ? 'Passed' : 'Completed'}
                                         </Badge>

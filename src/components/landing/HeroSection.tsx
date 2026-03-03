@@ -25,8 +25,8 @@ export const HeroSection = () => {
                 >
                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-800 dark:text-white text-xs font-semibold uppercase tracking-wider backdrop-blur-sm">
                         <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                         </span>
                         Introducing Scire v1.0
                     </span>
@@ -73,15 +73,15 @@ export const HeroSection = () => {
                     className="flex flex-col sm:flex-row items-center gap-4 pt-4"
                 >
                     <Link href="/request-access">
-                        <Button size="lg" className="rounded-full h-12 px-8 text-base bg-orange-600 hover:bg-orange-700 text-white shadow-lg hover:shadow-xl hover:shadow-orange-500/20 transition-all duration-300 font-medium group">
+                        <Button size="lg" className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 font-medium group">
                             Start Free Trial
                             <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </Link>
-                    <Link href="#demo">
+                    <Link href="/#features">
                         <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-neutral-200 dark:border-white/10 hover:bg-neutral-100 dark:hover:bg-white/10 backdrop-blur-sm font-medium">
                             <PlayCircle className="mr-2 w-4 h-4" />
-                            Watch Demo
+                            Explore Features
                         </Button>
                     </Link>
                 </motion.div>

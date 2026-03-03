@@ -195,7 +195,7 @@ function LoginForm() {
                                 />
                             </div>
                             {errors.email && (
-                                <p className="text-sm text-red-500 font-medium">{errors.email.message}</p>
+                                <p role="alert" className="text-sm text-red-500 font-medium">{errors.email.message}</p>
                             )}
                         </div>
 
@@ -217,12 +217,13 @@ function LoginForm() {
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
                             {errors.password && (
-                                <p className="text-sm text-red-500 font-medium">{errors.password.message}</p>
+                                <p role="alert" className="text-sm text-red-500 font-medium">{errors.password.message}</p>
                             )}
                             <div className="flex justify-end">
                                 <Link
@@ -253,6 +254,13 @@ function LoginForm() {
                             )}
                         </Button>
                     </form>
+
+                    {/* Form-level error summary for screen readers */}
+                    {Object.keys(errors).length > 0 && (
+                        <div role="alert" className="sr-only">
+                            Please fix {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''} in the form above.
+                        </div>
+                    )}
 
                     {/* Divider */}
                     <div className="relative my-8">
@@ -297,7 +305,7 @@ function LoginFormFallback() {
         <div className="w-full max-w-md">
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/50 backdrop-blur-xl shadow-2xl p-8 md:p-10">
                 <div className="flex items-center justify-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
             </div>
         </div>

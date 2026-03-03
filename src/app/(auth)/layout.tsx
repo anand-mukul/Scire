@@ -20,9 +20,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                     </main>
 
                     {/* Footer — fixed at bottom */}
-                    <footer className="shrink-0 px-6 py-4 text-center text-sm text-white/50 flex flex-col md:flex-row justify-center items-center gap-3">
+                    <footer className="shrink-0 px-6 py-4 text-center text-sm text-white/70 flex flex-col md:flex-row justify-center items-center gap-3">
                         <span>© 2026 Scire Inc. All rights reserved.</span>
-                        <span className="hidden md:inline text-white/20">|</span>
+                        <span className="hidden md:inline text-white/30">|</span>
                         <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                             <span>Systems Operational</span>

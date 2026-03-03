@@ -29,19 +29,19 @@ export default function NotFound() {
                     </p>
                 </div>
 
-                <div className="flex flax-col sm:flex-row items-center justify-center gap-4 mt-8">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
                     <Link href="/">
                         <Button className="h-12 px-8 rounded-full bg-white text-black hover:bg-neutral-200 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105 font-medium text-lg group">
                             <Home className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                             Return Home
                         </Button>
                     </Link>
-                    <Link href="#" onClick={() => window.history.back()}>
+                    <button onClick={() => window.history.back()}>
                         <Button variant="outline" className="h-12 px-8 rounded-full border-white/10 text-white hover:bg-white/5 hover:border-white/20 transition-all font-medium text-lg">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Go Back
                         </Button>
-                    </Link>
+                    </button>
                 </div>
             </div>
 
