@@ -48,6 +48,7 @@ import {
     SidebarMenuSubItem,
     SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
+import { useSidebar } from '@/components/ui/sidebar';
 import {
     Collapsible,
     CollapsibleContent,
@@ -76,6 +77,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
+import { cn } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -166,6 +168,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const router = useRouter();
     const { user, logout } = useAuth();
     const { tenantName, subscriptionTier } = useTenant();
+    const { state: sidebarState } = useSidebar();
 
     // Search state
     const [searchOpen, setSearchOpen] = React.useState(false);
@@ -228,14 +231,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             />
             <Sidebar collapsible="icon" {...props}>
                 <SidebarHeader>
-                    <div className="flex items-center gap-2 px-2 py-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold shadow-md text-sm">
-                            S
-                        </div>
-                        <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                            <span className="truncate font-bold text-lg tracking-tight">Scire</span>
-                            <span className="truncate text-xs text-muted-foreground">{tenantName || 'Education Platform'}</span>
-                        </div>
+                    <div className="flex items-center gap-2 py-3">
+                        <img
+                            src="/brand-logo.svg"
+                            alt="Scire"
+                            className={cn(
+                                'flex-shrink-1 transition-all duration-200',
+                                sidebarState === 'collapsed' ? 'w-6 h-6' : 'w-6 h-6'
+                            )}
+                        />
+                        {sidebarState !== 'collapsed' && (
+                            <div className="grid flex-1 text-left leading-tight min-w-0">
+                                <span className="truncate font-bold text-base tracking-tight text-foreground">Scire</span>
+                                <span className="truncate text-xs text-muted-foreground">{tenantName || 'Education Platform'}</span>
+                            </div>
+                        )}
                     </div>
                 </SidebarHeader>
 
@@ -289,15 +299,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                                 className={`transition-all duration-150 ${disabled ? 'opacity-60 hover:bg-transparent hover:text-muted-foreground cursor-not-allowed' : ''}`}
                                             >
                                                 {disabled ? (
-                                                    <div className="flex items-center w-full">
-                                                        <item.icon className="h-4 w-4" />
-                                                        <span className="flex-1 ml-2">{item.label}</span>
+                                                    <>
+                                                        <item.icon className="h-4 w-4 shrink-0" />
+                                                        <span className="flex-1 truncate">{item.label}</span>
                                                         {item.comingSoon ? (
-                                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-500/80 bg-orange-500/10 px-1.5 py-0.5 rounded ml-auto">Soon</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-500/80 bg-orange-500/10 px-1.5 py-0.5 rounded ml-auto group-data-[collapsible=icon]:hidden">Soon</span>
                                                         ) : (
                                                             <Lock className="h-3 w-3 text-muted-foreground ml-auto" />
                                                         )}
-                                                    </div>
+                                                    </>
                                                 ) : (
                                                     <Link href={item.href}>
                                                         <item.icon className="h-4 w-4" />

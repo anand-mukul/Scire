@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
                 </div>
             ) : (
                 <Tabs defaultValue="overview" className="space-y-6">
-                    <TabsList className="bg-muted/50 border border-border/40 p-1 w-fit inline-flex justify-start">
+                    <TabsList>
                         <TabsTrigger value="overview" className="px-6">Overview</TabsTrigger>
                         <TabsTrigger value="performance" className="px-6">Broad Performance</TabsTrigger>
                         <TabsTrigger value="engagement" className="px-6">Engagement Details</TabsTrigger>

@@ -13,13 +13,9 @@ import {
     Radio,
     CheckCircle,
     AlertTriangle,
-    CreditCard,
-    Check,
     Globe,
     Lock
 } from 'lucide-react';
-import RazorpayButton from '@/components/ui/razorpay-button';
-import { BillingTab } from '@/components/dashboard/settings/billing-tab';
 
 import { api } from '@/lib/network/api';
 import { useTenant } from '@/contexts/TenantContext';
@@ -91,20 +87,7 @@ export default function TenantSettingsPage() {
         enabled: !!tenantId,
     });
 
-    // Billing: Fetch plans from server
-    const { data: plansData } = useQuery({
-        queryKey: ['billing-plans'],
-        queryFn: api.billing.getPlans,
-        enabled: !!tenantId && !isPlatformAdmin,
-        staleTime: 60000,
-    });
 
-    // Billing: Fetch payment history
-    const { data: historyData } = useQuery({
-        queryKey: ['billing-history'],
-        queryFn: () => api.billing.getHistory({ limit: 10 }),
-        enabled: !!tenantId && !isPlatformAdmin,
-    });
 
     // Fetch existing settings
     const { data: currentSettings, isLoading: isSettingsLoading } = useQuery({
@@ -211,14 +194,13 @@ export default function TenantSettingsPage() {
             />
 
             <Tabs defaultValue="profile" className="w-full space-y-8">
-                <TabsList className="bg-card/40 backdrop-blur-md border border-border/50 p-1 h-auto grid grid-cols-2 lg:grid-cols-7 gap-1 w-full rounded-xl">
-                    <TabsTrigger value="profile" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><Palette className="w-3.5 h-3.5" /> Profile</TabsTrigger>
-                    <TabsTrigger value="viva" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><Radio className="w-3.5 h-3.5" /> Viva</TabsTrigger>
-                    <TabsTrigger value="ai" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><Brain className="w-3.5 h-3.5" /> AI Model</TabsTrigger>
-                    <TabsTrigger value="grading" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><CheckCircle className="w-3.5 h-3.5" /> Grading</TabsTrigger>
-                    <TabsTrigger value="proctoring" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><Shield className="w-3.5 h-3.5" /> Security</TabsTrigger>
-                    <TabsTrigger value="compliance" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><AlertTriangle className="w-3.5 h-3.5" /> Compliance</TabsTrigger>
-                    <TabsTrigger value="billing" className="gap-2 rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><CreditCard className="w-3.5 h-3.5" /> Billing</TabsTrigger>
+                <TabsList className="flex flex-wrap gap-1 w-full">
+                    <TabsTrigger value="profile" className="gap-2"><Palette className="w-3.5 h-3.5" /> Profile</TabsTrigger>
+                    <TabsTrigger value="viva" className="gap-2"><Radio className="w-3.5 h-3.5" /> Viva</TabsTrigger>
+                    <TabsTrigger value="ai" className="gap-2"><Brain className="w-3.5 h-3.5" /> AI Model</TabsTrigger>
+                    <TabsTrigger value="grading" className="gap-2"><CheckCircle className="w-3.5 h-3.5" /> Grading</TabsTrigger>
+                    <TabsTrigger value="proctoring" className="gap-2"><Shield className="w-3.5 h-3.5" /> Security</TabsTrigger>
+                    <TabsTrigger value="compliance" className="gap-2"><AlertTriangle className="w-3.5 h-3.5" /> Compliance</TabsTrigger>
                 </TabsList>
 
                 {/* === PROFILE TAB === */}
@@ -607,19 +589,7 @@ export default function TenantSettingsPage() {
                     </Card>
                 </TabsContent>
 
-                {/* === BILLING TAB (Hidden for Platform Admins) === */}
-                <TabsContent value="billing">
-                    {isPlatformAdmin ? (
-                        <Card className="border-border/60 bg-card/40 backdrop-blur-sm shadow-sm max-w-lg mx-auto">
-                            <CardContent className="p-10 text-center">
-                                <Lock className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                                <p className="text-muted-foreground">Billing is managed at the tenant level.</p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <BillingTab />
-                    )}
-                </TabsContent>
+
             </Tabs>
         </div>
     );

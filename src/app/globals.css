@@ -1,6 +1,27 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ── Lenis Smooth Scroll ───────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -235,11 +256,11 @@ body {
   /* Shimmer animation for loading skeletons */
   .skeleton-shimmer {
     background: linear-gradient(90deg,
-        hsl(var(--muted) / 0.2) 0%,
-        hsl(var(--muted) / 0.4) 50%,
-        hsl(var(--muted) / 0.2) 100%);
+        color-mix(in oklch, var(--color-muted), transparent 70%) 0%,
+        color-mix(in oklch, var(--color-muted), transparent 40%) 50%,
+        color-mix(in oklch, var(--color-muted), transparent 70%) 100%);
     background-size: 200% 100%;
-    animation: shimmer 2s infinite;
+    animation: shimmer 1.5s ease-in-out infinite;
   }
 
   /* Premium card hover effect */

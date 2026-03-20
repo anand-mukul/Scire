@@ -194,22 +194,22 @@ export default function ManageExamPage() {
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
                 <div className="flex items-center justify-between">
-                    <TabsList className="bg-muted/50 p-1 rounded-lg border border-border/50 h-auto inline-flex">
+                    <TabsList>
                         <TabsTrigger
                             value="settings"
-                            className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer gap-2"
+                            className="gap-2"
                         >
                             <Settings className="h-4 w-4" /> Settings
                         </TabsTrigger>
                         <TabsTrigger
                             value="rubrics"
-                            className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer gap-2"
+                            className="gap-2"
                         >
                             <ListChecks className="h-4 w-4" /> Grading Rubrics
                         </TabsTrigger>
                         <TabsTrigger
                             value="knowledge"
-                            className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer gap-2"
+                            className="gap-2"
                         >
                             <BookOpen className="h-4 w-4" /> Knowledge Base
                             {kbStatus === KBStatus.PROCESSING && (

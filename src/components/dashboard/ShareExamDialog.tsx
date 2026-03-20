@@ -125,9 +125,9 @@ Requirements: Desktop/Laptop, Camera, Mic.`;
 
                 <Tabs defaultValue="link" className="w-full">
                     <div className="px-6 pb-2">
-                        <TabsList className="grid w-full grid-cols-2 h-9 p-1 bg-muted/50 rounded-lg">
-                            <TabsTrigger value="link" className="text-xs rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Link & Code</TabsTrigger>
-                            <TabsTrigger value="invite" className="text-xs rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Invitation Preview</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="link" className="text-xs">Link & Code</TabsTrigger>
+                            <TabsTrigger value="invite" className="text-xs">Invitation Preview</TabsTrigger>
                         </TabsList>
                     </div>
 

@@ -54,28 +54,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             // DEVELOPER AUTH BYPASS
             // Controlled by NEXT_PUBLIC_DEV_AUTH_BYPASS env var
+            // FRONT-2 FIX: Block bypass in production builds to prevent accidental admin access
             if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
-                const envRole = process.env.NEXT_PUBLIC_DEV_AUTH_ROLE as UserRole;
-                const role = Object.values(UserRole).includes(envRole) ? envRole : UserRole.PLATFORM_ADMIN;
+                if (process.env.NODE_ENV === 'production') {
+                    console.error('🚨 CRITICAL: DEV_AUTH_BYPASS is enabled in a PRODUCTION build! Ignoring bypass for security.');
+                } else {
+                    const envRole = process.env.NEXT_PUBLIC_DEV_AUTH_ROLE as UserRole;
+                    const role = Object.values(UserRole).includes(envRole) ? envRole : UserRole.PLATFORM_ADMIN;
 
-                console.warn(`⚠️ AUTH BYPASS ENABLED: Using mock ${role} user`);
+                    console.warn(`⚠️ AUTH BYPASS ENABLED: Using mock ${role} user`);
 
-                const mockUser: User = {
-                    id: 'dev-bypass-user',
-                    email: 'dev@example.com',
-                    role: role,
-                    full_name: 'Developer Mode',
-                    is_active: true,
-                    is_anonymized: false,
-                    tenant_id: 'dev-tenant',
-                    tenant_slug: 'dev',
-                    tenant_name: 'Development Tenant',
-                    tenant_status: TenantStatus.ACTIVE,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                };
-                setUser(mockUser);
-                return mockUser;
+                    const mockUser: User = {
+                        id: 'dev-bypass-user',
+                        email: 'dev@example.com',
+                        role: role,
+                        full_name: 'Developer Mode',
+                        is_active: true,
+                        is_anonymized: false,
+                        tenant_id: 'dev-tenant',
+                        tenant_slug: 'dev',
+                        tenant_name: 'Development Tenant',
+                        tenant_status: TenantStatus.ACTIVE,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                    };
+                    setUser(mockUser);
+                    return mockUser;
+                }
             }
 
             setError(null);

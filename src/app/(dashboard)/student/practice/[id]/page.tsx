@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
@@ -10,12 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/dashboard/page-header';
 import {
     ArrowLeft, Play, Loader2, CheckCircle, XCircle,
-    Clock, BookOpen, CreditCard, Sparkles, RefreshCw,
+    Clock, BookOpen, CreditCard, Sparkles, RefreshCw, Zap, Crown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/network/api';
 import { toast } from 'sonner';
 import { formatToLocalDateTime } from '@/lib/date-utils';
+import { PracticePlansModal } from '@/components/content/practice/practice-plans-modal';
 
 declare global {
     interface Window {
@@ -23,11 +24,18 @@ declare global {
     }
 }
 
+const PLAN_ICON: Record<string, React.ReactNode> = {
+    FREE: <Sparkles className="h-4 w-4" />,
+    LITE: <Zap className="h-4 w-4" />,
+    PLUS: <Crown className="h-4 w-4" />,
+};
+
 export default function PracticeDetailPage() {
     const params = useParams();
     const router = useRouter();
     const queryClient = useQueryClient();
     const examId = params.id as string;
+    const [showPlansModal, setShowPlansModal] = useState(false);
 
     const { data: exam, isLoading } = useQuery({
         queryKey: ['practice-exam', examId],
@@ -54,6 +62,7 @@ export default function PracticeDetailPage() {
         onSuccess: (data: any) => {
             toast.success('Practice session started!');
             queryClient.invalidateQueries({ queryKey: ['practice-sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['practice-status'] });
             router.push(`/student/exam/${data.id}/session`);
         },
         onError: (error: any) => {
@@ -64,7 +73,7 @@ export default function PracticeDetailPage() {
                 toast.info('Resuming your active practice session...');
                 router.push(`/student/exam/${detail.active_session_id}/session`);
             } else if (status === 402) {
-                handlePaymentFlow();
+                setShowPlansModal(true);
             } else {
                 const message = typeof detail === 'string' ? detail : detail?.message || 'Failed to start session.';
                 toast.error(message);
@@ -131,13 +140,13 @@ export default function PracticeDetailPage() {
     }, [loadRazorpayScript, startMutation]);
 
     const handleStart = useCallback(() => {
-        const isFree = practiceStatus?.free_remaining > 0;
-        if (isFree) {
+        const hasAccess = practiceStatus?.sessions_remaining === null || (practiceStatus?.sessions_remaining ?? 0) > 0;
+        if (hasAccess) {
             startMutation.mutate(undefined);
         } else {
-            handlePaymentFlow();
+            setShowPlansModal(true);
         }
-    }, [practiceStatus, startMutation, handlePaymentFlow]);
+    }, [practiceStatus, startMutation]);
 
     const examSessions = (sessions || []).filter(
         (s: any) => s.exam_id === examId
@@ -166,6 +175,8 @@ export default function PracticeDetailPage() {
     const isReady = exam.kb_status === 'READY';
     const isProcessing = exam.kb_status === 'PROCESSING';
     const isFailed = exam.kb_status === 'FAILED';
+    const currentPlan = practiceStatus?.plan || 'FREE';
+    const hasAccess = practiceStatus?.is_unlimited || (practiceStatus?.sessions_remaining ?? 0) > 0;
 
     return (
         <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24 max-w-4xl mx-auto w-full">
@@ -259,23 +270,36 @@ export default function PracticeDetailPage() {
                     </div>
                 </Card>
 
+                {/* Plan-aware Pricing Card (fixes P6 — dynamic, not hardcoded) */}
                 <Card className="p-6 space-y-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        Pricing
+                        Your Plan
                     </div>
                     <div className="space-y-3 text-sm">
-                        {practiceStatus?.free_remaining > 0 ? (
-                            <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
-                                <Sparkles className="h-5 w-5 text-emerald-500 mx-auto mb-2" />
-                                <p className="font-semibold text-foreground">First Session Free!</p>
-                                <p className="text-xs text-muted-foreground mt-1">No payment needed</p>
+                        <div className="p-4 rounded-xl text-center border bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                {PLAN_ICON[currentPlan]}
+                                <span className="font-bold text-foreground">{practiceStatus?.plan_name || currentPlan}</span>
                             </div>
-                        ) : (
-                            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl text-center">
-                                <p className="text-2xl font-bold text-foreground">₹19</p>
-                                <p className="text-xs text-muted-foreground mt-1">per practice session</p>
-                            </div>
+                            {practiceStatus?.is_unlimited ? (
+                                <p className="text-xs text-muted-foreground">Unlimited sessions</p>
+                            ) : (
+                                <p className="text-xs text-muted-foreground">
+                                    {practiceStatus?.sessions_remaining ?? 0} sessions remaining
+                                </p>
+                            )}
+                        </div>
+                        {currentPlan === 'FREE' && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs gap-1.5"
+                                onClick={() => setShowPlansModal(true)}
+                            >
+                                <Zap className="h-3.5 w-3.5" />
+                                Upgrade Plan
+                            </Button>
                         )}
                     </div>
                 </Card>
@@ -291,7 +315,7 @@ export default function PracticeDetailPage() {
                 </Card>
             )}
 
-            {/* Start Button */}
+            {/* Start Button — plan-aware text */}
             {isReady && (
                 <Button
                     onClick={handleStart}
@@ -307,7 +331,10 @@ export default function PracticeDetailPage() {
                     ) : (
                         <>
                             <Play className="h-5 w-5" />
-                            {practiceStatus?.free_remaining > 0 ? 'Start Free Practice' : 'Pay ₹19 & Start Practice'}
+                            {hasAccess
+                                ? 'Start Practice Session'
+                                : 'Upgrade & Start Practice'
+                            }
                         </>
                     )}
                 </Button>
@@ -350,6 +377,15 @@ export default function PracticeDetailPage() {
                     </div>
                 </div>
             )}
+
+            {/* Plans Modal */}
+            <PracticePlansModal
+                open={showPlansModal}
+                onOpenChange={setShowPlansModal}
+                onSubscribed={() => {
+                    queryClient.invalidateQueries({ queryKey: ['practice-status'] });
+                }}
+            />
         </main>
     );
 }

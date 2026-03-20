@@ -9,6 +9,7 @@ import { KPICard } from '@/components/dashboard/kpi-card';
 // import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Plus, Users, Activity, FileText, ChevronRight, BarChart3, Settings } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { Exam, VivaSession, ExamStatus, SessionStatus } from '@/types/backend';
 
@@ -57,7 +58,16 @@ export default function InstructorDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {isLoadingStats
                     ? Array(4).fill(0).map((_, i) => (
-                        <div key={i} className="h-32 rounded-xl bg-muted animate-pulse" />
+                        <Card key={i} className="overflow-hidden">
+                            <div className="p-6 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-4 w-4 rounded-full" />
+                                </div>
+                                <Skeleton className="h-8 w-16" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
+                        </Card>
                     ))
                     : (
                         <>
@@ -118,7 +128,28 @@ export default function InstructorDashboard() {
 
                     <div className="grid gap-4">
                         {isLoadingExams ? (
-                            <div className="p-12 text-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/20">Loading exams...</div>
+                            <div className="space-y-4">
+                                {[1, 2, 3].map(i => (
+                                    <Card key={i} className="overflow-hidden">
+                                        <Skeleton className="h-0.5 w-full" />
+                                        <div className="p-5 space-y-3">
+                                            <div className="flex justify-between items-start">
+                                                <div className="space-y-2 flex-1">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <Skeleton className="h-5 w-48" />
+                                                        <Skeleton className="h-5 w-16 rounded-full" />
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <Skeleton className="h-4 w-16 rounded-full" />
+                                                        <Skeleton className="h-4 w-24" />
+                                                    </div>
+                                                </div>
+                                                <Skeleton className="h-8 w-8 rounded-full" />
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
                         ) : activeExams.length === 0 ? (
                             <div className="p-12 text-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/20">No active exams found. Create one to get started.</div>
                         ) : (
@@ -214,7 +245,27 @@ export default function InstructorDashboard() {
                     <div className="border border-border rounded-2xl p-4 min-h-[400px]">
                         <div className="space-y-3">
                             {isLoadingSessions ? (
-                                <div className="text-center py-10 text-muted-foreground">Scanning active channels...</div>
+                                <div className="space-y-3">
+                                    {[1, 2, 3].map(i => (
+                                        <Card key={i} className="p-4 border-l-2 border-l-muted">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="space-y-1.5">
+                                                    <Skeleton className="h-4 w-28" />
+                                                    <Skeleton className="h-3 w-20" />
+                                                </div>
+                                                <Skeleton className="h-5 w-16 rounded-full" />
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Skeleton className="flex-1 h-1 rounded-full" />
+                                                <Skeleton className="h-3 w-10" />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Skeleton className="flex-1 h-7" />
+                                                <Skeleton className="h-7 w-7" />
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </div>
                             ) : liveSessions.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4">
                                     <div className="w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center">

@@ -1,8 +1,9 @@
-// 'use client';
+'use client';
 
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/landing/Navbar';
 import { HeroSection } from '@/components/landing/HeroSection';
+import { SmoothScroll } from '@/components/landing/SmoothScroll';
 
 const DashboardPreview = dynamic(() => import('@/components/landing/DashboardPreview').then((mod) => mod.DashboardPreview), { ssr: true });
 const FeaturesSection = dynamic(() => import('@/components/landing/FeaturesSection').then((mod) => mod.FeaturesSection), { ssr: true });
@@ -13,14 +14,17 @@ const Footer = dynamic(() => import('@/components/landing/Footer').then((mod) =>
 
 export default function Home() {
   return (
-    <main className="bg-background min-h-screen text-foreground selection:bg-primary/30">
-      <Navbar />
-      <HeroSection />
-      <DashboardPreview />
-      {/* <HowItWorks /> */}
-      <FeaturesSection />
-      <CTASection />
-      <Footer />
-    </main>
+    <SmoothScroll>
+      <main className="bg-background min-h-screen text-foreground selection:bg-primary/30">
+        <Navbar />
+        <HeroSection />
+        <DashboardPreview />
+        {/* <HowItWorks /> */}
+        <FeaturesSection />
+        <CTASection />
+        <Footer />
+      </main>
+    </SmoothScroll>
   );
 }
+

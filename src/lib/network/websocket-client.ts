@@ -1,6 +1,7 @@
 import { useSessionStore, DialogueState } from '@/lib/store/session-store';
 import { Logger } from '@/lib/logger';
 import { TranscriptSpeaker } from '@/types/backend';
+import { getAccessToken } from '@/lib/auth-token';
 
 type WebSocketMessage =
     | { type: 'state_update'; state: DialogueState; questions_asked?: number }
@@ -123,10 +124,17 @@ class VivaWebSocketClient {
 
             useSessionStore.getState().setConnectionState('CONNECTED');
             useSessionStore.getState().setError(null); // Clear errors
+
+            // FRONT-4 FIX: Only send session_start on first connect.
+            // On reconnect, send session_resume to avoid resetting the FSM.
+            if (this.reconnectAttempts === 0) {
+                this.send({ type: 'session_start' });
+            } else {
+                this.send({ type: 'session_resume' });
+            }
+
             this.reconnectAttempts = 0;
             this.startHeartbeat();
-
-            this.send({ type: 'session_start' });
             this.flushQueue();
         };
 
@@ -205,18 +213,30 @@ class VivaWebSocketClient {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             useSessionStore.getState().setConnectionState('RECONNECTING');
 
-            // Exponential backoff
-            // Base 1s, Max 15s. Jitter logic could be added but simple exp is fine.
+            // Exponential backoff with jitter to prevent thundering herd
             let baseDelay = 1000 * Math.pow(1.5, this.reconnectAttempts);
-            const delay = Math.min(baseDelay, 15000);
+            const jitter = Math.random() * 500; // 0-500ms random jitter
+            const delay = Math.min(baseDelay + jitter, 15000);
 
             this.reconnectAttempts++;
 
-            Logger.log(`VivaWS: Reconnecting in ${delay}ms (Attempt ${this.reconnectAttempts})`);
+            Logger.log(`VivaWS: Reconnecting in ${Math.round(delay)}ms (Attempt ${this.reconnectAttempts})`);
 
-            setTimeout(() => {
-                if (!this.explicitClose && this.url && this.token) {
-                    this.connect(this.url, this.token);
+            setTimeout(async () => {
+                if (!this.explicitClose && this.url) {
+                    // FRONT-3 FIX: Refresh access token before reconnecting.
+                    // The original token may have expired during the disconnection period.
+                    const freshToken = getAccessToken();
+                    if (freshToken) {
+                        this.token = freshToken;
+                    }
+                    if (this.token) {
+                        this.connect(this.url, this.token);
+                    } else {
+                        Logger.error('VivaWS: No token available for reconnect');
+                        useSessionStore.getState().setError('Authentication expired. Please refresh.');
+                        useSessionStore.getState().setConnectionState('FAILED');
+                    }
                 }
             }, delay);
         } else {
@@ -318,11 +338,11 @@ class VivaWebSocketClient {
                 if (message.code === ERROR_CODES.VOICE_UNAVAILABLE) {
                     Logger.warn(`VivaWS: ${message.message}`);
                     store.setAudioStatus(false);
-                    store.setError(`${message.message} Switched to text-only mode.`);
+                    store.setError(`${message.message} Switched to text-only mode.`, false); // Non-fatal
                     window.dispatchEvent(new CustomEvent('viva:voice_unavailable'));
                 } else if (message.code === ERROR_CODES.PROCESSING_CRASH) {
                     Logger.error(`VivaWS Error [${message.code}]: ${message.message}`);
-                    store.setError(message.message);
+                    store.setError(message.message, false); // Non-fatal: session can continue
                     store.setAudioStatus(false);
                     window.dispatchEvent(new CustomEvent('viva:voice_unavailable'));
                 } else {

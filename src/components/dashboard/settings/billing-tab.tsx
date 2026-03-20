@@ -8,7 +8,7 @@ import { PricingCards, PlanData } from '@/components/content/pricing/pricing-car
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, History } from 'lucide-react';
+import { AlertCircle, History, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
@@ -103,7 +103,7 @@ export function BillingTab() {
     }, [plansData, subscriptionTier]);
 
     // Handle Upgrade
-    const handleUpgrade = async (planId: string, billingCycle: 'monthly' | 'yearly') => {
+    const handleUpgrade = async (planId: string, billingCycle: 'MONTHLY' | 'YEARLY') => {
         setIsProcessing(true);
         try {
             // 1. Create Order
@@ -329,17 +329,27 @@ export function BillingTab() {
                                             })}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-3">
                                         <span className="font-semibold text-sm">₹{p.amount_inr?.toLocaleString('en-IN')}</span>
                                         <Badge
-                                            variant={p.status === 'CAPTURED' ? 'default' : 'destructive'}
+                                            variant={p.status === 'captured' || p.status === 'CAPTURED' ? 'default' : 'destructive'}
                                             className={cn(
                                                 "text-[10px] uppercase px-2 py-0.5 h-6",
-                                                p.status === 'CAPTURED' ? "bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20" : ""
+                                                (p.status === 'captured' || p.status === 'CAPTURED') ? "bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20" : ""
                                             )}
                                         >
-                                            {p.status === 'CAPTURED' ? 'Paid' : p.status}
+                                            {p.status_label || (p.status === 'CAPTURED' || p.status === 'captured' ? 'Paid' : p.status)}
                                         </Badge>
+                                        {(p.status === 'captured' || p.status === 'CAPTURED') && (
+                                            <button
+                                                onClick={() => api.billing.downloadInvoice(p.id)}
+                                                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/5 cursor-pointer"
+                                                title="Download Invoice"
+                                            >
+                                                <Download className="h-3.5 w-3.5" />
+                                                <span className="hidden sm:inline">Invoice</span>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

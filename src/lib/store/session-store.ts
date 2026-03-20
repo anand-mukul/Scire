@@ -76,7 +76,7 @@ export interface SessionState {
     setSessionInfo: (sessionId: string, examId: string, studentId: string) => void;
     setSessionMetadata: (expiryTime: string | null, settings: Record<string, any>) => void;
     setConnectionState: (state: ConnectionState) => void;
-    setError: (error: string | null) => void;
+    setError: (error: string | null, fatal?: boolean) => void;
     setOnboardingStatus: (accepted: boolean) => void;
 
     setFsmState: (state: DialogueState, questionsAsked?: number) => void;
@@ -168,10 +168,12 @@ export const useSessionStore = create<SessionState>()(
                 }
             }),
 
-        setError: (error) =>
+        setError: (error, fatal = true) =>
             set((state) => {
                 state.error = error;
-                if (error) state.connectionState = 'FAILED';
+                // FRONT-8 FIX: Only force FAILED on fatal errors.
+                // Non-fatal errors (e.g. VOICE_UNAVAILABLE) should keep the connection alive.
+                if (error && fatal) state.connectionState = 'FAILED';
             }),
 
         setOnboardingStatus: (accepted) =>

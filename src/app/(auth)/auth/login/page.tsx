@@ -136,49 +136,46 @@ function LoginForm() {
                 {/* Glow Effect */}
                 <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
 
-                <div className="p-8 md:p-10">
+                <div className="p-6 md:p-8">
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">Welcome Back</h1>
-                        <p className="text-muted-foreground">Sign in to continue to Scire</p>
+                    <div className="text-center mb-5">
+                        <h1 className="text-2xl font-bold text-foreground mb-1 tracking-tight">Welcome Back</h1>
+                        <p className="text-sm text-muted-foreground">Sign in to continue to Scire</p>
                     </div>
 
                     {/* SSO Buttons */}
                     {!ssoLoading && ssoProviders.length > 0 && (
                         <>
-                            <div className="space-y-3 mb-6">
+                            <div className="grid grid-cols-2 gap-2.5 mb-4">
                                 {ssoProviders.map((provider) => (
                                     <Button
                                         key={provider.id}
                                         type="button"
                                         variant="outline"
                                         onClick={() => handleSSOLogin(provider.id)}
-                                        className="w-full h-12 rounded-xl border-primary/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-primary/5 dark:hover:bg-white/10 transition-all font-medium text-foreground"
+                                        className="w-full h-10 rounded-xl border-primary/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-primary/5 dark:hover:bg-white/10 transition-all font-medium text-foreground text-sm"
                                     >
                                         {provider.id === 'google' ? (
-                                            <GoogleIcon className="w-5 h-5 mr-3" />
+                                            <GoogleIcon className="w-4 h-4 mr-2" />
                                         ) : (
-                                            <MicrosoftIcon className="w-5 h-5 mr-3" />
+                                            <MicrosoftIcon className="w-4 h-4 mr-2" />
                                         )}
-                                        Continue with {provider.name}
+                                        {provider.name}
                                     </Button>
                                 ))}
                             </div>
 
                             {/* Divider between SSO and email/password */}
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-border" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase tracking-widest text-muted-foreground">
-                                    <span className="px-4 bg-white/60 dark:bg-black/40">or continue with email</span>
-                                </div>
+                            <div className="flex items-center gap-3 my-4">
+                                <div className="flex-1 h-px bg-border" />
+                                <span className="text-xs uppercase tracking-widest text-muted-foreground">or continue with email</span>
+                                <div className="flex-1 h-px bg-border" />
                             </div>
                         </>
                     )}
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         {/* Email Field */}
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-foreground/90 font-medium">
@@ -190,7 +187,7 @@ function LoginForm() {
                                     id="email"
                                     type="email"
                                     placeholder="you@example.com"
-                                    className="pl-11 h-12 bg-primary/5 dark:bg-white/5 border-primary/10 dark:border-white/10 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                                    className="pl-11 h-10 bg-primary/5 dark:bg-white/5 border-primary/10 dark:border-white/10 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all text-sm"
                                     {...register('email')}
                                 />
                             </div>
@@ -210,7 +207,7 @@ function LoginForm() {
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="••••••••"
-                                    className="pl-11 pr-11 h-12 bg-primary/5 dark:bg-white/5 border-primary/10 dark:border-white/10 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                                    className="pl-11 pr-11 h-10 bg-primary/5 dark:bg-white/5 border-primary/10 dark:border-white/10 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all text-sm"
                                     {...register('password')}
                                 />
                                 <button
@@ -239,7 +236,7 @@ function LoginForm() {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-12 rounded-xl bg-foreground text-background hover:bg-foreground/90 shadow-[0_0_20px_-5px_var(--primary)/0.3] hover:shadow-primary/50 transition-all hover:scale-[1.02] font-semibold text-lg"
+                            className="w-full h-10 rounded-xl bg-foreground text-background hover:bg-foreground/90 shadow-[0_0_20px_-5px_var(--primary)/0.3] hover:shadow-primary/50 transition-all hover:scale-[1.02] font-semibold text-sm"
                         >
                             {isLoading ? (
                                 <>
@@ -263,13 +260,10 @@ function LoginForm() {
                     )}
 
                     {/* Divider */}
-                    <div className="relative my-8">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-border" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase tracking-widest text-muted-foreground">
-                            <span className="px-4 bg-transparent backdrop-blur-sm">New to Scire?</span>
-                        </div>
+                    <div className="flex items-center gap-3 my-5">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-xs uppercase tracking-widest text-muted-foreground">New to Scire?</span>
+                        <div className="flex-1 h-px bg-border" />
                     </div>
 
                     {/* Register Link */}
@@ -277,7 +271,7 @@ function LoginForm() {
                         <Button
                             type="button"
                             variant="outline"
-                            className="w-full h-12 rounded-xl border-primary/10 dark:border-white/10 text-foreground hover:bg-primary/5 dark:hover:bg-white/5 transition-all font-medium"
+                            className="w-full h-10 rounded-xl border-primary/10 dark:border-white/10 text-foreground hover:bg-primary/5 dark:hover:bg-white/5 transition-all font-medium text-sm"
                         >
                             Create an Account
                         </Button>

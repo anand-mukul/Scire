@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, XCircle, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { VivaSession, GradingDetail, ReviewStatus } from '@/types/backend';
 // import { BackgroundBeams } from '@/components/visuals/BackgroundBeams';
 
@@ -61,9 +62,48 @@ export default function ReviewSessionPage() {
 
     if (sessionLoading || gradingLoading) {
         return (
-            <div className="flex items-center justify-center py-32 text-muted-foreground">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
+            <main className="flex flex-col gap-8 p-6 md:p-8 pb-24">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-40" />
+                        <Skeleton className="h-4 w-80" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="h-10 w-20" />
+                        <Skeleton className="h-7 w-24 rounded-full" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                        <Card className="p-6 space-y-6">
+                            <div className="space-y-2">
+                                <Skeleton className="h-6 w-44" />
+                                <Skeleton className="h-4 w-56" />
+                            </div>
+                            <Skeleton className="h-10 w-80" />
+                            <div className="space-y-3">
+                                {[1, 2, 3, 4].map(i => (
+                                    <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                                ))}
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="lg:col-span-1">
+                        <Card className="p-6 space-y-6">
+                            <div className="space-y-2">
+                                <Skeleton className="h-6 w-36" />
+                                <Skeleton className="h-4 w-48" />
+                            </div>
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <Skeleton className="h-10" />
+                                <Skeleton className="h-10" />
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            </main>
         );
     }
 
@@ -122,9 +162,9 @@ export default function ReviewSessionPage() {
                         </CardHeader>
                         <CardContent>
                             <Tabs defaultValue="grading" className="w-full">
-                                <TabsList className="bg-muted border border-border p-1 mb-6">
-                                    <TabsTrigger value="grading" className="data-[state=active]:bg-background shadow-sm">Grading Breakdown</TabsTrigger>
-                                    <TabsTrigger value="transcript" className="data-[state=active]:bg-background shadow-sm">Transcript</TabsTrigger>
+                                <TabsList className="mb-6">
+                                    <TabsTrigger value="grading">Grading Breakdown</TabsTrigger>
+                                    <TabsTrigger value="transcript">Transcript</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="grading">

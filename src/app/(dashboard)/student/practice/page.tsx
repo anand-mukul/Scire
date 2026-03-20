@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/dashboard/page-header';
-import { Target, Plus, Loader2, CheckCircle, XCircle, Clock, Sparkles } from 'lucide-react';
+import { Target, Plus, Loader2, CheckCircle, XCircle, Clock, Sparkles, Zap, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/network/api';
 import { formatToLocalDateTime } from '@/lib/date-utils';
+import { PracticePlansModal } from '@/components/content/practice/practice-plans-modal';
 
 const KBStatusBadge = ({ status }: { status: string | null }) => {
     if (!status) return <Badge variant="secondary">Unknown</Badge>;
@@ -42,7 +43,15 @@ const KBStatusBadge = ({ status }: { status: string | null }) => {
     }
 };
 
+const PLAN_ICON: Record<string, React.ReactNode> = {
+    FREE: <Sparkles className="h-5 w-5 text-muted-foreground" />,
+    LITE: <Zap className="h-5 w-5 text-blue-500" />,
+    PLUS: <Crown className="h-5 w-5 text-purple-500" />,
+};
+
 export default function PracticePage() {
+    const [showPlansModal, setShowPlansModal] = useState(false);
+
     const { data: exams, isLoading: examsLoading } = useQuery({
         queryKey: ['practice-exams'],
         queryFn: () => api.practice.listExams(),
@@ -52,6 +61,8 @@ export default function PracticePage() {
         queryKey: ['practice-status'],
         queryFn: () => api.practice.getStatus(),
     });
+
+    const currentPlan = practiceStatus?.plan || 'FREE';
 
     return (
         <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
@@ -68,31 +79,51 @@ export default function PracticePage() {
                 }
             />
 
-            {/* Status Banner */}
+            {/* Plan-Aware Status Banner */}
             {practiceStatus && (
-                <Card className="p-5 bg-gradient-to-r from-primary/5 to-transparent border-primary/10">
+                <Card className="p-5 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent border-primary/10">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-4">
                             <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20">
-                                <Sparkles className="h-5 w-5 text-primary" />
+                                {PLAN_ICON[currentPlan] || <Sparkles className="h-5 w-5 text-primary" />}
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-foreground">
-                                    {practiceStatus.free_remaining > 0
-                                        ? `${practiceStatus.free_remaining} free session remaining`
-                                        : `₹${(practiceStatus.price_per_session / 100).toFixed(0)} per session`
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <p className="text-sm font-medium text-foreground">
+                                        {practiceStatus.plan_name || currentPlan} Plan
+                                    </p>
+                                    {currentPlan !== 'FREE' && (
+                                        <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                                            ACTIVE
+                                        </Badge>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {practiceStatus.is_unlimited
+                                        ? `Unlimited sessions • ${practiceStatus.sessions_used} used`
+                                        : `${practiceStatus.sessions_remaining} of ${practiceStatus.sessions_limit} sessions remaining`
                                     }
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {practiceStatus.total_sessions} total practice sessions completed
                                 </p>
                             </div>
                         </div>
-                        {practiceStatus.free_remaining > 0 && (
-                            <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs">
-                                FREE
-                            </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {currentPlan === 'FREE' && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs gap-1.5 font-semibold"
+                                    onClick={() => setShowPlansModal(true)}
+                                >
+                                    <Zap className="h-3.5 w-3.5" />
+                                    Upgrade
+                                </Button>
+                            )}
+                            {currentPlan === 'FREE' && practiceStatus.sessions_remaining > 0 && (
+                                <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs">
+                                    FREE
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 </Card>
             )}
@@ -162,6 +193,12 @@ export default function PracticePage() {
                     )}
                 </div>
             </div>
+
+            {/* Plans Modal */}
+            <PracticePlansModal
+                open={showPlansModal}
+                onOpenChange={setShowPlansModal}
+            />
         </main>
     );
 }

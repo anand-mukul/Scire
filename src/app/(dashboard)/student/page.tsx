@@ -261,11 +261,11 @@ export default function StudentDashboard() {
             {/* Activity Tabs */}
             <div className="space-y-6">
                 <Tabs defaultValue="active" className="w-full">
-                    <TabsList className="bg-muted/50 p-1 rounded-lg border border-border/50 h-auto inline-flex">
-                        <TabsTrigger value="active" className="rounded-md px-5 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2 cursor-pointer">
+                    <TabsList>
+                        <TabsTrigger value="active" className="gap-2">
                             <Clock className="h-4 w-4" /> In Progress
                         </TabsTrigger>
-                        <TabsTrigger value="history" className="rounded-md px-5 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2 cursor-pointer">
+                        <TabsTrigger value="history" className="gap-2">
                             <FileText className="h-4 w-4" /> History
                         </TabsTrigger>
                     </TabsList>

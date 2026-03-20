@@ -3,6 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { LoginCredentials, RegisterData, User, AuthTokens, SSOProvidersResponse } from '@/types/auth';
 import { Exam, ExamStatus, ExamSettings, VivaSession, Rubric, GradingDetail } from '@/types/backend';
 import { AdminStats, AuditLog } from '@/types/admin';
+import { getAccessToken } from '@/lib/auth-token';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -62,6 +63,25 @@ const processQueue = (error: Error | null = null) => {
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
 }
+
+// FRONT-5 FIX: Attach in-memory access token as Bearer header on every request.
+// This ensures the token stored by AuthContext reaches the backend even when
+// cookies are not available (cross-origin, mobile webviews, etc.).
+apiClient.interceptors.request.use((config) => {
+    const token = getAccessToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+authClient.interceptors.request.use((config) => {
+    const token = getAccessToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
 apiClient.interceptors.response.use(
     (response) => response,
@@ -487,7 +507,7 @@ export const api = {
     },
 
     payments: {
-        createOrder: async (data: { plan_id: string; billing_cycle?: 'monthly' | 'yearly'; currency?: string; receipt?: string; notes?: Record<string, unknown> }) => {
+        createOrder: async (data: { plan_id: string; billing_cycle?: 'MONTHLY' | 'YEARLY'; currency?: string; receipt?: string }) => {
             const { data: response } = await apiClient.post('/payments/order', data);
             return response;
         },
@@ -506,8 +526,8 @@ export const api = {
 
     platform: {
         listTenants: async (params?: { status?: string; skip?: number; limit?: number }) => {
-            // MOCK DATA INJECTION
-            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
+            // FRONT-9 FIX: Production guard on mock data
+            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
                 return [
                     { id: '1', name: 'Acme Corp', slug: 'acme', status: 'ACTIVE', subscription_tier: 'ENTERPRISE', max_students: 5000 },
                     { id: '2', name: 'TechStart', slug: 'techstart', status: 'TRIAL', subscription_tier: 'STARTER', max_students: 50 },
@@ -556,8 +576,8 @@ export const api = {
         },
         // Stats & Analytics
         getStats: async () => {
-            // MOCK DATA INJECTION
-            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
+            // FRONT-9 FIX: Production guard on mock data
+            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
                 return {
                     total_users: 1250,
                     active_sessions: 42,
@@ -573,8 +593,8 @@ export const api = {
             return data;
         },
         getAnalytics: async () => {
-            // MOCK DATA INJECTION
-            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
+            // FRONT-9 FIX: Production guard on mock data
+            if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
                 return {
                     sessions_by_day: Array.from({ length: 30 }, (_, i) => ({
                         date: new Date(Date.now() - (29 - i) * 86400000).toISOString(),
@@ -614,6 +634,9 @@ export const api = {
         getHistory: async (params?: { skip?: number; limit?: number }) => {
             const { data } = await apiClient.get('/billing/history', { params });
             return data;
+        },
+        downloadInvoice: (paymentId: string) => {
+            window.open(`${getApiBaseUrl()}/billing/invoice/${paymentId}`, '_blank');
         },
     },
 
@@ -678,10 +701,28 @@ export const api = {
         },
     },
 
+
+
     // ────────────────── Practice Viva ──────────────────
     practice: {
         getStatus: async () => {
             const { data } = await apiClient.get('/practice/status');
+            return data;
+        },
+        getPlans: async () => {
+            const { data } = await apiClient.get('/practice/plans');
+            return data;
+        },
+        subscribe: async (planId: string) => {
+            const { data } = await apiClient.post('/practice/subscribe', { plan: planId });
+            return data;
+        },
+        verifySubscription: async (payload: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+        }) => {
+            const { data } = await apiClient.post('/practice/subscribe/verify', payload);
             return data;
         },
         createExam: async (payload: { title: string; instructions?: string; syllabus_url?: string }) => {

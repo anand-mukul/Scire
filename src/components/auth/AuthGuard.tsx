@@ -4,20 +4,28 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, getLandingPageForRole } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
 
 interface AuthGuardProps {
     children: React.ReactNode;
     allowedRoles?: string[];
 }
 
-// Loading component during auth check
 function AuthLoadingScreen() {
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-                <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-                <p className="text-neutral-400">Verifying authentication...</p>
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+            {/* Logo mark */}
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/80 to-primary/40 flex items-center justify-center">
+                <span className="text-base font-semibold text-primary-foreground">S</span>
             </div>
+
+            {/* Status */}
+            <p className="text-[13px] text-muted-foreground tracking-wide">
+                Verifying session
+            </p>
+
+            {/* Skeleton shimmer bar */}
+            <Skeleton className="w-40 h-[3px] rounded-full" />
         </div>
     );
 }

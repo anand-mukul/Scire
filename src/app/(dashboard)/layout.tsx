@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/layout/app-sidebar';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useTenant } from '@/contexts/TenantContext';
 import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { NotificationSheet } from '@/components/layout/notification-sheet';
@@ -36,23 +37,40 @@ export default function DashboardLayout({
             <div className="flex h-dvh bg-background">
                 {/* Sidebar skeleton */}
                 <div className="hidden md:flex w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 gap-4">
-                    <div className="h-8 w-32 rounded-lg bg-muted/30 animate-pulse" />
-                    <div className="h-9 w-full rounded-lg bg-muted/20 animate-pulse mt-4" />
+                    <Skeleton className="h-8 w-32 rounded-lg" />
+                    <Skeleton className="h-9 w-full rounded-lg mt-4" />
                     <div className="space-y-2 mt-6">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="h-8 rounded-md bg-muted/15 animate-pulse" style={{ width: `${70 + Math.random() * 30}%` }} />
+                        {[75, 88, 82, 95, 70].map((w, i) => (
+                            <Skeleton key={i} className="h-8 rounded-md" style={{ width: `${w}%` }} />
                         ))}
+                    </div>
+                    <div className="mt-auto space-y-2">
+                        <Skeleton className="h-8 w-full rounded-md" />
+                        <Skeleton className="h-8 w-3/4 rounded-md" />
                     </div>
                 </div>
                 {/* Content skeleton */}
                 <div className="flex-1 flex flex-col">
                     <div className="h-14 border-b border-border flex items-center px-4 gap-4">
-                        <div className="h-5 w-40 rounded bg-muted/20 animate-pulse" />
+                        <Skeleton className="h-5 w-40" />
+                        <div className="ml-auto flex items-center gap-3">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
                     </div>
-                    <div className="flex-1 flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-3">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/50" />
-                            <p className="text-sm text-muted-foreground">Loading organization...</p>
+                    <div className="flex-1 p-6 md:p-8 space-y-6">
+                        <div className="space-y-2">
+                            <Skeleton className="h-8 w-48" />
+                            <Skeleton className="h-4 w-72" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {[1, 2, 3, 4].map(i => (
+                                <Skeleton key={i} className="h-28 rounded-xl" />
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <Skeleton className="h-64 rounded-xl lg:col-span-2" />
+                            <Skeleton className="h-64 rounded-xl" />
                         </div>
                     </div>
                 </div>

@@ -261,7 +261,7 @@ export default function AdminDashboard() {
                                         <Skeleton className="h-4 w-full" />
                                     </div>
                                 ) : (
-                                    Object.entries(stats?.users_by_role || {}).map(([role, count]) => {
+                                    Object.entries(stats?.users_by_role || {}).filter(([role]) => role !== 'PLATFORM_ADMIN').map(([role, count]) => {
                                         const total = stats?.total_users || 1;
                                         const percentage = Math.round((count / total) * 100);
                                         // Match StatusBadge colors

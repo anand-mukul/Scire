@@ -10,12 +10,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                 {/* Full-height flex column: logo at top, form centered, footer at bottom */}
                 <div className="flex flex-col min-h-dvh">
                     {/* Logo Header — fixed at top */}
-                    <header className="shrink-0 p-5 md:p-6">
+                    <header className="shrink-0 p-4 md:p-5">
                         <Logo textClassName="!bg-none !text-white/90" />
                     </header>
 
                     {/* Main Content — takes remaining space, centers the form card */}
-                    <main className="flex-1 flex items-center justify-center px-4 py-4">
+                    <main className="flex-1 flex items-center justify-center px-4 py-2">
                         {children}
                     </main>
 

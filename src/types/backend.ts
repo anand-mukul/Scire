@@ -1,16 +1,3 @@
-/**
- * Backend Type Definitions
- * Mirrors SQLAlchemy models in app/models/
- */
-
-export enum UserRole {
-    STUDENT = 'STUDENT',
-    INSTRUCTOR = 'INSTRUCTOR',
-    ADMIN = 'ADMIN',
-    REVIEWER = 'REVIEWER',
-    PLATFORM_ADMIN = 'PLATFORM_ADMIN' // Added to match backend
-}
-
 export enum ExamStatus {
     DRAFT = 'DRAFT',
     PUBLISHED = 'PUBLISHED',
@@ -55,10 +42,10 @@ export enum TenantStatus {
 }
 
 export interface User {
-    id: string; // UUID
+    id: string;
     email: string;
     full_name: string;
-    role: UserRole;
+    role: string;
     is_active: boolean;
     is_anonymized: boolean;
     created_at: string;
@@ -164,6 +151,7 @@ export interface GradingDetail {
     ai_reasoning: string;
     confidence: number;
     evaluated_at: string;
+    needs_human_review?: boolean; // FRONT-6: Flagged when confidence < 0.6 or LLM fallback
 }
 
 export interface ReviewRequest {

@@ -29,7 +29,7 @@ export interface PlanData {
 interface PricingCardsProps {
     plans: PlanData[];
     variant?: 'public' | 'admin';
-    onUpgrade?: (planId: string, billingCycle: 'monthly' | 'yearly') => void;
+    onUpgrade?: (planId: string, billingCycle: 'MONTHLY' | 'YEARLY') => void;
 }
 
 const PricingCard = ({
@@ -40,15 +40,15 @@ const PricingCard = ({
 }: {
     plan: PlanData,
     variant: 'public' | 'admin',
-    onUpgrade?: (id: string, cycle: 'monthly' | 'yearly') => void,
-    billingCycle: 'monthly' | 'yearly'
+    onUpgrade?: (id: string, cycle: 'MONTHLY' | 'YEARLY') => void,
+    billingCycle: 'MONTHLY' | 'YEARLY'
 }) => {
     const isPopular = plan.isPopular;
     const isDowngrade = (plan.tierLevel || 0) < (plan.currentTierLevel || 0);
 
     // Calculate Price logic
     const displayPrice = typeof plan.price === 'number'
-        ? (billingCycle === 'yearly' ? Math.round(plan.price * 12 * 0.8 / 12) : plan.price)
+        ? (billingCycle === 'YEARLY' ? Math.round(plan.price * 12 * 0.8 / 12) : plan.price)
         : plan.price;
 
     return (
@@ -86,7 +86,7 @@ const PricingCard = ({
                             {displayPrice}
                         </span>
                     )}
-                    {billingCycle === 'yearly' && typeof plan.price === 'number' && (
+                    {billingCycle === 'YEARLY' && typeof plan.price === 'number' && (
                         <p className="text-xs text-muted-foreground mt-1">
                             Billed ₹{Math.round(plan.price * 12 * 0.8).toLocaleString('en-IN')} yearly
                         </p>
@@ -181,7 +181,7 @@ const PricingCard = ({
 };
 
 export function PricingCards({ plans, variant = 'public', onUpgrade }: PricingCardsProps) {
-    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+    const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
 
     return (
         <div className="w-full max-w-5xl mx-auto">
@@ -189,10 +189,10 @@ export function PricingCards({ plans, variant = 'public', onUpgrade }: PricingCa
             <div className="flex justify-center mb-10">
                 <div className="flex items-center p-1 bg-muted rounded-full border border-border">
                     <button
-                        onClick={() => setBillingCycle('monthly')}
+                        onClick={() => setBillingCycle('MONTHLY')}
                         className={cn(
                             "px-6 py-2 rounded-full text-sm font-medium transition-all duration-200",
-                            billingCycle === 'monthly'
+                            billingCycle === 'MONTHLY'
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
                         )}
@@ -200,10 +200,10 @@ export function PricingCards({ plans, variant = 'public', onUpgrade }: PricingCa
                         Monthly
                     </button>
                     <button
-                        onClick={() => setBillingCycle('yearly')}
+                        onClick={() => setBillingCycle('YEARLY')}
                         className={cn(
                             "px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                            billingCycle === 'yearly'
+                            billingCycle === 'YEARLY'
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
                         )}

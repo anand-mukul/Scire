@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/network/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -16,12 +17,14 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
-import { BillingTab } from '@/components/dashboard/settings/billing-tab';
+import { SubscriptionTab, getSubscriptionTabLabel, shouldShowSubscriptionTab } from '@/components/dashboard/settings/subscription-tab';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NotificationPreference } from '@/types/backend';
 
 export default function SettingsPage() {
     const { user, refetch } = useAuth();
+    const searchParams = useSearchParams();
+    const initialTab = searchParams.get('tab') || 'general';
 
     // Form states
     const [fullName, setFullName] = useState(user?.full_name || '');
@@ -113,337 +116,297 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="space-y-8 animate-fade-in pb-10">
+        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
             <PageHeader
                 title="Settings"
                 description="Manage your account security and preferences."
             />
 
-            <div className="w-full">
-                <Tabs defaultValue="general" className="w-full space-y-0">
-                    {/* Top Navigation - Full Width with Background */}
-                    <div className="w-full border-b bg-muted/40 backdrop-blur-sm sticky top-0 z-10">
-                        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="overflow-x-auto pb-0 scrollbar-hide">
-                                <TabsList className="flex w-full justify-start gap-6 bg-transparent p-0 h-14">
-                                    <TabsTrigger
-                                        value="general"
-                                        className="relative h-14 rounded-none border-b-2 border-transparent px-2 pb-3 pt-4 font-medium text-muted-foreground shadow-none transition-all duration-300 ease-in-out data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <UserCog className="h-4 w-4" />
-                                            General
-                                        </div>
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="security"
-                                        className="relative h-14 rounded-none border-b-2 border-transparent px-2 pb-3 pt-4 font-medium text-muted-foreground shadow-none transition-all duration-300 ease-in-out data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <Shield className="h-4 w-4" />
-                                            Security
-                                        </div>
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="notifications"
-                                        className="relative h-14 rounded-none border-b-2 border-transparent px-2 pb-3 pt-4 font-medium text-muted-foreground shadow-none transition-all duration-300 ease-in-out data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <Bell className="h-4 w-4" />
-                                            Notifications
-                                        </div>
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="billing"
-                                        className="relative h-14 rounded-none border-b-2 border-transparent px-2 pb-3 pt-4 font-medium text-muted-foreground shadow-none transition-all duration-300 ease-in-out data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <CreditCard className="h-4 w-4" />
-                                            Billing
-                                        </div>
-                                    </TabsTrigger>
-                                </TabsList>
-                            </div>
+            <Tabs defaultValue={initialTab} className="w-full">
+                <TabsList>
+                    <TabsTrigger value="general" className="gap-2">
+                        <UserCog className="h-4 w-4" />
+                        General
+                    </TabsTrigger>
+                    <TabsTrigger value="security" className="gap-2">
+                        <Shield className="h-4 w-4" />
+                        Security
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" className="gap-2">
+                        <Bell className="h-4 w-4" />
+                        Notifications
+                    </TabsTrigger>
+                    {shouldShowSubscriptionTab(user?.role) && (
+                        <TabsTrigger value="billing" className="gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            {getSubscriptionTabLabel(user?.role)}
+                        </TabsTrigger>
+                    )}
+                </TabsList>
+
+                {/* General Tab */}
+                <TabsContent value="general" className="space-y-8 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-tight">General Settings</h2>
+                            <p className="text-muted-foreground mt-1">Manage your public profile and interface preferences.</p>
                         </div>
                     </div>
 
-                    {/* Settings Forms container */}
-                    <div className="container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-muted/10 border-b border-border/50 pb-4">
+                            <CardTitle className="text-base font-medium">Profile Information</CardTitle>
+                            <CardDescription>Update your photo and personal details.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-8 pt-8">
+                            <div className="flex flex-col md:flex-row gap-8">
+                                <div className="flex-shrink-0 space-y-3">
+                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Photo</label>
+                                    <div className="relative group">
+                                        <Avatar className="h-24 w-24 border-2 border-border shadow-sm cursor-pointer group-hover:border-primary/50 transition-colors">
+                                            <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.full_name}`} />
+                                            <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground">
+                                                {user?.full_name ? getInitials(user.full_name) : 'IT'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                            <span className="text-xs font-medium">Change</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        {/* General Tab */}
-                        <TabsContent value="general" className="space-y-8 m-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-bold tracking-tight">General Settings</h2>
-                                    <p className="text-muted-foreground mt-1">Manage your public profile and interface preferences.</p>
+                                <div className="flex-1 space-y-6 max-w-md">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="full_name">Full Name</Label>
+                                        <Input
+                                            id="full_name"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            className="max-w-md focus-visible:ring-primary/20"
+                                        />
+                                        <p className="text-[0.8rem] text-muted-foreground">This is your public display name.</p>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email Address</Label>
+                                        <Input
+                                            id="email"
+                                            value={user?.email || ''}
+                                            disabled
+                                            className="max-w-md bg-muted/50"
+                                        />
+                                        <p className="text-[0.8rem] text-muted-foreground">Contact support to change your email.</p>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label>Role</Label>
+                                        <div className="flex">
+                                            <Badge variant="secondary" className="px-2 py-1 text-sm font-normal">
+                                                {user?.role || 'User'}
+                                            </Badge>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            <div className="flex justify-end border-t pt-6 mt-6">
+                                <Button
+                                    onClick={handleUpdateProfile}
+                                    disabled={!canSubmitProfile || isUpdatingProfile}
+                                    className="cursor-pointer"
+                                >
+                                    {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                            <Card className="border-border/50 shadow-sm overflow-hidden">
-                                <CardHeader className="bg-muted/10 border-b border-border/50 pb-4">
-                                    <CardTitle className="text-base font-medium">Profile Information</CardTitle>
-                                    <CardDescription>Update your photo and personal details.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-8 pt-8">
-                                    <div className="flex flex-col md:flex-row gap-8">
-                                        <div className="flex-shrink-0 space-y-3">
-                                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Photo</label>
-                                            <div className="relative group">
-                                                <Avatar className="h-24 w-24 border-2 border-border shadow-sm cursor-pointer group-hover:border-primary/50 transition-colors">
-                                                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.full_name}`} />
-                                                    <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground">
-                                                        {user?.full_name ? getInitials(user.full_name) : 'IT'}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                                    <span className="text-xs font-medium">Change</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex-1 space-y-6 max-w-md">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="full_name">Full Name</Label>
-                                                <Input
-                                                    id="full_name"
-                                                    value={fullName}
-                                                    onChange={(e) => setFullName(e.target.value)}
-                                                    className="max-w-md focus-visible:ring-primary/20"
-                                                />
-                                                <p className="text-[0.8rem] text-muted-foreground">This is your public display name.</p>
-                                            </div>
-
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="email">Email Address</Label>
-                                                <Input
-                                                    id="email"
-                                                    value={user?.email || ''}
-                                                    disabled
-                                                    className="max-w-md bg-muted/50"
-                                                />
-                                                <p className="text-[0.8rem] text-muted-foreground">Contact support to change your email.</p>
-                                            </div>
-
-                                            <div className="grid gap-2">
-                                                <Label>Role</Label>
-                                                <div className="flex">
-                                                    <Badge variant="secondary" className="px-2 py-1 text-sm font-normal">
-                                                        {user?.role || 'User'}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </div>
+                    <Card className="border-border/50 shadow-sm">
+                        <CardHeader>
+                            <CardTitle>Appearance & Regional</CardTitle>
+                            <CardDescription>Customize your interface experience.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors border border-transparent hover:border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-background border rounded-md shadow-sm">
+                                        <Palette className="h-4 w-4" />
                                     </div>
-                                    <div className="flex justify-end border-t pt-6 mt-6">
-                                        <Button
-                                            onClick={handleUpdateProfile}
-                                            disabled={!canSubmitProfile || isUpdatingProfile}
-                                            className="cursor-pointer"
-                                        >
-                                            {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
-                                        </Button>
+                                    <div>
+                                        <p className="font-medium text-sm">Theme Preference</p>
+                                        <p className="text-xs text-muted-foreground">Toggle between light and dark modes</p>
                                     </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="border-border/50 shadow-sm">
-                                <CardHeader>
-                                    <CardTitle>Appearance & Regional</CardTitle>
-                                    <CardDescription>Customize your interface experience.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors border border-transparent hover:border-border/50">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-background border rounded-md shadow-sm">
-                                                <Palette className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-sm">Theme Preference</p>
-                                                <p className="text-xs text-muted-foreground">Toggle between light and dark modes</p>
-                                            </div>
-                                        </div>
-                                        <AnimatedThemeToggler />
-                                    </div>
-                                    <Separator />
-                                    <div className="flex items-center justify-between p-3 rounded-lg opacity-60 cursor-not-allowed">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-background border rounded-md shadow-sm">
-                                                <Languages className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-sm">Language</p>
-                                                <p className="text-xs text-muted-foreground">Select your preferred language</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-muted-foreground">English (US)</span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Security Tab */}
-                        <TabsContent value="security" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-sm">
-                                    <Shield className="h-5 w-5" />
                                 </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold tracking-tight">Security & Authentication</h2>
-                                    <p className="text-sm text-muted-foreground">Manage your password and account access.</p>
+                                <AnimatedThemeToggler />
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between p-3 rounded-lg opacity-60 cursor-not-allowed">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-background border rounded-md shadow-sm">
+                                        <Languages className="h-4 w-4" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">Language</p>
+                                        <p className="text-xs text-muted-foreground">Select your preferred language</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">English (US)</span>
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-                            <Card className="border-border/50 shadow-sm">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="text-base flex items-center justify-between">
-                                        Change Password
-                                        <Badge variant="outline" className="font-normal text-[10px] uppercase tracking-wider bg-background">Recommended</Badge>
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Ensure your account is using a long, random password to stay secure.
-                                    </CardDescription>
-                                </CardHeader>
-                                <Separator />
-                                <CardContent className="space-y-4 pt-6">
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="currentPassword">Current Password</Label>
-                                            <Input
-                                                id="currentPassword"
-                                                type="password"
-                                                value={currentPassword}
-                                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                                placeholder="Enter current password"
-                                                className="focus-visible:ring-primary/20"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="newPassword">New Password</Label>
-                                            <Input
-                                                id="newPassword"
-                                                type="password"
-                                                value={newPassword}
-                                                onChange={(e) => setNewPassword(e.target.value)}
-                                                placeholder="Enter new password"
-                                                className="focus-visible:ring-primary/20"
-                                            />
-                                            {newPassword && !isValidPassword && (
-                                                <p className="text-xs text-amber-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
-                                                    <AlertCircle className="w-3 h-3" />
-                                                    Must be at least 8 characters
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="col-span-full md:col-start-2 space-y-2">
-                                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                                            <Input
-                                                id="confirmPassword"
-                                                type="password"
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                                placeholder="Confirm new password"
-                                                className="focus-visible:ring-primary/20"
-                                            />
-                                            {confirmPassword && !passwordsMatch && (
-                                                <p className="text-xs text-destructive flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
-                                                    <AlertCircle className="w-3 h-3" />
-                                                    Passwords do not match
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end pt-2">
-                                        <Button
-                                            onClick={handlePasswordChange}
-                                            disabled={!canSubmitPassword || isChangingPassword}
-                                            className="cursor-pointer"
-                                        >
-                                            {isChangingPassword ? 'Updating...' : 'Update Password'}
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Notifications Tab */}
-                        <TabsContent value="notifications" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-sm">
-                                    <Bell className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold tracking-tight">Notification Preferences</h2>
-                                    <p className="text-sm text-muted-foreground">Choose what updates you want to receive.</p>
-                                </div>
-                            </div>
-
-                            <Card className="border-border/50 shadow-sm divide-y">
-                                <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
-                                    <div className="space-y-0.5">
-                                        <Label htmlFor="inapp-notifs" className="text-base font-medium cursor-pointer">In-App Notifications</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            Show notification bell and alerts within the platform.
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        id="inapp-notifs"
-                                        checked={notifPrefs?.channel_in_app ?? true}
-                                        onCheckedChange={handleToggleInApp}
-                                        disabled={prefsMutation.isPending}
-                                        className="cursor-pointer"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
-                                    <div className="space-y-0.5">
-                                        <Label htmlFor="email-notifs" className="text-base font-medium cursor-pointer">Email Notifications</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            Receive emails about your account activity and platform updates.
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        id="email-notifs"
-                                        checked={notifPrefs?.channel_email ?? true}
-                                        onCheckedChange={handleToggleEmail}
-                                        disabled={prefsMutation.isPending}
-                                        className="cursor-pointer"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between p-6 opacity-50 cursor-not-allowed">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <Label className="text-base font-medium">Marketing Emails</Label>
-                                            <Badge variant="secondary" className="text-[10px] h-5 font-normal">Coming Soon</Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            Receive news about new features and improvements.
-                                        </p>
-                                    </div>
-                                    <Switch disabled checked={false} />
-                                </div>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Billing Tab */}
-                        <TabsContent value="billing" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-sm">
-                                    <CreditCard className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold tracking-tight">Billing & Plans</h2>
-                                    <p className="text-sm text-muted-foreground">Manage your subscription and payment methods.</p>
-                                </div>
-                            </div>
-
-                            {/* Current Plan Card */}
-                            <BillingTab />
-                        </TabsContent>
+                {/* Security Tab */}
+                <TabsContent value="security" className="space-y-6 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-sm">
+                            <Shield className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold tracking-tight">Security & Authentication</h2>
+                            <p className="text-sm text-muted-foreground">Manage your password and account access.</p>
+                        </div>
                     </div>
-                </Tabs>
-            </div>
-        </div>
+
+                    <Card className="border-border/50 shadow-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base flex items-center justify-between">
+                                Change Password
+                                <Badge variant="outline" className="font-normal text-[10px] uppercase tracking-wider bg-background">Recommended</Badge>
+                            </CardTitle>
+                            <CardDescription>
+                                Ensure your account is using a long, random password to stay secure.
+                            </CardDescription>
+                        </CardHeader>
+                        <Separator />
+                        <CardContent className="space-y-4 pt-6">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="currentPassword">Current Password</Label>
+                                    <Input
+                                        id="currentPassword"
+                                        type="password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        placeholder="Enter current password"
+                                        className="focus-visible:ring-primary/20"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="newPassword">New Password</Label>
+                                    <Input
+                                        id="newPassword"
+                                        type="password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="Enter new password"
+                                        className="focus-visible:ring-primary/20"
+                                    />
+                                    {newPassword && !isValidPassword && (
+                                        <p className="text-xs text-amber-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+                                            <AlertCircle className="w-3 h-3" />
+                                            Must be at least 8 characters
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="col-span-full md:col-start-2 space-y-2">
+                                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                    <Input
+                                        id="confirmPassword"
+                                        type="password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Confirm new password"
+                                        className="focus-visible:ring-primary/20"
+                                    />
+                                    {confirmPassword && !passwordsMatch && (
+                                        <p className="text-xs text-destructive flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+                                            <AlertCircle className="w-3 h-3" />
+                                            Passwords do not match
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-end pt-2">
+                                <Button
+                                    onClick={handlePasswordChange}
+                                    disabled={!canSubmitPassword || isChangingPassword}
+                                    className="cursor-pointer"
+                                >
+                                    {isChangingPassword ? 'Updating...' : 'Update Password'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Notifications Tab */}
+                <TabsContent value="notifications" className="space-y-6 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-sm">
+                            <Bell className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold tracking-tight">Notification Preferences</h2>
+                            <p className="text-sm text-muted-foreground">Choose what updates you want to receive.</p>
+                        </div>
+                    </div>
+
+                    <Card className="border-border/50 shadow-sm divide-y">
+                        <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="inapp-notifs" className="text-base font-medium cursor-pointer">In-App Notifications</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Show notification bell and alerts within the platform.
+                                </p>
+                            </div>
+                            <Switch
+                                id="inapp-notifs"
+                                checked={notifPrefs?.channel_in_app ?? true}
+                                onCheckedChange={handleToggleInApp}
+                                disabled={prefsMutation.isPending}
+                                className="cursor-pointer"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="email-notifs" className="text-base font-medium cursor-pointer">Email Notifications</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Receive emails about your account activity and platform updates.
+                                </p>
+                            </div>
+                            <Switch
+                                id="email-notifs"
+                                checked={notifPrefs?.channel_email ?? true}
+                                onCheckedChange={handleToggleEmail}
+                                disabled={prefsMutation.isPending}
+                                className="cursor-pointer"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between p-6 opacity-50 cursor-not-allowed">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-base font-medium">Marketing Emails</Label>
+                                    <Badge variant="secondary" className="text-[10px] h-5 font-normal">Coming Soon</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    Receive news about new features and improvements.
+                                </p>
+                            </div>
+                            <Switch disabled checked={false} />
+                        </div>
+                    </Card>
+                </TabsContent>
+
+                {/* Billing / Subscription / Usage Tab — role aware */}
+                {shouldShowSubscriptionTab(user?.role) && (
+                    <TabsContent value="billing" className="space-y-6 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <SubscriptionTab />
+                    </TabsContent>
+                )}
+            </Tabs>
+        </main>
     );
 }
