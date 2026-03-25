@@ -7,6 +7,7 @@ import { useSessionStore } from '@/lib/store/session-store';
 import { vivaWebSocket } from '@/lib/network/websocket-client';
 import { api } from '@/lib/network/api';
 import { getAccessToken } from '@/lib/auth-token';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SessionPage() {
     const params = useParams();
@@ -14,12 +15,20 @@ export default function SessionPage() {
     const setSessionInfo = useSessionStore((state) => state.setSessionInfo);
     const resetSession = useSessionStore((state) => state.resetSession);
     const setError = useSessionStore((state) => state.setError);
+    const { isLoading: authLoading } = useAuth();
 
     useEffect(() => {
+        // Wait for AuthContext to finish its initial silentRefresh
+        // before trying to read the in-memory token
+        if (authLoading) return;
+
         const initSession = async () => {
             if (sessionId) {
                 try {
                     // Fetch real session details
+                    // If the access_token cookie is expired, the 401 interceptor
+                    // in api.ts will automatically call /auth/refresh and populate
+                    // the in-memory token via setAccessToken().
                     const sessionData = await api.sessions.getStatus(sessionId);
 
                     setSessionInfo(
@@ -30,14 +39,18 @@ export default function SessionPage() {
 
                     useSessionStore.getState().setOnboardingStatus(!!sessionData.onboarding_accepted);
 
-                    // Connect WS with secure in-memory token (not localStorage!)
+                    // The 401 interceptor should have populated the in-memory token
+                    // during the API call above. Read it directly.
                     const token = getAccessToken();
+
                     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/v1/ws/session';
 
                     if (token) {
                         vivaWebSocket.connect(`${wsUrl}/${sessionId}`, token);
                     } else {
-                        console.error('No auth token found - please re-login');
+                        // Token is genuinely unavailable — redirect to login
+                        console.error('No auth token found after successful API call - please re-login');
+                        setError('Authentication expired. Please log in again.');
                     }
                 } catch (error: unknown) {
                     console.error('Failed to initialize session:', error);
@@ -53,7 +66,7 @@ export default function SessionPage() {
             vivaWebSocket.disconnect();
             resetSession();
         };
-    }, [sessionId, setSessionInfo, resetSession]);
+    }, [sessionId, setSessionInfo, resetSession, authLoading]);
 
     return (
         <div className="h-full flex flex-col bg-background">
@@ -61,3 +74,4 @@ export default function SessionPage() {
         </div>
     );
 }
+

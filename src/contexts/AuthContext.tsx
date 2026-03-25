@@ -54,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             // DEVELOPER AUTH BYPASS
             // Controlled by NEXT_PUBLIC_DEV_AUTH_BYPASS env var
-            // FRONT-2 FIX: Block bypass in production builds to prevent accidental admin access
             if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
                 if (process.env.NODE_ENV === 'production') {
                     console.error('🚨 CRITICAL: DEV_AUTH_BYPASS is enabled in a PRODUCTION build! Ignoring bypass for security.');

@@ -7,6 +7,7 @@ export enum DialogueState {
     AUTH = 'auth',
     CALIBRATION = 'calibration',
     QUESTION = 'question',
+    THINK = 'think',
     LISTENING = 'listening',
     EVALUATION = 'evaluation',
     SCAFFOLD = 'scaffold',
@@ -48,6 +49,7 @@ export interface SessionState {
 
     // Audio/Media State
     isMicActive: boolean;
+    isMicUnmuted: boolean;  // Push-to-talk: user manually controls this
     isAudioPlaying: boolean;
     isAgentSpeaking: boolean;
     userVolume: number;
@@ -86,6 +88,7 @@ export interface SessionState {
     setAudioStatus: (isPlaying: boolean) => void;
     setAgentSpeaking: (isSpeaking: boolean) => void;
     setMicStatus: (isActive: boolean) => void;
+    setMicUnmuted: (unmuted: boolean) => void;
     setUserVolume: (vol: number) => void;
     setAgentVolume: (vol: number) => void;
     resetSession: () => void;
@@ -111,6 +114,7 @@ export const useSessionStore = create<SessionState>()(
         questionsAsked: 0,
 
         isMicActive: false,
+        isMicUnmuted: false,
         isAudioPlaying: false,
         isAgentSpeaking: false,
         userVolume: 0,
@@ -171,7 +175,6 @@ export const useSessionStore = create<SessionState>()(
         setError: (error, fatal = true) =>
             set((state) => {
                 state.error = error;
-                // FRONT-8 FIX: Only force FAILED on fatal errors.
                 // Non-fatal errors (e.g. VOICE_UNAVAILABLE) should keep the connection alive.
                 if (error && fatal) state.connectionState = 'FAILED';
             }),
@@ -223,6 +226,11 @@ export const useSessionStore = create<SessionState>()(
                 state.isMicActive = isActive;
             }),
 
+        setMicUnmuted: (unmuted) =>
+            set((state) => {
+                state.isMicUnmuted = unmuted;
+            }),
+
         setUserVolume: (vol) =>
             set((state) => {
                 state.userVolume = vol;
@@ -249,6 +257,7 @@ export const useSessionStore = create<SessionState>()(
                 state.fsmState = DialogueState.AUTH;
                 state.status = SessionStatus.PENDING;
                 state.isMicActive = false;
+                state.isMicUnmuted = false;
                 state.isAudioPlaying = false;
                 state.isAgentSpeaking = false;
                 state.userVolume = 0;

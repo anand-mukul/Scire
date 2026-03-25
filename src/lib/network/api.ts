@@ -3,7 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { LoginCredentials, RegisterData, User, AuthTokens, SSOProvidersResponse } from '@/types/auth';
 import { Exam, ExamStatus, ExamSettings, VivaSession, Rubric, GradingDetail } from '@/types/backend';
 import { AdminStats, AuditLog } from '@/types/admin';
-import { getAccessToken } from '@/lib/auth-token';
+import { getAccessToken, setAccessToken } from '@/lib/auth-token';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -64,7 +64,6 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
 }
 
-// FRONT-5 FIX: Attach in-memory access token as Bearer header on every request.
 // This ensures the token stored by AuthContext reaches the backend even when
 // cookies are not available (cross-origin, mobile webviews, etc.).
 apiClient.interceptors.request.use((config) => {
@@ -107,7 +106,12 @@ apiClient.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                await authClient.post('/auth/refresh');
+                const { data: refreshData } = await authClient.post<{ access_token?: string }>('/auth/refresh');
+                // CRITICAL: Store the refreshed token in memory so WebSocket
+                // and other non-cookie consumers can access it
+                if (refreshData?.access_token) {
+                    setAccessToken(refreshData.access_token);
+                }
                 processQueue();
                 return apiClient(originalRequest);
             } catch (refreshError) {
@@ -526,7 +530,6 @@ export const api = {
 
     platform: {
         listTenants: async (params?: { status?: string; skip?: number; limit?: number }) => {
-            // FRONT-9 FIX: Production guard on mock data
             if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
                 return [
                     { id: '1', name: 'Acme Corp', slug: 'acme', status: 'ACTIVE', subscription_tier: 'ENTERPRISE', max_students: 5000 },
@@ -576,7 +579,6 @@ export const api = {
         },
         // Stats & Analytics
         getStats: async () => {
-            // FRONT-9 FIX: Production guard on mock data
             if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
                 return {
                     total_users: 1250,
@@ -593,7 +595,6 @@ export const api = {
             return data;
         },
         getAnalytics: async () => {
-            // FRONT-9 FIX: Production guard on mock data
             if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
                 return {
                     sessions_by_day: Array.from({ length: 30 }, (_, i) => ({

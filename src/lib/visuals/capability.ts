@@ -49,7 +49,6 @@ export const detectDeviceTier = (): DeviceTier => {
                 lowerRenderer.includes('adreno') ||
                 lowerRenderer.includes('powervr')
             ) {
-                // High-end mobile might be fine, but safe default is MEDIUM
                 return 'MEDIUM';
             }
 

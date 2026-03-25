@@ -151,7 +151,7 @@ export interface GradingDetail {
     ai_reasoning: string;
     confidence: number;
     evaluated_at: string;
-    needs_human_review?: boolean; // FRONT-6: Flagged when confidence < 0.6 or LLM fallback
+    needs_human_review?: boolean;
 }
 
 export interface ReviewRequest {

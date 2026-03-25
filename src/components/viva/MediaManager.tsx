@@ -30,14 +30,15 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
             try {
                 if (stream && stream.active) return;
 
-                Logger.log('MediaManager: Requesting User Media...');
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false,
                         channelCount: 1,
-                        sampleRate: 16000
+                        // NOTE: Do NOT specify sampleRate here — let the browser
+                        // use native rate. Downsampling to 16kHz is handled by
+                        // the recorder-processor.js AudioWorklet.
                     },
                     video: {
                         width: 320,
@@ -49,7 +50,6 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                 if (mounted) {
                     setStream(mediaStream);
                     if (onStreamReady) onStreamReady(mediaStream);
-                    Logger.log('MediaManager: Stream Active');
 
                     audioManager.setStream(mediaStream);
 
@@ -76,7 +76,6 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
     useEffect(() => {
         if (fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) {
             if (stream) {
-                Logger.log('MediaManager: Releasing stream on session end');
                 stream.getTracks().forEach(t => t.stop());
                 setStream(null);
             }
@@ -89,7 +88,6 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
         return () => {
             integrityService.stopMonitoring();
-            Logger.log('MediaManager: Cleaning up AudioManager');
             audioManager.cleanup();
             setMicStatus(false);
 
@@ -123,6 +121,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
         const shouldRecord = (
             fsmState === DialogueState.CALIBRATION ||
             fsmState === DialogueState.QUESTION ||
+            fsmState === DialogueState.THINK ||
             fsmState === DialogueState.LISTENING ||
             fsmState === DialogueState.SCAFFOLD ||
             fsmState === DialogueState.EVALUATION ||
@@ -132,19 +131,36 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
         if (shouldRecord) {
             const currentMic = useSessionStore.getState().isMicActive;
             if (!currentMic) {
-                Logger.log("MediaManager: Starting Audio Transmission");
                 useSessionStore.getState().setMicStatus(true);
                 audioManager.startRecording();
             }
         } else {
             const currentMic = useSessionStore.getState().isMicActive;
             if (currentMic) {
-                Logger.log("MediaManager: Stopping Audio Transmission");
                 useSessionStore.getState().setMicStatus(false);
                 audioManager.stopRecording();
             }
         }
     }, [stream, fsmState]);
+
+    // Auto-mute push-to-talk when entering non-speaking phases
+    // Mic unmute is only allowed during LISTENING (user clicks mic button)
+    useEffect(() => {
+        const autoMuteStates = [
+            DialogueState.QUESTION,
+            DialogueState.THINK,
+            DialogueState.EVALUATION,
+            DialogueState.TRANSFER,
+            DialogueState.END,
+            DialogueState.TERMINATED,
+        ];
+        if (autoMuteStates.includes(fsmState)) {
+            const currentUnmuted = useSessionStore.getState().isMicUnmuted;
+            if (currentUnmuted) {
+                useSessionStore.getState().setMicUnmuted(false);
+            }
+        }
+    }, [fsmState]);
 
     // Reuse a persistent video element for snapshot capture instead of creating new ones each call
     const captureAndSendSnapshot = useCallback(() => {

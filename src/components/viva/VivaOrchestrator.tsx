@@ -7,10 +7,11 @@ import { toast } from 'sonner';
 import { CalibrationPhase } from '@/components/viva/phases/CalibrationPhase';
 import { QuestionPhase } from '@/components/viva/phases/QuestionPhase';
 import { ListeningPhase } from '@/components/viva/phases/ListeningPhase';
+import { ThinkPhase } from '@/components/viva/phases/ThinkPhase';
 import { EvaluationPhase } from '@/components/viva/phases/EvaluationPhase';
 import { TTSPlayer } from '@/components/viva/TTSPlayer';
 import { useExamIntegrity } from '@/hooks/use-exam-integrity';
-import { LogOut, CheckCircle, Maximize, Timer as TimerIcon, AlertTriangle, WifiOff, Monitor } from 'lucide-react';
+import { LogOut, CheckCircle, Maximize, Timer as TimerIcon, AlertTriangle, WifiOff, Monitor, Mic, MicOff, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
@@ -26,6 +27,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { MediaManager } from '@/components/viva/MediaManager';
+import { audioManager } from '@/services/audioManager';
 import AIOrb from '../visuals/AIOrb';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/network/api';
@@ -35,8 +37,102 @@ import { PremiumLoader } from '@/components/ui/premium-loader';
 import { cn } from '@/lib/utils';
 
 
-// Placeholder for Auth phase
-const AuthPhase = () => <div className="text-center p-8 text-neutral-400 animate-pulse">Authenticating Secure Session...</div>;
+// Push-to-Talk Mic Toolbar — Fixed at bottom center
+const MicToolbar = () => {
+    const fsmState = useSessionStore((state) => state.fsmState);
+    const isMicUnmuted = useSessionStore((state) => state.isMicUnmuted);
+    const setMicUnmuted = useSessionStore((state) => state.setMicUnmuted);
+    const userVolume = useSessionStore((state) => state.userVolume);
+    const isAgentSpeaking = useSessionStore((state) => state.isAgentSpeaking);
+
+    // Mic button is ONLY enabled during THINK, LISTENING, and SCAFFOLD phases
+    const canToggle = [
+        DialogueState.THINK,
+        DialogueState.LISTENING,
+        DialogueState.SCAFFOLD,
+        DialogueState.CALIBRATION,
+    ].includes(fsmState) && !isAgentSpeaking;
+
+    const handleMicToggle = async () => {
+        if (!canToggle) return;
+
+        // Initialize AudioContext on user gesture (solves autoplay policy)
+        try {
+            await audioManager.initialize();
+        } catch {
+            // Already initialized or error — proceed
+        }
+
+        setMicUnmuted(!isMicUnmuted);
+    };
+
+    // Visual volume ring scale (0.0 - 1.0 → 1.0 - 1.4)
+    const volumeScale = isMicUnmuted ? 1 + (userVolume * 0.4) : 1;
+
+    return (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[80] animate-in slide-in-from-bottom fade-in duration-500">
+            <div className="flex items-center bg-black/80 backdrop-blur-xl border border-white/10 rounded-full p-2 shadow-2xl">
+                <button
+                    onClick={handleMicToggle}
+                    disabled={!canToggle}
+                    className={cn(
+                        "relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black",
+                        canToggle ? "cursor-pointer" : "cursor-not-allowed opacity-40",
+                        isMicUnmuted
+                            ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/40 focus:ring-emerald-500"
+                            : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 focus:ring-neutral-500",
+                        canToggle && !isMicUnmuted && "animate-pulse"
+                    )}
+                >
+                    {/* Volume ring */}
+                    {isMicUnmuted && (
+                        <div
+                            className="absolute inset-0 rounded-full border-2 border-emerald-400/50 transition-transform duration-150 ease-out"
+                            style={{ transform: `scale(${volumeScale})` }}
+                        />
+                    )}
+                    {isMicUnmuted ? (
+                        <Mic className="w-6 h-6 relative z-10" />
+                    ) : (
+                        <MicOff className="w-6 h-6 relative z-10" />
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// Interactive Auth Phase — Acts as user interaction gateway to start AudioContext
+const AuthPhase = () => {
+    const handleStart = async () => {
+        try {
+            await audioManager.initialize();
+            vivaWebSocket.startSession();
+        } catch (error) {
+            console.error("Failed to initialize audio:", error);
+            toast.error("Failed to access microphone. Please ensure permissions are granted.");
+        }
+    };
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center animate-in fade-in duration-500">
+            <div className="space-y-3">
+                <h2 className="text-2xl font-semibold text-foreground tracking-tight">Microphone Check</h2>
+                <p className="text-muted-foreground text-sm max-w-[280px] mx-auto leading-relaxed">
+                    Please test your microphone to ensure your audio is clear before starting the exam.
+                </p>
+            </div>
+            <Button 
+                size="lg" 
+                onClick={handleStart} 
+                className="mt-6 rounded-full px-8 shadow-md hover:-translate-y-0.5 transition-transform"
+            >
+                <Mic className="mr-2 h-4 w-4" />
+                Test Mic & Join
+            </Button>
+        </div>
+    );
+};
 
 // Proper End Phase with completion summary
 const EndPhase: React.FC = () => {
@@ -50,31 +146,39 @@ const EndPhase: React.FC = () => {
     const questionCount = Math.min(questionsAsked, totalConfigured);
 
     return (
-        <div className="text-center space-y-4 py-4">
-            <div className={cn(
-                "inline-flex items-center justify-center w-16 h-16 rounded-full mb-2",
-                isTerminated
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-emerald-500/10 text-emerald-400"
-            )}>
-                {isTerminated ? <AlertTriangle className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
+        <div className="text-center space-y-6 py-8 animate-in zoom-in-95 duration-700 ease-out">
+            <div className="relative inline-flex items-center justify-center">
+                <div className={cn(
+                    "absolute inset-0 rounded-full opacity-20 blur-2xl",
+                    isTerminated ? "bg-red-500" : "bg-emerald-500"
+                )} />
+                <div className={cn(
+                    "relative z-10 w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-2xl",
+                    isTerminated
+                        ? "bg-red-950/50 border-red-500/50 text-red-400"
+                        : "bg-emerald-950/50 border-emerald-500/50 text-emerald-400"
+                )}>
+                    {isTerminated ? <AlertTriangle className="w-12 h-12" /> : <CheckCircle className="w-12 h-12" />}
+                </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-foreground">
-                {isTerminated ? 'Session Terminated' : 'Session Completed'}
-            </h2>
+            <div className="space-y-2">
+                <h2 className="text-4xl font-extrabold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60">
+                    {isTerminated ? 'Session Terminated' : 'Session Completed'}
+                </h2>
 
-            <p className="text-muted-foreground max-w-md mx-auto">
-                {isTerminated
-                    ? 'Your session was terminated due to an integrity violation. Contact your instructor for details.'
-                    : 'Your responses have been submitted for grading. Results will be available once reviewed.'}
-            </p>
+                <p className="text-muted-foreground/80 max-w-md mx-auto text-lg">
+                    {isTerminated
+                        ? 'Your session was terminated due to an integrity violation. Contact your instructor for details.'
+                        : 'Your responses have been successfully submitted for grading. Results will wrap up shortly.'}
+                </p>
+            </div>
 
             {!isTerminated && questionCount > 0 && (
-                <div className="flex justify-center gap-6 text-sm text-muted-foreground mt-4">
-                    <div className="bg-muted/40 px-4 py-2 rounded-lg border border-border">
-                        <span className="font-mono font-bold text-foreground text-lg">{questionCount}</span>
-                        <span className="ml-2">Questions Answered</span>
+                <div className="flex justify-center gap-6 text-sm mt-8 animate-in slide-in-from-bottom-4 duration-500 delay-150">
+                    <div className="bg-muted/30 px-6 py-4 rounded-2xl border border-white/5 shadow-inner">
+                        <span className="block text-3xl font-mono font-black text-foreground mb-1">{questionCount}</span>
+                        <span className="text-muted-foreground font-medium tracking-wide uppercase text-xs">Questions Answered</span>
                     </div>
                 </div>
             )}
@@ -82,9 +186,9 @@ const EndPhase: React.FC = () => {
             <Button
                 onClick={() => router.push('/student/history')}
                 variant="outline"
-                className="mt-6 border-border hover:bg-muted text-foreground"
+                className="mt-8 border-white/10 hover:bg-white/5 hover:text-white rounded-full px-8 py-6 shadow-xl transition-all hover:scale-105 active:scale-95"
             >
-                View Results
+                Return to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
         </div>
     );
@@ -96,10 +200,9 @@ const useIsMobile = () => {
 
     React.useEffect(() => {
         const check = () => {
-            const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             const isNarrow = window.innerWidth < 768;
-            const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-            setIsMobile((hasTouchScreen && isNarrow) || (isCoarsePointer && isNarrow));
+            const isCoarsePointer = window.matchMedia('(any-pointer: coarse)').matches;
+            setIsMobile(isCoarsePointer && isNarrow);
         };
         check();
         window.addEventListener('resize', check);
@@ -160,16 +263,26 @@ const ExamTimer: React.FC<{ expiryTime: string | null }> = ({ expiryTime }) => {
     );
 };
 
-// Phase elapsed timer — shows how long current phase has been active
+// Phase elapsed timer — shows how long current phase has been active, or countdown for THINK
 const PhaseTimer: React.FC<{ fsmState: DialogueState }> = ({ fsmState }) => {
     const [elapsed, setElapsed] = React.useState(0);
+    const [timeLeft, setTimeLeft] = React.useState(15);
 
     React.useEffect(() => {
         setElapsed(0);
-        const timer = setInterval(() => {
-            setElapsed(prev => prev + 1);
-        }, 1000);
-        return () => clearInterval(timer);
+        setTimeLeft(15);
+        
+        if (fsmState === DialogueState.THINK) {
+            const timer = setInterval(() => {
+                setTimeLeft(prev => Math.max(0, prev - 1));
+            }, 1000);
+            return () => clearInterval(timer);
+        } else {
+            const timer = setInterval(() => {
+                setElapsed(prev => prev + 1);
+            }, 1000);
+            return () => clearInterval(timer);
+        }
     }, [fsmState]);
 
     // Don't show for non-interactive phases
@@ -177,8 +290,21 @@ const PhaseTimer: React.FC<{ fsmState: DialogueState }> = ({ fsmState }) => {
         return null;
     }
 
+    if (fsmState === DialogueState.THINK) {
+        return (
+            <div className="flex items-center ml-2 gap-1 bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20">
+                <div className="w-12 h-1.5 bg-yellow-950/50 rounded-full overflow-hidden">
+                    <div 
+                        className="h-full bg-yellow-400 transition-all duration-1000 ease-linear rounded-full" 
+                        style={{ width: `${(timeLeft / 15) * 100}%` }} 
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <span className="text-muted-foreground/50 font-mono text-xs tabular-nums">
+        <span className="text-muted-foreground/50 font-mono text-xs tabular-nums ml-1">
             {elapsed}s
         </span>
     );
@@ -191,6 +317,8 @@ const getStatusBadge = (fsmState: DialogueState, isAgentSpeaking: boolean) => {
     switch (fsmState) {
         case DialogueState.LISTENING:
             return { text: 'LISTENING', color: 'border-emerald-500/30 text-emerald-400', dotColor: 'bg-emerald-500 animate-pulse' };
+        case DialogueState.THINK:
+            return { text: 'THINK', color: 'border-yellow-500/30 text-yellow-400', dotColor: 'bg-yellow-500 animate-pulse' };
         case DialogueState.EVALUATION:
         case DialogueState.SCAFFOLD:
             return { text: 'PROCESSING', color: 'border-amber-500/30 text-amber-400', dotColor: 'bg-amber-500 animate-pulse' };
@@ -235,6 +363,22 @@ export const VivaOrchestrator: React.FC = () => {
     const [longConnect, setLongConnect] = React.useState(false);
     const [isFullscreen, setIsFullscreen] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    
+    const userVolume = useSessionStore((state) => state.userVolume);
+    const isMicActive = useSessionStore((state) => state.isMicActive);
+    const [isMicDead, setIsMicDead] = React.useState(false);
+
+    // Dead Mic Detection
+    React.useEffect(() => {
+        let timeout: NodeJS.Timeout;
+        // If mic is supposed to be on, agent isn't speaking, and we detect absolute 0 volume for 12 seconds
+        if (isMicActive && !isAgentSpeaking && userVolume === 0) {
+            timeout = setTimeout(() => setIsMicDead(true), 12000);
+        } else {
+            setIsMicDead(false);
+        }
+        return () => clearTimeout(timeout);
+    }, [isMicActive, isAgentSpeaking, userVolume]);
 
     // Derive question info
     const totalQuestions = examSettings?.number_of_questions || 0;
@@ -248,6 +392,7 @@ export const VivaOrchestrator: React.FC = () => {
     // Show question subtitle in QUESTION, LISTENING, EVALUATION, SCAFFOLD phases
     const showQuestionSubtitle = [
         DialogueState.QUESTION,
+        DialogueState.THINK,
         DialogueState.LISTENING,
         DialogueState.EVALUATION,
         DialogueState.SCAFFOLD,
@@ -338,6 +483,7 @@ export const VivaOrchestrator: React.FC = () => {
             case DialogueState.CALIBRATION: return <CalibrationPhase stream={audioStream} />;
             case DialogueState.QUESTION:
             case DialogueState.TRANSFER: return <QuestionPhase />;
+            case DialogueState.THINK: return <ThinkPhase />;
             case DialogueState.LISTENING:
             case DialogueState.EVALUATION:
             case DialogueState.SCAFFOLD:
@@ -566,6 +712,17 @@ export const VivaOrchestrator: React.FC = () => {
 
                 {/* --- Main Content --- */}
                 <main className="flex-1 flex flex-col relative z-0">
+                    {/* Global Mic Warning */}
+                    {isMicDead && (
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top fade-in duration-300 pointer-events-none">
+                            <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/30 text-destructive px-4 py-2 rounded-full shadow-lg backdrop-blur-md">
+                                <AlertTriangle className="w-4 h-4 animate-pulse" />
+                                <span className="text-sm font-medium">No audio detected. Please check your microphone or browser permissions.</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="max-w-7xl mx-auto px-4 h-full flex flex-col py-6 relative z-10">
                     {/* AI Orb - Center Stage */}
                     <div className="flex-1 flex items-center justify-center relative z-10 -mt-6">
                         <div className="flex flex-col items-center gap-6">
@@ -585,16 +742,22 @@ export const VivaOrchestrator: React.FC = () => {
                     </div>
 
                     {/* Dynamic Phase Content (Captions/Inputs) — minimal bottom area */}
-                    <div className="relative z-20 w-full max-w-2xl mx-auto px-6 pb-8 min-h-[80px] flex items-center justify-center">
+                    <div className="relative z-20 w-full max-w-2xl mx-auto px-6 pb-28 min-h-[80px] flex items-center justify-center">
                         <div className="w-full">
                             {renderPhase()}
                         </div>
                     </div>
-                </main>
+                </div>
+            </main>
 
                 {/* Functional Components */}
                 <TTSPlayer />
                 <MediaManager onStreamReady={setAudioStream} />
+
+                {/* Push-to-Talk Mic Toolbar — Fixed bottom center */}
+                {fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && fsmState !== DialogueState.TERMINATED && (
+                    <MicToolbar />
+                )}
 
             </div>
         </TooltipProvider>

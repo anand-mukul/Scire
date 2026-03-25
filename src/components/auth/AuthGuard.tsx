@@ -3,29 +3,38 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, getLandingPageForRole } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
-import { Skeleton } from '../ui/skeleton';
 
 interface AuthGuardProps {
     children: React.ReactNode;
     allowedRoles?: string[];
 }
 
+import { Logo } from '@/components/ui/logo';
+
 function AuthLoadingScreen() {
     return (
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
-            {/* Logo mark */}
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/80 to-primary/40 flex items-center justify-center">
-                <span className="text-base font-semibold text-primary-foreground">S</span>
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-8">
+            <div className="relative">
+                {/* Glowing backdrop */}
+                <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse opacity-50" />
+                
+                {/* Logo with pulse */}
+                <div className="relative animate-pulse duration-2000">
+                    <Logo size="xl" showText={false} />
+                </div>
             </div>
 
-            {/* Status */}
-            <p className="text-[13px] text-muted-foreground tracking-wide">
-                Verifying session
-            </p>
+            <div className="flex flex-col items-center gap-4">
+                {/* Status */}
+                <p className="text-sm font-medium text-muted-foreground/80 tracking-widest uppercase">
+                    Verifying session
+                </p>
 
-            {/* Skeleton shimmer bar */}
-            <Skeleton className="w-40 h-[3px] rounded-full" />
+                {/* Progress bar style loader */}
+                <div className="w-48 h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full animate-[shimmer_1.5s_infinite] w-1/2" />
+                </div>
+            </div>
         </div>
     );
 }

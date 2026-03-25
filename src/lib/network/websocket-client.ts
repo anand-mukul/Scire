@@ -51,7 +51,6 @@ class VivaWebSocketClient {
             this.url === url &&
             this.token === token
         ) {
-            Logger.log("VivaWS: Ignoring duplicate connect call");
             return;
         }
 
@@ -74,7 +73,6 @@ class VivaWebSocketClient {
         useSessionStore.getState().setConnectionState('CONNECTING');
 
         try {
-            Logger.log("VivaWS: Initiating Secure Connection...");
 
             // Auth via subprotocol header — cookies don't work cross-origin (port 3000 → 8000).
             // Backend extracts token from Sec-WebSocket-Protocol header.
@@ -118,18 +116,14 @@ class VivaWebSocketClient {
         if (!this.ws) return;
 
         this.ws.onopen = () => {
-            Logger.log('VivaWS: Connected');
             this.isConnecting = false;
             if (this.connectionTimeout) clearTimeout(this.connectionTimeout);
 
             useSessionStore.getState().setConnectionState('CONNECTED');
             useSessionStore.getState().setError(null); // Clear errors
 
-            // FRONT-4 FIX: Only send session_start on first connect.
-            // On reconnect, send session_resume to avoid resetting the FSM.
-            if (this.reconnectAttempts === 0) {
-                this.send({ type: 'session_start' });
-            } else {
+            // On first connect (0 reconnects), wait for explicit startSession() call.
+            if (this.reconnectAttempts > 0) {
                 this.send({ type: 'session_resume' });
             }
 
@@ -145,9 +139,11 @@ class VivaWebSocketClient {
                 this.isConnecting = false;
             }
 
-            Logger.log(`VivaWS: Closed ${event.code} - ${event.reason}`);
             this.stopHeartbeat();
             this.ws = null;
+
+            // Stop any buffered TTS audio immediately on WS close
+            window.dispatchEvent(new CustomEvent('viva:stop_audio'));
 
             if (this.explicitClose) {
                 useSessionStore.getState().setConnectionState('DISCONNECTED');
@@ -220,11 +216,8 @@ class VivaWebSocketClient {
 
             this.reconnectAttempts++;
 
-            Logger.log(`VivaWS: Reconnecting in ${Math.round(delay)}ms (Attempt ${this.reconnectAttempts})`);
-
             setTimeout(async () => {
                 if (!this.explicitClose && this.url) {
-                    // FRONT-3 FIX: Refresh access token before reconnecting.
                     // The original token may have expired during the disconnection period.
                     const freshToken = getAccessToken();
                     if (freshToken) {
@@ -244,6 +237,10 @@ class VivaWebSocketClient {
             useSessionStore.getState().setError("Unable to connect. Server might be at capacity.");
             useSessionStore.getState().setConnectionState('FAILED');
         }
+    }
+
+    public startSession() {
+        this.send({ type: 'session_start' });
     }
 
     private handleConnectionFailure() {
