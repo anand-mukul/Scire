@@ -95,6 +95,7 @@ export interface Exam {
     max_attempts: number;
     subject_id?: string;
     is_public: boolean;
+    auto_publish: boolean;
     start_time?: string;
     end_time?: string;
     created_at: string;

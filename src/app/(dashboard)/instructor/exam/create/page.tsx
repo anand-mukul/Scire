@@ -50,6 +50,14 @@ const examFormSchema = z.object({
         .refine((file) => file?.type === "application/pdf", "Only PDF files are allowed")
         .refine((file) => file?.size <= 10 * 1024 * 1024, "Max file size is 10MB"),
 }).refine(data => {
+    if (data.start_time && data.start_time < new Date()) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Start time cannot be in the past",
+    path: ["start_time"],
+}).refine(data => {
     if (data.start_time && data.end_time) {
         return data.end_time > data.start_time;
     }
@@ -323,7 +331,7 @@ export default function CreateExamPage() {
                                     <FormItem>
                                         <FormLabel>Start Date</FormLabel>
                                         <FormControl>
-                                            <DateTimePicker date={field.value} setDate={field.onChange} label="Select start time" />
+                                            <DateTimePicker date={field.value} setDate={field.onChange} label="Select start time" disablePastDates />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

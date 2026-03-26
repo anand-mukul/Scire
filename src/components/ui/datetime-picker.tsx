@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Calendar as CalendarIcon, Clock } from "lucide-react"
-import { format } from "date-fns"
+import { format, startOfDay, isBefore } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -12,15 +12,16 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface DateTimePickerProps {
     date: Date | undefined
     setDate: (date: Date | undefined) => void
     label?: string
+    disablePastDates?: boolean
+    disabled?: boolean
 }
 
-export function DateTimePicker({ date, setDate, label }: DateTimePickerProps) {
+export function DateTimePicker({ date, setDate, label, disablePastDates, disabled }: DateTimePickerProps) {
     const [isOpen, setIsOpen] = React.useState(false)
     const scrollRef = React.useRef<HTMLDivElement>(null)
 
@@ -36,6 +37,19 @@ export function DateTimePicker({ date, setDate, label }: DateTimePickerProps) {
         }
         return timeSlots
     }, [])
+
+    // Filter out past time slots if disablePastDates is on and selected date is today
+    const availableTimes = React.useMemo(() => {
+        if (!disablePastDates || !date) return times
+        const now = new Date()
+        const isToday = date.toDateString() === now.toDateString()
+        if (!isToday) return times
+        const currentMinutes = now.getHours() * 60 + now.getMinutes()
+        return times.filter(time => {
+            const [h, m] = time.split(':').map(Number)
+            return h * 60 + m > currentMinutes
+        })
+    }, [disablePastDates, date, times])
 
     // Auto-scroll to selected time when opening
     React.useEffect(() => {
@@ -72,16 +86,23 @@ export function DateTimePicker({ date, setDate, label }: DateTimePickerProps) {
         }
     }
 
+    // Disable past dates in calendar
+    const disabledDays = disablePastDates
+        ? { before: startOfDay(new Date()) }
+        : undefined
+
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover open={isOpen} onOpenChange={disabled ? undefined : setIsOpen}>
             <PopoverTrigger asChild>
                 <Button
                     variant={"outline"}
                     className={cn(
                         "w-full justify-start text-left font-normal h-11 bg-background border-input hover:bg-accent hover:text-accent-foreground transition-colors",
                         !date && "text-muted-foreground",
-                        isOpen && "border-primary ring-1 ring-primary"
+                        isOpen && "border-primary ring-1 ring-primary",
+                        disabled && "opacity-50 cursor-not-allowed"
                     )}
+                    disabled={disabled}
                 >
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                     {date ? (
@@ -104,6 +125,7 @@ export function DateTimePicker({ date, setDate, label }: DateTimePickerProps) {
                             onSelect={handleDateSelect}
                             initialFocus
                             className="p-0"
+                            disabled={disabledDays}
                         />
                     </div>
                     <div className="flex flex-col w-[140px] h-full overflow-hidden">
@@ -113,7 +135,7 @@ export function DateTimePicker({ date, setDate, label }: DateTimePickerProps) {
                         </div>
                         <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                             <div className="p-2 space-y-1">
-                                {times.map((time) => {
+                                {availableTimes.map((time) => {
                                     const isSelected = date && format(date, 'HH:mm') === time
                                     return (
                                         <Button

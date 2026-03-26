@@ -221,7 +221,7 @@ export const api = {
             const { data } = await apiClient.post<VivaSession>('/exams/join', { exam_code: code });
             return data;
         },
-        create: async (data: { title: string; settings?: ExamSettings; max_attempts?: number; start_time?: string; end_time?: string; subject_id?: string; is_public?: boolean }) => {
+        create: async (data: { title: string; settings?: ExamSettings; max_attempts?: number; start_time?: string; end_time?: string; subject_id?: string; is_public?: boolean; auto_publish?: boolean }) => {
             const { data: response } = await apiClient.post<Exam>('/exams', data);
             return response;
         },
@@ -233,7 +233,7 @@ export const api = {
             const { data } = await apiClient.get<Exam>(`/exams/${id}`);
             return data;
         },
-        update: async (id: string, data: { status?: ExamStatus; max_attempts?: number; title?: string; settings?: ExamSettings; subject_id?: string | null; is_public?: boolean; start_time?: string | null; end_time?: string | null }) => {
+        update: async (id: string, data: { status?: ExamStatus; max_attempts?: number; title?: string; settings?: ExamSettings; subject_id?: string | null; is_public?: boolean; start_time?: string | null; end_time?: string | null; auto_publish?: boolean }) => {
             const { data: response } = await apiClient.patch<Exam>(`/exams/${id}`, data);
             return response;
         },
