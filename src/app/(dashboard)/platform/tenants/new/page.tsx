@@ -121,6 +121,8 @@ const formSchema = z.object({
     override_limits: z.boolean(),
     max_students: z.coerce.number().int().min(0).optional(),
     max_exams_per_month: z.coerce.number().int().min(0).optional(),
+    admin_email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    admin_name: z.string().optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -142,6 +144,8 @@ export default function NewTenantPage() {
             override_limits: false,
             max_students: PLAN_CONFIG.STARTER.limits.max_students,
             max_exams_per_month: PLAN_CONFIG.STARTER.limits.max_exams_per_month,
+            admin_email: '',
+            admin_name: '',
         },
     });
 
@@ -186,6 +190,8 @@ export default function NewTenantPage() {
                 override_limits: values.override_limits,
                 max_students: values.override_limits ? values.max_students : undefined,
                 max_exams_per_month: values.override_limits ? values.max_exams_per_month : undefined,
+                admin_email: values.admin_email || undefined,
+                admin_name: values.admin_name || undefined,
             });
             toast.success('Tenant created successfully');
             router.push('/platform/tenants');
@@ -558,6 +564,53 @@ export default function NewTenantPage() {
                                 </FormItem>
                             )}
                         />
+                    </div>
+
+                    {/* ── Section 4: Initial Admin Provisioning ───────────────── */}
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <Users className="h-5 w-5 text-primary" />
+                                Initial Admin Provisioning
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                By providing an email address, an initial admin user will be automatically created and invited.
+                            </p>
+                        </div>
+                        <Separator />
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <FormField
+                                control={form.control}
+                                name="admin_name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Admin Name <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="John Doe" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="admin_email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Admin Email <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                                        <FormControl>
+                                            <Input type="email" placeholder="admin@example.com" {...field} />
+                                        </FormControl>
+                                        <FormDescription>
+                                            A secure temporary password will be sent to this email.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                     </div>
 
                     {/* ── Actions ──────────────────────────────────────────── */}

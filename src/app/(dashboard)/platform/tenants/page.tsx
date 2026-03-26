@@ -1,9 +1,10 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
 import { redirect } from 'next/navigation';
+import { toast } from 'sonner';
 import { Building2, Plus, Search, Settings, Filter, MoreHorizontal, Activity, Users, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { UserRole } from '@/types/auth';
@@ -38,6 +39,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 export default function TenantsPage() {
     const { user, isLoading: authLoading } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
+    const queryClient = useQueryClient();
 
     // Fetch tenant list
     const { data: tenants, isLoading: tenantsLoading } = useQuery({
@@ -47,6 +49,18 @@ export default function TenantsPage() {
             return data as Tenant[];
         },
         enabled: user?.role === UserRole.PLATFORM_ADMIN,
+    });
+
+    // Suspend mutation
+    const suspendMutation = useMutation({
+        mutationFn: (id: string) => api.platform.updateTenant(id, { status: TenantStatus.SUSPENDED }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['platform', 'tenants'] });
+            toast.success("Tenant suspended successfully");
+        },
+        onError: (err: any) => {
+            toast.error("Failed to suspend tenant: " + (err.message || 'Unknown error'));
+        }
     });
 
     // Loading state
@@ -245,12 +259,22 @@ export default function TenantsPage() {
                                                                 Settings
                                                             </Link>
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            <Activity className="h-4 w-4" />
-                                                            View Activity
+                                                        <DropdownMenuItem asChild>
+                                                            <Link href={`/platform/audit-logs?tenant=${tenant.id}`}>
+                                                                <Activity className="h-4 w-4" />
+                                                                View Activity
+                                                            </Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                                        <DropdownMenuItem 
+                                                            className="text-destructive focus:text-destructive cursor-pointer"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                if (window.confirm(`Are you sure you want to suspend tenant "${tenant.name}"?`)) {
+                                                                    suspendMutation.mutate(tenant.id);
+                                                                }
+                                                            }}
+                                                        >
                                                             Suspend Tenant
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>

@@ -61,6 +61,76 @@ const formSchema = z.object({
     max_exams_per_month: z.coerce.number().min(1),
 });
 
+const adminFormSchema = z.object({
+    admin_email: z.string().email('Invalid email address'),
+    admin_name: z.string().min(2, 'Name must be at least 2 characters'),
+});
+
+function AdminProvisioningForm({ tenantId }: { tenantId: string }) {
+    const [isPending, setIsPending] = useState(false);
+    
+    const form = useForm<z.infer<typeof adminFormSchema>>({
+        resolver: zodResolver(adminFormSchema) as any,
+        defaultValues: {
+            admin_email: '',
+            admin_name: '',
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof adminFormSchema>) {
+        try {
+            setIsPending(true);
+            await api.platform.provisionTenantAdmin(tenantId, values);
+            toast.success("Admin provisioned successfully. They will receive a welcome email.");
+            form.reset();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.detail || error.message || "Failed to provision admin");
+        } finally {
+            setIsPending(false);
+        }
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-muted/30 p-6 rounded-lg border border-border/50">
+                <div className="grid gap-6 md:grid-cols-2">
+                    <FormField
+                        control={form.control}
+                        name="admin_name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Admin Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="John Doe" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="admin_email"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Admin Email</FormLabel>
+                                <FormControl>
+                                    <Input type="email" placeholder="admin@example.com" {...field} />
+                                </FormControl>
+                                <FormDescription>A secure temporary password will be sent here.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <Button type="submit" disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Provision Admin
+                </Button>
+            </form>
+        </Form>
+    );
+}
+
 export default function TenantDetailsPage({ params }: { params: Promise<{ tenantId: string }> }) {
     const { tenantId } = use(params);
     const router = useRouter();
@@ -380,6 +450,21 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                     </div>
                 </form>
             </Form>
+
+            <div className="space-y-6 max-w-5xl mt-12">
+                <div>
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <Users className="h-5 w-5 text-primary" />
+                        Retroactive Admin Provisioning
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        If this tenant was created without an initial admin, you can provision one here. 
+                        They will receive an email with their login credentials.
+                    </p>
+                </div>
+                <Separator />
+                <AdminProvisioningForm tenantId={tenant.id} />
+            </div>
         </div>
     );
 }

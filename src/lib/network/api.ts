@@ -558,6 +558,8 @@ export const api = {
             trial_days?: number;
             provisioning_note?: string;
             override_limits?: boolean;
+            admin_email?: string;
+            admin_name?: string;
         }) => {
             const { data } = await apiClient.post('/tenants', tenantData);
             return data;
@@ -568,6 +570,10 @@ export const api = {
         },
         updateTenant: async (tenantId: string, tenantData: { name?: string; domain?: string; status?: string; subscription_tier?: string; max_students?: number; max_exams_per_month?: number }) => {
             const { data } = await apiClient.patch(`/tenants/${tenantId}`, tenantData);
+            return data;
+        },
+        provisionTenantAdmin: async (tenantId: string, adminData: { admin_email: string; admin_name: string }) => {
+            const { data } = await apiClient.post(`/tenants/${tenantId}/admin`, adminData);
             return data;
         },
         // Request Management
