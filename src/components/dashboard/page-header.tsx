@@ -15,7 +15,7 @@ interface PageHeaderBadge {
 
 interface PageHeaderProps {
     title: string;
-    description?: string;
+    description?: ReactNode | string;
     badge?: PageHeaderBadge;
     button?: ReactNode;
     actions?: ReactNode; // For backwards compatibility

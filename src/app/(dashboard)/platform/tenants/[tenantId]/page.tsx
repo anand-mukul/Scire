@@ -41,16 +41,9 @@ import {
     Building2
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@/components/ui/separator";
 import Link from 'next/link';
+import { PageHeader } from "@/components/dashboard/page-header";
 
 const formSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -184,8 +177,7 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
 
     if (isLoading) {
         return (
-            <div className="w-full py-6 px-4 md:px-8 space-y-8 max-w-5xl mx-auto">
-                <Skeleton className="h-5 w-64" />
+            <div className="flex flex-col gap-6 p-6 pb-20 max-w-5xl">
                 <div className="flex items-center justify-between">
                     <div className="space-y-2">
                         <Skeleton className="h-9 w-48" />
@@ -193,6 +185,7 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                     </div>
                     <Skeleton className="h-7 w-20 rounded-full" />
                 </div>
+                <Separator />
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <Skeleton className="h-6 w-48" />
@@ -236,34 +229,17 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
     }
 
     return (
-        <div className="w-full py-6 px-4 md:px-8 space-y-8 animate-fade-in max-w-5xl mx-auto">
-            <Breadcrumb>
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/platform">Platform</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/platform/tenants">Tenants</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbPage>{tenant.name}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
-
-            <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight">Manage Tenant</h1>
-                    <p className="text-muted-foreground">
-                        Configure settings and subscription for <span className="font-medium text-foreground">{tenant.name}</span>
-                    </p>
-                </div>
-                <Badge variant="outline" className="text-sm py-1 px-3">
-                    {tenant.slug}
-                </Badge>
-            </div>
+        <div className="flex flex-col gap-6 p-6 animate-fade-in pb-20">
+            <PageHeader
+                title="Manage Tenant"
+                description={`Configure settings and subscription for ${tenant.name}`}
+                actions={
+                    <Badge variant="outline" className="text-sm py-1 px-3">
+                        {tenant.slug}
+                    </Badge>
+                }
+            />
+            <Separator />
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl">
