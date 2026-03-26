@@ -21,7 +21,7 @@ import { SubscriptionTab, getSubscriptionTabLabel, shouldShowSubscriptionTab } f
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NotificationPreference } from '@/types/backend';
 
-export default function SettingsPage() {
+function SettingsContent() {
     const { user, refetch } = useAuth();
     const searchParams = useSearchParams();
     const initialTab = searchParams.get('tab') || 'general';
@@ -408,5 +408,17 @@ export default function SettingsPage() {
                 )}
             </Tabs>
         </main>
+    );
+}
+
+export default function SettingsPage() {
+    return (
+        <React.Suspense fallback={
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <SettingsContent />
+        </React.Suspense>
     );
 }

@@ -87,6 +87,7 @@ export default function CreateExamPage() {
     });
 
     const fileRef = form.watch('file');
+    const watchStartTime = form.watch('start_time');
 
     const { data: subjects = [] } = useQuery<SubjectOption[]>({
         queryKey: ['subjects'],
@@ -344,7 +345,13 @@ export default function CreateExamPage() {
                                     <FormItem>
                                         <FormLabel>End Date</FormLabel>
                                         <FormControl>
-                                            <DateTimePicker date={field.value} setDate={field.onChange} label="Select end time" />
+                                            <DateTimePicker 
+                                                date={field.value} 
+                                                setDate={field.onChange} 
+                                                label="Select end time" 
+                                                minDate={watchStartTime || undefined}
+                                                disablePastDates 
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

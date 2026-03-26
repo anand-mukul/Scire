@@ -94,6 +94,7 @@ interface ExamSettingsProps {
 export default function ExamSettings({ exam }: ExamSettingsProps) {
     const queryClient = useQueryClient();
     const isPublished = exam.status === ExamStatus.PUBLISHED || exam.status === ExamStatus.ACTIVE;
+    const isScheduled = !isPublished && exam.auto_publish && exam.start_time;
     const [showRubricAlert, setShowRubricAlert] = useState(false);
 
     // Fetch rubrics for the readiness checklist & publish guard
@@ -358,6 +359,8 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                                                 date={field.value ?? undefined}
                                                                 setDate={(d) => field.onChange(d ?? null)}
                                                                 label="Select end time"
+                                                                minDate={watchStartTime || undefined}
+                                                                disablePastDates
                                                             />
                                                         </FormControl>
                                                         <FormDescription>
@@ -397,21 +400,8 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                             )}
                                         />
 
-                                        {watchAutoPublish && watchStartTime && (
-                                            <Alert className="bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                                <AlertTitle className="text-sm font-medium">Auto-Publish Scheduled</AlertTitle>
-                                                <AlertDescription className="text-xs mt-1 opacity-90">
-                                                    This exam will go live automatically on{' '}
-                                                    <span className="font-semibold">{format(watchStartTime, 'PPP')}</span> at{' '}
-                                                    <span className="font-semibold">{format(watchStartTime, 'p')}</span>.
-                                                    The server checks every 60 seconds.
-                                                </AlertDescription>
-                                            </Alert>
-                                        )}
-
                                         {watchAutoPublish && !watchStartTime && (
-                                            <Alert className="bg-destructive/10 border-destructive/20 text-destructive dark:text-red-300 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <Alert className="bg-destructive/10 border-destructive/20 text-destructive dark:text-red-300 animate-in fade-in slide-in-from-top-1 duration-200 mt-4">
                                                 <AlertTriangle className="h-4 w-4" />
                                                 <AlertTitle className="text-sm font-medium">Start time required</AlertTitle>
                                                 <AlertDescription className="text-xs mt-1 opacity-90">
@@ -580,8 +570,14 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base font-medium flex items-center justify-between">
                                 Status
-                                <Badge variant={isPublished ? "default" : "secondary"} className={isPublished ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20" : "bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 border-amber-500/20"}>
-                                    {exam.status}
+                                <Badge variant={isPublished ? "default" : isScheduled ? "outline" : "secondary"} className={
+                                    isPublished 
+                                        ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20" 
+                                        : isScheduled
+                                            ? "border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                                            : "bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 border-amber-500/20"
+                                }>
+                                    {isPublished ? exam.status : isScheduled ? 'SCHEDULED' : exam.status}
                                 </Badge>
                             </CardTitle>
                         </CardHeader>
@@ -598,6 +594,30 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                     <p className="text-xs text-muted-foreground">
                                         To make changes, you must archive or duplicate this exam.
                                     </p>
+                                </>
+                            ) : isScheduled ? (
+                                <>
+                                    <Alert className="bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200">
+                                        <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                        <AlertTitle>Auto-Publish Scheduled</AlertTitle>
+                                        <AlertDescription className="text-xs mt-1 opacity-90">
+                                            This exam will go live automatically on{' '}
+                                            <span className="font-semibold">{format(new Date(exam.start_time!), 'PPP')}</span> at{' '}
+                                            <span className="font-semibold">{format(new Date(exam.start_time!), 'p')}</span>.
+                                            The server checks every 60 seconds.
+                                        </AlertDescription>
+                                    </Alert>
+                                    <Button
+                                        className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-md border-0"
+                                        onClick={handlePublish}
+                                        disabled={statusMutation.isPending || updateMutation.isPending}
+                                    >
+                                        {statusMutation.isPending ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            "Publish Now"
+                                        )}
+                                    </Button>
                                 </>
                             ) : (
                                 <>
@@ -656,37 +676,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                         </Card>
                     )}
 
-                    {/* Schedule Summary (if set) */}
-                    {exam.start_time && (
-                        <Card className="border-border/60 shadow-sm bg-card/40 backdrop-blur-sm">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-primary" />
-                                    Schedule
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Starts</span>
-                                    <span className="font-medium">{format(new Date(exam.start_time), 'PP p')}</span>
-                                </div>
-                                {exam.end_time && (
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Ends</span>
-                                        <span className="font-medium">{format(new Date(exam.end_time), 'PP p')}</span>
-                                    </div>
-                                )}
-                                {exam.auto_publish && !isPublished && (
-                                    <div className="flex items-center gap-2 pt-2 border-t border-border/40">
-                                        <Zap className="w-3.5 h-3.5 text-amber-500" />
-                                        <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                                            Auto-publish enabled
-                                        </span>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
+
 
                     {!isPublished && (
                         <div className="text-center text-xs text-muted-foreground p-2">

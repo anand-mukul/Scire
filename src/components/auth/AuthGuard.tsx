@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth, getLandingPageForRole } from '@/contexts/AuthContext';
 
 interface AuthGuardProps {
@@ -83,10 +83,10 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     return <>{children}</>;
 }
 
-// Redirect authenticated users away from auth pages
-export function GuestGuard({ children }: { children: React.ReactNode }) {
+function GuestGuardInner({ children }: { children: React.ReactNode }) {
     const { user, isLoading, isAuthenticated } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isGuest, setIsGuest] = useState(false);
 
     useEffect(() => {
@@ -96,16 +96,17 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        // If authenticated, redirect to their landing page
+        // If authenticated, redirect to their landing page or redirect param
         if (isAuthenticated && user) {
-            const landingPage = getLandingPageForRole(user.role);
+            const redirectParam = searchParams.get('redirect');
+            const landingPage = redirectParam || getLandingPageForRole(user.role);
             router.replace(landingPage);
             return;
         }
 
         // User is a guest (not authenticated)
         setIsGuest(true);
-    }, [isLoading, isAuthenticated, user, router]);
+    }, [isLoading, isAuthenticated, user, router, searchParams]);
 
     // Show loading while checking auth or during redirect
     if (isLoading || !isGuest) {
@@ -113,6 +114,15 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
     }
 
     return <>{children}</>;
+}
+
+// Redirect authenticated users away from auth pages
+export function GuestGuard({ children }: { children: React.ReactNode }) {
+    return (
+        <Suspense fallback={<AuthLoadingScreen />}>
+            <GuestGuardInner>{children}</GuestGuardInner>
+        </Suspense>
+    );
 }
 
 // Hook to check if user has specific roles

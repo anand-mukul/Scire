@@ -18,10 +18,11 @@ interface DateTimePickerProps {
     setDate: (date: Date | undefined) => void
     label?: string
     disablePastDates?: boolean
+    minDate?: Date
     disabled?: boolean
 }
 
-export function DateTimePicker({ date, setDate, label, disablePastDates, disabled }: DateTimePickerProps) {
+export function DateTimePicker({ date, setDate, label, disablePastDates, minDate, disabled }: DateTimePickerProps) {
     const [isOpen, setIsOpen] = React.useState(false)
     const scrollRef = React.useRef<HTMLDivElement>(null)
 
@@ -40,16 +41,17 @@ export function DateTimePicker({ date, setDate, label, disablePastDates, disable
 
     // Filter out past time slots if disablePastDates is on and selected date is today
     const availableTimes = React.useMemo(() => {
-        if (!disablePastDates || !date) return times
-        const now = new Date()
-        const isToday = date.toDateString() === now.toDateString()
-        if (!isToday) return times
-        const currentMinutes = now.getHours() * 60 + now.getMinutes()
+        if (!disablePastDates && !minDate) return times
+        if (!date) return times
+        const referenceDate = minDate || new Date()
+        const isSameDay = date.toDateString() === referenceDate.toDateString()
+        if (!isSameDay) return times
+        const currentMinutes = referenceDate.getHours() * 60 + referenceDate.getMinutes()
         return times.filter(time => {
             const [h, m] = time.split(':').map(Number)
             return h * 60 + m > currentMinutes
         })
-    }, [disablePastDates, date, times])
+    }, [disablePastDates, minDate, date, times])
 
     // Auto-scroll to selected time when opening
     React.useEffect(() => {
@@ -87,8 +89,8 @@ export function DateTimePicker({ date, setDate, label, disablePastDates, disable
     }
 
     // Disable past dates in calendar
-    const disabledDays = disablePastDates
-        ? { before: startOfDay(new Date()) }
+    const disabledDays = disablePastDates || minDate
+        ? { before: startOfDay(minDate || new Date()) }
         : undefined
 
     return (
