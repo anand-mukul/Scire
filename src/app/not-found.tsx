@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-// import { BackgroundBeams } from '@/components/visuals/BackgroundBeams';
-// import { AmbientGlow } from '@/components/ui/ambient-glow';
 import { ArrowLeft, Home } from 'lucide-react';
 
 export default function NotFound() {
     return (
         <div className="h-screen w-full rounded-md bg-black relative flex flex-col items-center justify-center antialiased">
-            {/* <AmbientGlow /> */}
 
             <div className="max-w-2xl mx-auto p-4 relative z-10 text-center space-y-8">
                 <div className="relative inline-block">
@@ -36,16 +33,12 @@ export default function NotFound() {
                             Return Home
                         </Button>
                     </Link>
-                    <button onClick={() => window.history.back()}>
-                        <Button variant="outline" className="h-12 px-8 rounded-full border-white/10 text-white hover:bg-white/5 hover:border-white/20 transition-all font-medium text-lg">
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Go Back
-                        </Button>
-                    </button>
+                    <Button onClick={() => window.history.back()} variant="outline" className="h-12 px-8 rounded-full border-white/10 text-white hover:bg-white/5 hover:border-white/20 transition-all font-medium text-lg">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Go Back
+                    </Button>
                 </div>
             </div>
-
-            {/* <BackgroundBeams className="opacity-40" /> */}
 
             <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
         </div>

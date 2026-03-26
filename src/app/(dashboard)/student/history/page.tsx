@@ -8,10 +8,11 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { VivaSession, SessionStatus } from '@/types/backend';
 import { useSessions } from '@/hooks/use-dashboard-data';
-import { FileText, Calendar, Clock, ArrowUpRight } from 'lucide-react';
+import { Clock, ArrowUpRight, ShieldAlert, FileText, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { formatToLocalDateTime, formatDuration } from '@/lib/date-utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HistorySession extends VivaSession {
     exam_title?: string;
@@ -65,6 +66,9 @@ export default function StudentHistoryPage() {
                     )?.map((session, index) => {
                         const isPending = session.final_score === null || session.final_score === undefined;
                         const passed = (session.final_score || 0) >= 50;
+                        const isUnderReview = (session.integrity_flag || session.review_status === 'FLAGGED' || session.review_status === 'UNDER_REVIEW') && 
+                                              session.review_status !== 'APPROVED' && 
+                                              session.review_status !== 'REJECTED';
 
                         return (
                             <div key={session.id} className="animate-in fade-in duration-200" style={{ animationDelay: `${index * 50}ms` }}>
@@ -75,7 +79,12 @@ export default function StudentHistoryPage() {
                                                 <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors truncate max-w-[500px]" title={session.exam?.title || 'Untitled Exam'}>
                                                     {session.exam?.title || session.exam_title || 'Untitled Exam'}
                                                 </h3>
-                                                {isPending ? (
+                                                {isUnderReview ? (
+                                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                                                        <ShieldAlert className="w-3 h-3 mr-1" />
+                                                        Pending Review
+                                                    </Badge>
+                                                ) : isPending ? (
                                                     <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                                                         <span className="relative flex h-2 w-2 mr-2">
                                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -108,12 +117,28 @@ export default function StudentHistoryPage() {
                                         </div>
 
                                         <div className="flex items-center gap-4 border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-6 mt-2 md:mt-0">
-                                            <Link href={`/student/exam/${session.id}/result`} className="w-full md:w-auto">
-                                                <Button className="w-full md:w-auto bg-secondary/50 hover:bg-primary hover:text-primary-foreground text-foreground border border-border hover:border-primary transition-all font-bold shadow-sm button-press">
-                                                    View Results
-                                                    <ArrowUpRight className="ml-2 w-4 h-4" />
-                                                </Button>
-                                            </Link>
+                                            {isUnderReview ? (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="w-full md:w-auto">
+                                                            <Button disabled variant="outline" className="w-full md:w-auto bg-destructive/5 text-destructive border-destructive/20 font-bold opacity-100 cursor-not-allowed">
+                                                                <ShieldAlert className="mr-2 w-4 h-4" />
+                                                                In Review
+                                                            </Button>
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-xs border-border">
+                                                        <p>Integrity issues were detected during this session. It is currently being reviewed by your instructor.</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            ) : (
+                                                <Link href={`/student/exam/${session.id}/result`} className="w-full md:w-auto">
+                                                    <Button className="w-full md:w-auto bg-secondary/50 hover:bg-primary hover:text-primary-foreground text-foreground border border-border hover:border-primary transition-all font-bold shadow-sm button-press">
+                                                        View Results
+                                                        <ArrowUpRight className="ml-2 w-4 h-4" />
+                                                    </Button>
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>

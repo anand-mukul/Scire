@@ -80,7 +80,6 @@ export default function CreatePracticePage() {
             <PageHeader
                 title="New Practice Session"
                 description="Set up a topic and start practicing with AI-powered viva questions."
-                backButton
             />
 
             <div className="grid gap-8 lg:grid-cols-12 items-start">
@@ -88,23 +87,20 @@ export default function CreatePracticePage() {
                 <div className="lg:col-span-8 space-y-6">
                     {/* Title Card */}
                     <Card className="p-6 md:p-8 space-y-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-primary/10 p-2 rounded-xl border border-primary/20">
-                                <Sparkles className="h-4 w-4 text-primary" />
-                            </div>
-                            <Label htmlFor="title" className="text-base font-semibold text-foreground">Session Title</Label>
+                        <div className="space-y-2">
+                            <Label htmlFor="title" className="text-sm font-medium">Session Title</Label>
+                            <Input
+                                id="title"
+                                placeholder="e.g., Data Structures & Algorithms"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                className="h-12 text-base"
+                                maxLength={200}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Give your practice session a descriptive name.
+                            </p>
                         </div>
-                        <Input
-                            id="title"
-                            placeholder="e.g., Data Structures & Algorithms"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="h-12 text-base bg-secondary/20 border-border focus:border-primary/50 focus:ring-primary/20 transition-all"
-                            maxLength={200}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Give your practice session a descriptive name so you can find it later.
-                        </p>
                     </Card>
 
                     {/* Content Mode Selector */}
@@ -121,11 +117,11 @@ export default function CreatePracticePage() {
                                 type="button"
                                 onClick={() => setMode('instructions')}
                                 className={`group/mode p-5 rounded-xl border-2 transition-all text-left cursor-pointer hover:shadow-md ${mode === 'instructions'
-                                        ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
-                                        : 'border-border hover:border-primary/30 hover:bg-accent/30'
+                                    ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                                    : 'border-border hover:border-primary/30 hover:bg-accent/30'
                                     }`}
                             >
-                                <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${mode === 'instructions' ? 'bg-primary/10 border border-primary/20' : 'bg-secondary border border-border'}`}>
+                                <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${mode === 'instructions' ? 'bg-primary/10 border border-primary/20' : 'bg-muted/50 border border-border/50'}`}>
                                     <FileText className={`h-5 w-5 ${mode === 'instructions' ? 'text-primary' : 'text-muted-foreground group-hover/mode:text-primary/70'}`} />
                                 </div>
                                 <p className="text-sm font-semibold text-foreground">Write Instructions</p>
@@ -135,11 +131,11 @@ export default function CreatePracticePage() {
                                 type="button"
                                 onClick={() => setMode('syllabus')}
                                 className={`group/mode p-5 rounded-xl border-2 transition-all text-left cursor-pointer hover:shadow-md ${mode === 'syllabus'
-                                        ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
-                                        : 'border-border hover:border-primary/30 hover:bg-accent/30'
+                                    ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                                    : 'border-border hover:border-primary/30 hover:bg-accent/30'
                                     }`}
                             >
-                                <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${mode === 'syllabus' ? 'bg-primary/10 border border-primary/20' : 'bg-secondary border border-border'}`}>
+                                <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${mode === 'syllabus' ? 'bg-primary/10 border border-primary/20' : 'bg-muted/50 border border-border/50'}`}>
                                     <Upload className={`h-5 w-5 ${mode === 'syllabus' ? 'text-primary' : 'text-muted-foreground group-hover/mode:text-primary/70'}`} />
                                 </div>
                                 <p className="text-sm font-semibold text-foreground">Upload Syllabus</p>
@@ -188,7 +184,7 @@ export default function CreatePracticePage() {
                                         {uploading ? (
                                             <Loader2 className="h-10 w-10 text-primary animate-spin mb-3" />
                                         ) : (
-                                            <div className="bg-secondary p-3 rounded-xl border border-border mb-3 group-hover/upload:bg-primary/10 group-hover/upload:border-primary/20 transition-colors">
+                                            <div className="bg-muted/50 p-3 rounded-xl border border-border/50 mb-3 group-hover/upload:bg-primary/10 group-hover/upload:border-primary/20 transition-colors">
                                                 <Upload className="h-6 w-6 text-muted-foreground group-hover/upload:text-primary transition-colors" />
                                             </div>
                                         )}
@@ -260,7 +256,7 @@ export default function CreatePracticePage() {
                         <ul className="space-y-3 text-sm text-muted-foreground">
                             <li className="flex items-start gap-2">
                                 <span className="text-primary mt-0.5">•</span>
-                                Be specific about topics — mention chapters, algorithms, or concepts.
+                                Be specific about topics - mention chapters, algorithms, or concepts.
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-primary mt-0.5">•</span>

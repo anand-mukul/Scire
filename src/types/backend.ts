@@ -115,6 +115,8 @@ export interface VivaSession {
     confidence_score?: number;
     integrity_flag: boolean;
     review_status: ReviewStatus;
+    review_notes?: string;
+    assigned_reviewer_id?: string;
     created_at: string;
     updated_at?: string;
     start_time?: string;

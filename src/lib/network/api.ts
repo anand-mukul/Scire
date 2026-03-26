@@ -45,16 +45,16 @@ export const authClient = axios.create({
 
 let isRefreshing = false;
 let failedQueue: Array<{
-    resolve: (value?: unknown) => void;
+    resolve: (value?: string | null) => void;
     reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: Error | null = null) => {
+const processQueue = (error: Error | null = null, token: string | null = null) => {
     failedQueue.forEach((prom) => {
         if (error) {
             prom.reject(error);
         } else {
-            prom.resolve();
+            prom.resolve(token);
         }
     });
     failedQueue = [];
@@ -76,7 +76,7 @@ apiClient.interceptors.request.use((config) => {
 
 authClient.interceptors.request.use((config) => {
     const token = getAccessToken();
-    if (token) {
+    if (token && !config.url?.includes('/auth/refresh')) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -97,9 +97,14 @@ apiClient.interceptors.response.use(
             !originalRequest.url?.includes('/auth/me')
         ) {
             if (isRefreshing) {
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                }).then(() => apiClient(originalRequest));
+                return new Promise<string | null>((resolve, reject) => {
+                    failedQueue.push({ resolve: (val) => resolve(val || null), reject });
+                }).then((token) => {
+                    if (token) {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                    }
+                    return apiClient(originalRequest);
+                });
             }
 
             originalRequest._retry = true;
@@ -111,8 +116,9 @@ apiClient.interceptors.response.use(
                 // and other non-cookie consumers can access it
                 if (refreshData?.access_token) {
                     setAccessToken(refreshData.access_token);
+                    originalRequest.headers.Authorization = `Bearer ${refreshData.access_token}`;
                 }
-                processQueue();
+                processQueue(null, refreshData?.access_token || null);
                 return apiClient(originalRequest);
             } catch (refreshError) {
                 processQueue(refreshError as Error);

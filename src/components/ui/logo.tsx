@@ -47,6 +47,7 @@ export const Logo = ({
                         fill
                         className="object-contain"
                         unoptimized
+                        priority
                     />
                 </div>
             )}
