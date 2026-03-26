@@ -601,10 +601,12 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                         <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                                         <AlertTitle>Auto-Publish Scheduled</AlertTitle>
                                         <AlertDescription className="text-xs mt-1 opacity-90">
-                                            This exam will go live automatically on{' '}
-                                            <span className="font-semibold">{format(new Date(exam.start_time!), 'PPP')}</span> at{' '}
-                                            <span className="font-semibold">{format(new Date(exam.start_time!), 'p')}</span>.
-                                            The server checks every 60 seconds.
+                                            <p>
+                                                This exam will go live automatically on{' '}
+                                                <span className="font-semibold">{format(new Date(exam.start_time!), 'PPP')}</span> at{' '}
+                                                <span className="font-semibold">{format(new Date(exam.start_time!), 'p')}</span>.
+                                                The server checks every 60 seconds.
+                                            </p>
                                         </AlertDescription>
                                     </Alert>
                                     <Button
