@@ -76,142 +76,204 @@ export default function CreatePracticePage() {
             (mode === 'syllabus' && syllabusUrl));
 
     return (
-        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24 max-w-3xl mx-auto w-full">
+        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
             <PageHeader
                 title="New Practice Session"
-                description="Set up a topic and start practicing."
+                description="Set up a topic and start practicing with AI-powered viva questions."
                 backButton
             />
 
-            {/* Title */}
-            <Card className="p-6 space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="title" className="text-sm font-medium">Session Title</Label>
-                    <Input
-                        id="title"
-                        placeholder="e.g., Data Structures & Algorithms"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="h-12 text-base"
-                        maxLength={200}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Give your practice session a descriptive name.
-                    </p>
-                </div>
-            </Card>
-
-            {/* Content Mode Selector */}
-            <Card className="p-6 space-y-6">
-                <div className="space-y-2">
-                    <Label className="text-sm font-medium">How should the AI prepare questions?</Label>
-                    <p className="text-xs text-muted-foreground">
-                        Choose one approach below.
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <button
-                        type="button"
-                        onClick={() => setMode('instructions')}
-                        className={`p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${mode === 'instructions'
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-border/80 hover:bg-accent/30'
-                            }`}
-                    >
-                        <FileText className={`h-5 w-5 mb-2 ${mode === 'instructions' ? 'text-primary' : 'text-muted-foreground'}`} />
-                        <p className="text-sm font-medium text-foreground">Write Instructions</p>
-                        <p className="text-xs text-muted-foreground mt-1">Describe topics to be tested</p>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setMode('syllabus')}
-                        className={`p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${mode === 'syllabus'
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-border/80 hover:bg-accent/30'
-                            }`}
-                    >
-                        <Upload className={`h-5 w-5 mb-2 ${mode === 'syllabus' ? 'text-primary' : 'text-muted-foreground'}`} />
-                        <p className="text-sm font-medium text-foreground">Upload Syllabus</p>
-                        <p className="text-xs text-muted-foreground mt-1">PDF (max 10MB)</p>
-                    </button>
-                </div>
-
-                {mode === 'instructions' ? (
-                    <div className="space-y-2">
-                        <Textarea
-                            placeholder={"Describe the topics, concepts, or areas you want the AI to test you on. Be specific for better questions.\n\nExample: Test me on binary trees, graph traversal algorithms (BFS/DFS), dynamic programming basics, and time complexity analysis..."}
-                            value={instructions}
-                            onChange={(e) => setInstructions(e.target.value)}
-                            className="min-h-[160px] text-sm resize-none"
-                            maxLength={5000}
-                        />
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{instructions.length < 20 ? `Min 20 characters (${20 - instructions.length} more)` : '✓ Ready'}</span>
-                            <span>{instructions.length}/5000</span>
+            <div className="grid gap-8 lg:grid-cols-12 items-start">
+                {/* Left Column — Form */}
+                <div className="lg:col-span-8 space-y-6">
+                    {/* Title Card */}
+                    <Card className="p-6 md:p-8 space-y-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-primary/10 p-2 rounded-xl border border-primary/20">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                            </div>
+                            <Label htmlFor="title" className="text-base font-semibold text-foreground">Session Title</Label>
                         </div>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {syllabusUrl ? (
-                            <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                                <FileText className="h-5 w-5 text-emerald-500 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">{syllabusName}</p>
-                                    <p className="text-xs text-emerald-500">Uploaded successfully</p>
+                        <Input
+                            id="title"
+                            placeholder="e.g., Data Structures & Algorithms"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="h-12 text-base bg-secondary/20 border-border focus:border-primary/50 focus:ring-primary/20 transition-all"
+                            maxLength={200}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Give your practice session a descriptive name so you can find it later.
+                        </p>
+                    </Card>
+
+                    {/* Content Mode Selector */}
+                    <Card className="p-6 md:p-8 space-y-6">
+                        <div className="space-y-1">
+                            <Label className="text-base font-semibold text-foreground">Question Source</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Choose how the AI should prepare your practice questions.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setMode('instructions')}
+                                className={`group/mode p-5 rounded-xl border-2 transition-all text-left cursor-pointer hover:shadow-md ${mode === 'instructions'
+                                        ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                                        : 'border-border hover:border-primary/30 hover:bg-accent/30'
+                                    }`}
+                            >
+                                <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${mode === 'instructions' ? 'bg-primary/10 border border-primary/20' : 'bg-secondary border border-border'}`}>
+                                    <FileText className={`h-5 w-5 ${mode === 'instructions' ? 'text-primary' : 'text-muted-foreground group-hover/mode:text-primary/70'}`} />
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => { setSyllabusUrl(null); setSyllabusName(null); }}
-                                    className="text-muted-foreground hover:text-destructive shrink-0"
-                                >
-                                    Remove
-                                </Button>
+                                <p className="text-sm font-semibold text-foreground">Write Instructions</p>
+                                <p className="text-xs text-muted-foreground mt-1">Describe topics & concepts to be tested on</p>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode('syllabus')}
+                                className={`group/mode p-5 rounded-xl border-2 transition-all text-left cursor-pointer hover:shadow-md ${mode === 'syllabus'
+                                        ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                                        : 'border-border hover:border-primary/30 hover:bg-accent/30'
+                                    }`}
+                            >
+                                <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${mode === 'syllabus' ? 'bg-primary/10 border border-primary/20' : 'bg-secondary border border-border'}`}>
+                                    <Upload className={`h-5 w-5 ${mode === 'syllabus' ? 'text-primary' : 'text-muted-foreground group-hover/mode:text-primary/70'}`} />
+                                </div>
+                                <p className="text-sm font-semibold text-foreground">Upload Syllabus</p>
+                                <p className="text-xs text-muted-foreground mt-1">Upload a PDF syllabus (max 10MB)</p>
+                            </button>
+                        </div>
+
+                        {mode === 'instructions' ? (
+                            <div className="space-y-2">
+                                <Textarea
+                                    placeholder={"Describe the topics, concepts, or areas you want the AI to test you on. Be specific for better questions.\n\nExample: Test me on binary trees, graph traversal algorithms (BFS/DFS), dynamic programming basics, and time complexity analysis..."}
+                                    value={instructions}
+                                    onChange={(e) => setInstructions(e.target.value)}
+                                    className="min-h-[200px] text-sm resize-none bg-secondary/20 border-border focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                    maxLength={5000}
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span className={instructions.length >= 20 ? 'text-emerald-500 font-medium' : ''}>
+                                        {instructions.length < 20 ? `Min 20 characters (${20 - instructions.length} more)` : '✓ Ready'}
+                                    </span>
+                                    <span className="font-mono">{instructions.length}/5000</span>
+                                </div>
                             </div>
                         ) : (
-                            <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
-                                {uploading ? (
-                                    <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                            <div className="space-y-3">
+                                {syllabusUrl ? (
+                                    <div className="flex items-center gap-3 p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                                        <div className="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                                            <FileText className="h-5 w-5 text-emerald-500" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-foreground truncate">{syllabusName}</p>
+                                            <p className="text-xs text-emerald-500 font-medium">Uploaded successfully</p>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => { setSyllabusUrl(null); setSyllabusName(null); }}
+                                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                        >
+                                            Remove
+                                        </Button>
+                                    </div>
                                 ) : (
-                                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                                    <label className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group/upload">
+                                        {uploading ? (
+                                            <Loader2 className="h-10 w-10 text-primary animate-spin mb-3" />
+                                        ) : (
+                                            <div className="bg-secondary p-3 rounded-xl border border-border mb-3 group-hover/upload:bg-primary/10 group-hover/upload:border-primary/20 transition-colors">
+                                                <Upload className="h-6 w-6 text-muted-foreground group-hover/upload:text-primary transition-colors" />
+                                            </div>
+                                        )}
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {uploading ? 'Uploading...' : 'Click to upload PDF'}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">PDF format, max 10MB</p>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="application/pdf"
+                                            onChange={handleFileUpload}
+                                            disabled={uploading}
+                                        />
+                                    </label>
                                 )}
-                                <p className="text-sm font-medium text-foreground">
-                                    {uploading ? 'Uploading...' : 'Click to upload PDF'}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">Max 10MB</p>
-                                <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="application/pdf"
-                                    onChange={handleFileUpload}
-                                    disabled={uploading}
-                                />
-                            </label>
+                            </div>
                         )}
-                    </div>
-                )}
-            </Card>
+                    </Card>
 
-            {/* Submit */}
-            <Button
-                onClick={() => createMutation.mutate()}
-                disabled={!isValid || createMutation.isPending}
-                className="w-full h-12 font-semibold text-base gap-2"
-                size="lg"
-            >
-                {createMutation.isPending ? (
-                    <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating...
-                    </>
-                ) : (
-                    <>
-                        <Sparkles className="h-4 w-4" />
-                        Create Practice Session
-                    </>
-                )}
-            </Button>
+                    {/* Submit */}
+                    <Button
+                        onClick={() => createMutation.mutate()}
+                        disabled={!isValid || createMutation.isPending}
+                        className="w-full h-12 font-semibold text-base gap-2"
+                        size="lg"
+                    >
+                        {createMutation.isPending ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Creating...
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="h-4 w-4" />
+                                Create Practice Session
+                            </>
+                        )}
+                    </Button>
+                </div>
+
+                {/* Right Column — Tips & Info */}
+                <div className="lg:col-span-4 space-y-6">
+                    <Card className="p-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-primary/10 p-2 rounded-xl border border-primary/20">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-foreground">How It Works</h3>
+                        </div>
+                        <div className="space-y-4">
+                            {[
+                                { step: '1', text: 'Name your session and describe the topic or upload a syllabus.' },
+                                { step: '2', text: 'Our AI builds a custom question bank based on your input.' },
+                                { step: '3', text: 'Start a live viva practice with real-time AI evaluation.' },
+                            ].map((item) => (
+                                <div key={item.step} className="flex gap-3 items-start">
+                                    <div className="bg-primary/10 text-primary text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shrink-0 border border-primary/20">
+                                        {item.step}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">{item.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <Card className="p-6">
+                        <h3 className="font-semibold text-foreground mb-3">Tips for Better Results</h3>
+                        <ul className="space-y-3 text-sm text-muted-foreground">
+                            <li className="flex items-start gap-2">
+                                <span className="text-primary mt-0.5">•</span>
+                                Be specific about topics — mention chapters, algorithms, or concepts.
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-primary mt-0.5">•</span>
+                                For syllabi, ensure the PDF text is selectable (not scanned images).
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-primary mt-0.5">•</span>
+                                Include the depth level you want: introductory, intermediate, or advanced.
+                            </li>
+                        </ul>
+                    </Card>
+                </div>
+            </div>
         </main>
     );
 }

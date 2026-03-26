@@ -146,7 +146,7 @@ const ROLE_NAV: Record<string, NavSection> = {
         items: [
             { label: 'Home', href: '/student', icon: LayoutDashboard },
             { label: 'Join Exam', href: '/student/join', icon: Video },
-            { label: 'Practice', href: '/student/practice', icon: Target, comingSoon: true },
+            { label: 'Practice', href: '/student/practice', icon: Target },
             { label: 'History', href: '/student/history', icon: FileText },
             { label: 'Help & Rules', href: '/student/help', icon: HelpCircle },
         ],

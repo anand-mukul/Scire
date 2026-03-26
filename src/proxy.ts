@@ -87,17 +87,6 @@ export async function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
-    if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true') {
-        const envRole = process.env.NEXT_PUBLIC_DEV_AUTH_ROLE as UserRole;
-        const role = Object.values(UserRole).includes(envRole) ? envRole : UserRole.PLATFORM_ADMIN;
-        if (isPublicPath(pathname) && pathname.startsWith('/auth/login')) {
-            const landingPage = ROLE_LANDING_PAGES[role] || '/platform';
-            return NextResponse.redirect(new URL(landingPage, request.url));
-        }
-
-        return NextResponse.next();
-    }
-
     const accessToken = request.cookies.get('access_token')?.value;
     let verifiedUser: VerifiedUser | null = null;
     let userRole: UserRole | null = null;

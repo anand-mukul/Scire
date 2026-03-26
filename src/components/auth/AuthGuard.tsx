@@ -13,26 +13,31 @@ import { Logo } from '@/components/ui/logo';
 
 function AuthLoadingScreen() {
     return (
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-8">
-            <div className="relative">
-                {/* Glowing backdrop */}
-                <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-pulse opacity-50" />
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+            <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-[0.98] duration-1000 ease-out">
+                {/* Crisp, static logo (No glow, no blur) */}
+                <Logo size="lg" showText={false} />
                 
-                {/* Logo with pulse */}
-                <div className="relative animate-pulse duration-2000">
-                    <Logo size="xl" showText={false} />
-                </div>
-            </div>
-
-            <div className="flex flex-col items-center gap-4">
-                {/* Status */}
-                <p className="text-sm font-medium text-muted-foreground/80 tracking-widest uppercase">
-                    Verifying session
-                </p>
-
-                {/* Progress bar style loader */}
-                <div className="w-48 h-1 bg-secondary rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full animate-[shimmer_1.5s_infinite] w-1/2" />
+                {/* Minimalist status and SV-style loader */}
+                <div className="flex flex-col items-center gap-4">
+                    <span className="text-[13px] font-medium tracking-wide text-muted-foreground/90">Authenticating...</span>
+                    
+                    {/* Sleek SV-style fast indeterminate progress bar */}
+                    <style>{`
+                        @keyframes bounce-x {
+                            0%, 100% { transform: translateX(0%); }
+                            50% { transform: translateX(200%); }
+                        }
+                        .animate-bounce-x {
+                            animation: bounce-x 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                        }
+                    `}</style>
+                    <div className="w-32 h-[2px] bg-secondary/40 rounded-full overflow-hidden relative shadow-inner backdrop-blur-sm">
+                        {/* Glow layer */}
+                        <div className="absolute inset-y-0 left-0 bg-primary/40 blur-[2px] rounded-full w-1/3 animate-bounce-x" />
+                        {/* Solid core bar */}
+                        <div className="absolute inset-y-0 left-0 bg-primary rounded-full w-1/3 animate-bounce-x shadow-[0_0_8px_theme(colors.primary.DEFAULT)]" />
+                    </div>
                 </div>
             </div>
         </div>

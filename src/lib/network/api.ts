@@ -730,12 +730,16 @@ export const api = {
             const { data } = await apiClient.post('/practice/exams', payload);
             return data;
         },
-        listExams: async () => {
-            const { data } = await apiClient.get('/practice/exams');
+        listExams: async (params?: { skip?: number; limit?: number }) => {
+            const { data } = await apiClient.get('/practice/exams', { params });
             return data;
         },
         getExam: async (examId: string) => {
             const { data } = await apiClient.get(`/practice/exams/${examId}`);
+            return data;
+        },
+        updateExam: async (examId: string, payload: { title?: string; instructions?: string }) => {
+            const { data } = await apiClient.patch(`/practice/exams/${examId}`, payload);
             return data;
         },
         startSession: async (examId: string, paymentOrderId?: string) => {
@@ -744,8 +748,8 @@ export const api = {
             });
             return data;
         },
-        listSessions: async () => {
-            const { data } = await apiClient.get('/practice/sessions');
+        listSessions: async (params?: { skip?: number; limit?: number }) => {
+            const { data } = await apiClient.get('/practice/sessions', { params });
             return data;
         },
         getReport: async (sessionId: string) => {
@@ -762,6 +766,13 @@ export const api = {
             razorpay_signature: string;
         }) => {
             const { data } = await apiClient.post('/practice/payment/verify', payload);
+            return data;
+        },
+        deleteExam: async (examId: string) => {
+            await apiClient.delete(`/practice/exams/${examId}`);
+        },
+        retryKb: async (examId: string) => {
+            const { data } = await apiClient.post(`/practice/exams/${examId}/retry-kb`);
             return data;
         },
         presignSyllabus: async () => {

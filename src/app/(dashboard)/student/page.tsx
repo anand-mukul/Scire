@@ -125,8 +125,8 @@ export default function StudentDashboard() {
     };
 
     const allSessions = (sessions || []) as StudentSession[];
-    const activeSessions = allSessions.filter(s => s.status === SessionStatus.IN_PROGRESS);
-    const historySessions = allSessions.filter(s => s.status === SessionStatus.COMPLETED);
+    const activeSessions = allSessions.filter(s => s.status === SessionStatus.IN_PROGRESS || s.status === SessionStatus.PENDING);
+    const historySessions = allSessions.filter(s => s.status === SessionStatus.COMPLETED || s.status === SessionStatus.TERMINATED || s.status === SessionStatus.ABANDONED);
 
     // Derived overall status
     const isSystemReady = status.microphone === 'ready' && status.camera === 'ready' && status.network === 'ready';
@@ -303,13 +303,19 @@ export default function StudentDashboard() {
                                             </div>
                                             <div className="text-xs text-muted-foreground font-mono mt-1">ID: {session.id.slice(0, 8)}</div>
                                         </div>
-                                        <Badge className="shrink-0 bg-primary/10 text-primary border-primary/20">
-                                            <span className="relative flex h-2 w-2 mr-2" aria-hidden="true">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                                            </span>
-                                            <span className="sr-only">Session is </span>Live
-                                        </Badge>
+                                        {session.status === SessionStatus.IN_PROGRESS ? (
+                                            <Badge className="shrink-0 bg-primary/10 text-primary border-primary/20">
+                                                <span className="relative flex h-2 w-2 mr-2" aria-hidden="true">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                                </span>
+                                                <span className="sr-only">Session is </span>Live
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="shrink-0 text-muted-foreground border-border/50">
+                                                Not Started
+                                            </Badge>
+                                        )}
                                     </div>
 
                                     <div className="bg-card/50 rounded-xl p-4 mb-6 space-y-2 border border-border/50">
@@ -326,7 +332,7 @@ export default function StudentDashboard() {
                                     <div className="space-y-3">
                                         <Button asChild className="w-full h-10 font-semibold">
                                             <Link href={`/student/exam/${session.id}/session`}>
-                                                RESUME SESSION
+                                                {session.status === SessionStatus.PENDING ? 'START SESSION' : 'RESUME SESSION'}
                                             </Link>
                                         </Button>
 

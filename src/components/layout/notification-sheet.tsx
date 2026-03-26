@@ -288,16 +288,7 @@ export function NotificationSheet() {
                     )}
                 </ScrollArea>
 
-                <SheetFooter className="p-6 border-t border-border/20 bg-muted/10">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full h-10 rounded-xl text-xs font-bold text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                        onClick={() => setOpen(false)}
-                    >
-                        Dismiss Overlay
-                    </Button>
-                </SheetFooter>
+
             </SheetContent>
         </Sheet>
     );

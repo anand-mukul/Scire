@@ -18,12 +18,6 @@ import { toast } from 'sonner';
 import { formatToLocalDateTime } from '@/lib/date-utils';
 import { PracticePlansModal } from '@/components/content/practice/practice-plans-modal';
 
-declare global {
-    interface Window {
-        Razorpay: any;
-    }
-}
-
 const PLAN_ICON: Record<string, React.ReactNode> = {
     FREE: <Sparkles className="h-4 w-4" />,
     LITE: <Zap className="h-4 w-4" />,
@@ -81,63 +75,16 @@ export default function PracticeDetailPage() {
         },
     });
 
-    const loadRazorpayScript = useCallback((): Promise<boolean> => {
-        return new Promise((resolve) => {
-            if (window.Razorpay) {
-                resolve(true);
-                return;
-            }
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.body.appendChild(script);
-        });
-    }, []);
-
-    const handlePaymentFlow = useCallback(async () => {
-        const loaded = await loadRazorpayScript();
-        if (!loaded) {
-            toast.error('Failed to load payment gateway.');
-            return;
-        }
-
-        try {
-            const order = await api.practice.createPaymentOrder();
-            if (order.free) {
-                startMutation.mutate(undefined);
-                return;
-            }
-
-            const options = {
-                key: order.key_id,
-                amount: order.amount,
-                currency: order.currency,
-                name: 'Scire',
-                description: 'Practice Viva Session',
-                order_id: order.order_id,
-                handler: async (response: any) => {
-                    try {
-                        await api.practice.verifyPayment({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                        });
-                        toast.success('Payment successful!');
-                        startMutation.mutate(response.razorpay_order_id);
-                    } catch {
-                        toast.error('Payment verification failed.');
-                    }
-                },
-                theme: { color: '#6366f1' },
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.open();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.detail || 'Payment failed.');
-        }
-    }, [loadRazorpayScript, startMutation]);
+    const retryMutation = useMutation({
+        mutationFn: () => api.practice.retryKb(examId),
+        onSuccess: () => {
+            toast.success('Retrying content analysis...');
+            queryClient.invalidateQueries({ queryKey: ['practice-exam', examId] });
+        },
+        onError: (error: any) => {
+            toast.error(error?.message || 'Retry failed.');
+        },
+    });
 
     const handleStart = useCallback(() => {
         const hasAccess = practiceStatus?.sessions_remaining === null || (practiceStatus?.sessions_remaining ?? 0) > 0;
@@ -232,11 +179,15 @@ export default function PracticeDetailPage() {
                                     Something went wrong while analyzing your content. Please try creating again.
                                 </p>
                             </div>
-                            <Button variant="outline" size="sm" asChild className="shrink-0 gap-1.5">
-                                <Link href="/student/practice/create">
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                    Retry
-                                </Link>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="shrink-0 gap-1.5"
+                                onClick={() => retryMutation.mutate()}
+                                disabled={retryMutation.isPending}
+                            >
+                                <RefreshCw className={`h-3.5 w-3.5 ${retryMutation.isPending ? 'animate-spin' : ''}`} />
+                                {retryMutation.isPending ? 'Retrying...' : 'Retry'}
                             </Button>
                         </>
                     )}
