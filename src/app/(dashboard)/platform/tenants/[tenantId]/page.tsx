@@ -61,7 +61,7 @@ const adminFormSchema = z.object({
 
 function AdminProvisioningForm({ tenantId }: { tenantId: string }) {
     const [isPending, setIsPending] = useState(false);
-    
+
     const form = useForm<z.infer<typeof adminFormSchema>>({
         resolver: zodResolver(adminFormSchema) as any,
         defaultValues: {
@@ -94,7 +94,7 @@ function AdminProvisioningForm({ tenantId }: { tenantId: string }) {
                             <FormItem>
                                 <FormLabel>Admin Name</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="John Doe" {...field} />
+                                    <Input placeholder="Ashok Kumar" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -159,6 +159,19 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
             });
         }
     }, [tenant, form]);
+
+    const selectedTier = form.watch('subscription_tier');
+
+    // Auto-update limits when fixed plan is selected
+    useEffect(() => {
+        if (selectedTier === 'STARTER') {
+            form.setValue('max_students', 50, { shouldValidate: true });
+            form.setValue('max_exams_per_month', 10, { shouldValidate: true });
+        } else if (selectedTier === 'PRO') {
+            form.setValue('max_students', 500, { shouldValidate: true });
+            form.setValue('max_exams_per_month', 100, { shouldValidate: true });
+        }
+    }, [selectedTier, form]);
 
     const updateMutation = useMutation({
         mutationFn: (values: z.infer<typeof formSchema>) =>
@@ -388,7 +401,12 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                                         <FormControl>
                                             <div className="relative">
                                                 <Users className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input type="number" className="pl-9" {...field} />
+                                                <Input 
+                                                    type="number" 
+                                                    className="pl-9" 
+                                                    {...field} 
+                                                    disabled={selectedTier !== 'ENTERPRISE'}
+                                                />
                                             </div>
                                         </FormControl>
                                         <FormMessage />
@@ -404,7 +422,12 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                                         <FormControl>
                                             <div className="relative">
                                                 <FileText className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input type="number" className="pl-9" {...field} />
+                                                <Input 
+                                                    type="number" 
+                                                    className="pl-9" 
+                                                    {...field} 
+                                                    disabled={selectedTier !== 'ENTERPRISE'}
+                                                />
                                             </div>
                                         </FormControl>
                                         <FormMessage />
@@ -434,7 +457,7 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                         Retroactive Admin Provisioning
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        If this tenant was created without an initial admin, you can provision one here. 
+                        If this tenant was created without an initial admin, you can provision one here.
                         They will receive an email with their login credentials.
                     </p>
                 </div>

@@ -350,8 +350,8 @@ export default function NewTenantPage() {
                                                             <RadioGroupItem value={key} className="peer sr-only" />
                                                         </FormControl>
                                                         <FormLabel className={`flex flex-col items-center justify-between rounded-xl border-2 p-5 cursor-pointer transition-all duration-200 ${isSelected
-                                                                ? `${plan.borderColor} ${plan.bgGlow} shadow-sm`
-                                                                : 'border-muted bg-popover hover:bg-accent/50 hover:text-accent-foreground'
+                                                            ? `${plan.borderColor} ${plan.bgGlow} shadow-sm`
+                                                            : 'border-muted bg-popover hover:bg-accent/50 hover:text-accent-foreground'
                                                             } peer-data-[state=checked]:${plan.borderColor} [&:has([data-state=checked])]:${plan.borderColor}`}>
                                                             <Icon className={`h-7 w-7 mb-2 ${isSelected ? plan.color : 'text-muted-foreground'}`} />
                                                             <span className="text-lg font-bold">{plan.name}</span>
@@ -587,7 +587,7 @@ export default function NewTenantPage() {
                                     <FormItem>
                                         <FormLabel>Admin Name <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
                                         <FormControl>
-                                            <Input placeholder="John Doe" {...field} />
+                                            <Input placeholder="Ashok Kumar" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
