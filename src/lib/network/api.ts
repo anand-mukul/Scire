@@ -576,6 +576,14 @@ export const api = {
             const { data } = await apiClient.post(`/tenants/${tenantId}/admin`, adminData);
             return data;
         },
+        getTenantAdmins: async (tenantId: string) => {
+            const { data } = await apiClient.get<User[]>(`/tenants/${tenantId}/admins`);
+            return data;
+        },
+        removeTenantAdmin: async (tenantId: string, adminId: string) => {
+            const { data } = await apiClient.delete(`/tenants/${tenantId}/admins/${adminId}`);
+            return data;
+        },
         // Request Management
         listRequests: async (params?: { status?: string; skip?: number; limit?: number }) => {
             const { data } = await apiClient.get('/onboarding/admin/requests', { params });

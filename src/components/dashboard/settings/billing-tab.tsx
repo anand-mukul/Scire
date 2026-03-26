@@ -23,7 +23,7 @@ declare global {
 }
 
 export function BillingTab() {
-    const { tenantId, subscriptionTier } = useTenant();
+    const { tenantId, subscriptionTier, isSuspended } = useTenant();
     const queryClient = useQueryClient();
     const [isProcessing, setIsProcessing] = React.useState(false);
 
@@ -42,11 +42,11 @@ export function BillingTab() {
         enabled: !!tenantId,
     });
 
-    // Fetch Usage
+    // Fetch Usage (skip for suspended tenants — this endpoint isn't exempt from suspension check)
     const { data: usageData, isLoading: isLoadingUsage } = useQuery({
         queryKey: ['tenant-usage'],
         queryFn: api.tenant.getUsage,
-        enabled: !!tenantId,
+        enabled: !!tenantId && !isSuspended,
     });
 
     // Transform backend plans to component format
@@ -168,7 +168,7 @@ export function BillingTab() {
         }
     };
 
-    if (isLoadingPlans || isLoadingUsage) {
+    if (isLoadingPlans) {
         return (
             <div className="space-y-8">
                 <Skeleton className="h-[200px] w-full rounded-xl" />

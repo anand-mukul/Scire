@@ -25,8 +25,15 @@ export default function TenantSuspendedPage() {
 
                 <div className="mt-8 space-y-3">
                     <Link
-                        href="mailto:support@scire.in"
+                        href="/admin/settings?tab=billing"
                         className="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+                    >
+                        Manage Billing
+                    </Link>
+
+                    <Link
+                        href="mailto:support@scire.in"
+                        className="inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-white/5"
                     >
                         Contact Support
                     </Link>

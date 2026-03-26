@@ -38,7 +38,9 @@ import {
     CreditCard,
     Users,
     FileText,
-    Building2
+    Building2,
+    Trash2,
+    UserPlus
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from "@/components/ui/separator";
@@ -59,8 +61,9 @@ const adminFormSchema = z.object({
     admin_name: z.string().min(2, 'Name must be at least 2 characters'),
 });
 
-function AdminProvisioningForm({ tenantId }: { tenantId: string }) {
+function AdminProvisioningForm({ tenantId, onSuccess }: { tenantId: string, onSuccess?: () => void }) {
     const [isPending, setIsPending] = useState(false);
+    const queryClient = useQueryClient();
 
     const form = useForm<z.infer<typeof adminFormSchema>>({
         resolver: zodResolver(adminFormSchema) as any,
@@ -75,7 +78,9 @@ function AdminProvisioningForm({ tenantId }: { tenantId: string }) {
             setIsPending(true);
             await api.platform.provisionTenantAdmin(tenantId, values);
             toast.success("Admin provisioned successfully. They will receive a welcome email.");
+            queryClient.invalidateQueries({ queryKey: ['tenantAdmins', tenantId] });
             form.reset();
+            if (onSuccess) onSuccess();
         } catch (error: any) {
             toast.error(error?.response?.data?.detail || error.message || "Failed to provision admin");
         } finally {
@@ -132,6 +137,22 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
     const { data: tenant, isLoading } = useQuery({
         queryKey: ['tenant', tenantId],
         queryFn: () => api.platform.getTenant(tenantId),
+    });
+
+    const { data: admins, isLoading: isLoadingAdmins } = useQuery({
+        queryKey: ['tenantAdmins', tenantId],
+        queryFn: () => api.platform.getTenantAdmins(tenantId),
+    });
+
+    const [showAddAdmin, setShowAddAdmin] = useState(false);
+
+    const removeAdminMutation = useMutation({
+        mutationFn: (adminId: string) => api.platform.removeTenantAdmin(tenantId, adminId),
+        onSuccess: () => {
+            toast.success('Admin revoked successfully');
+            queryClient.invalidateQueries({ queryKey: ['tenantAdmins', tenantId] });
+        },
+        onError: (err: any) => toast.error(err.message || 'Failed to revoke admin')
     });
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -450,19 +471,74 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                 </form>
             </Form>
 
-            <div className="space-y-6 max-w-5xl mt-12">
+            <div className="space-y-6 max-w-5xl mt-12 bg-muted/20 p-6 rounded-lg border border-border/50">
                 <div>
                     <h2 className="text-xl font-semibold flex items-center gap-2">
                         <Users className="h-5 w-5 text-primary" />
-                        Retroactive Admin Provisioning
+                        {admins && admins.length > 0 ? "Existing Tenant Admins" : "Retroactive Admin Provisioning"}
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        If this tenant was created without an initial admin, you can provision one here.
-                        They will receive an email with their login credentials.
+                        {admins && admins.length > 0 
+                            ? "This tenant already has one or more administrators assigned." 
+                            : "If this tenant was created without an initial admin, you can provision one here. They will receive an email with their login credentials."}
                     </p>
                 </div>
                 <Separator />
-                <AdminProvisioningForm tenantId={tenant.id} />
+                
+                {isLoadingAdmins ? (
+                    <div className="space-y-3">
+                        <Skeleton className="h-12 w-full" />
+                    </div>
+                ) : admins && admins.length > 0 ? (
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Assigned Administrators</span>
+                            <Button variant="outline" size="sm" onClick={() => setShowAddAdmin(!showAddAdmin)} className="flex items-center gap-2">
+                                {showAddAdmin ? "Cancel" : <><UserPlus className="h-4 w-4"/> Add Another Admin</>}
+                            </Button>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {admins.map((admin) => (
+                                <div key={admin.id} className="flex items-center gap-4 bg-background p-4 rounded-md border shadow-sm">
+                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                                        {admin.full_name.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-medium">{admin.full_name}</p>
+                                        <p className="text-sm text-muted-foreground">{admin.email}</p>
+                                    </div>
+                                    <Badge variant="secondary">Admin</Badge>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 -mr-2"
+                                        onClick={() => {
+                                            if (window.confirm(`Are you sure you want to revoke admin access for ${admin.full_name}?`)) {
+                                                removeAdminMutation.mutate(admin.id);
+                                            }
+                                        }}
+                                        disabled={removeAdminMutation.isPending}
+                                        title="Revoke Admin Access"
+                                    >
+                                        {removeAdminMutation.isPending && removeAdminMutation.variables === admin.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                        {showAddAdmin && (
+                            <div className="mt-8 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-top-4">
+                                <h3 className="font-medium mb-4">Provision New Administrator</h3>
+                                <AdminProvisioningForm tenantId={tenant.id} onSuccess={() => setShowAddAdmin(false)} />
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <AdminProvisioningForm tenantId={tenant.id} />
+                )}
             </div>
         </div>
     );

@@ -116,10 +116,15 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
+    // Suspended tenant check — allow admins to reach billing settings so they can pay to reactivate
     if (verifiedUser?.tenant_status &&
         !(verifiedUser.tenant_status === TenantStatus.ACTIVE || verifiedUser.tenant_status === TenantStatus.TRIAL) &&
         userRole !== UserRole.PLATFORM_ADMIN) {
-        return NextResponse.redirect(new URL('/tenant-suspended', request.url));
+        // Allow tenant admins to access billing/settings even when suspended
+        const isBillingPath = pathname.startsWith('/admin/settings');
+        if (!isBillingPath || userRole !== UserRole.ADMIN) {
+            return NextResponse.redirect(new URL('/tenant-suspended', request.url));
+        }
     }
 
     if (pathname.startsWith('/platform')) {
