@@ -86,7 +86,7 @@ function AdminProvisioningForm({ tenantId }: { tenantId: string }) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-muted/30 p-6 rounded-lg border border-border/50">
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 items-start">
                     <FormField
                         control={form.control}
                         name="admin_name"
@@ -192,7 +192,7 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                         <Skeleton className="h-4 w-64" />
                     </div>
                     <Skeleton className="h-px w-full" />
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-6 md:grid-cols-2 items-start">
                         <div className="space-y-2">
                             <Skeleton className="h-4 w-32" />
                             <Skeleton className="h-10 w-full" />
@@ -255,7 +255,7 @@ export default function TenantDetailsPage({ params }: { params: Promise<{ tenant
                         </div>
                         <Separator />
 
-                        <div className="grid gap-6 md:grid-cols-2">
+                        <div className="grid gap-6 md:grid-cols-2 items-start">
                             <FormField
                                 control={form.control}
                                 name="name"
