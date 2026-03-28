@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, XCircle, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { CheckCircle, XCircle, AlertTriangle, MessageSquare, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VivaSession, GradingDetail, ReviewStatus } from '@/types/backend';
 // import { BackgroundBeams } from '@/components/visuals/BackgroundBeams';
@@ -59,6 +60,14 @@ export default function ReviewSessionPage() {
 
     const [notes, setNotes] = React.useState('');
     const [overrideScore, setOverrideScore] = React.useState<string>('');
+    const [hasInitialized, setHasInitialized] = React.useState(false);
+
+    React.useEffect(() => {
+        if (session && !hasInitialized) {
+            if (session.review_notes) setNotes(session.review_notes);
+            setHasInitialized(true);
+        }
+    }, [session, hasInitialized]);
 
     if (sessionLoading || gradingLoading) {
         return (
@@ -126,6 +135,28 @@ export default function ReviewSessionPage() {
         });
     };
 
+    const isReviewed = session.review_status !== ReviewStatus.PENDING && session.review_status !== ReviewStatus.UNDER_REVIEW;
+
+    const handleUpdate = () => {
+        reviewMutation.mutate({
+            status: session.review_status,
+            notes: notes || 'Updated Review Notes',
+            final_score_override: overrideScore ? parseFloat(overrideScore) : undefined
+        });
+    };
+
+    const handleAddPredefinedNote = () => {
+        const score = session.final_score || 0;
+        let predefined = "Did not meet the requirements. Needs to review the core concepts further.";
+        if (score >= 80) {
+            predefined = "Excellent performance. Demonstrated strong understanding of concepts.";
+        } else if (score >= 50) {
+            predefined = "Good effort, but needs improvement in some areas.";
+        }
+        
+        setNotes((prev) => (prev ? `${prev}\n\n${predefined}` : predefined));
+    };
+
     return (
         <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
             {/* Header */}
@@ -139,7 +170,7 @@ export default function ReviewSessionPage() {
                         <div className="text-right hidden sm:block">
                             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Score</div>
                             <div className="text-2xl font-bold text-foreground">
-                                {session.final_score?.toFixed(1) || '0.0'}%
+                                {session.final_score?.toFixed(2) || '0.00'}%
                             </div>
                         </div>
                         <Badge variant={session.integrity_flag ? 'destructive' : 'secondary'} className="capitalize h-8 px-3 text-sm">
@@ -178,7 +209,7 @@ export default function ReviewSessionPage() {
                                                         </span>
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-xs text-muted-foreground">
-                                                                Score: {detail.score_awarded.toFixed(1)}
+                                                                Score: {detail.score_awarded.toFixed(2)}
                                                             </span>
                                                             {detail.passed ? (
                                                                 <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-0">Pass</Badge>
@@ -253,7 +284,7 @@ export default function ReviewSessionPage() {
                                 <Input
                                     id="score"
                                     type="number"
-                                    placeholder={session.final_score?.toString() || "0"}
+                                    placeholder={session.final_score?.toFixed(2) || "0.00"}
                                     value={overrideScore}
                                     onChange={(e) => setOverrideScore(e.target.value)}
                                     className="bg-muted border-border"
@@ -262,7 +293,27 @@ export default function ReviewSessionPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="notes">Review Notes</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="notes">Review Notes</Label>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="icon" 
+                                                    onClick={handleAddPredefinedNote}
+                                                    type="button"
+                                                    className="h-6 w-6 rounded-sm border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white" 
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Add Notes/Feedback</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
                                 <Textarea
                                     id="notes"
                                     placeholder="Add internal notes for this review..."
@@ -272,24 +323,37 @@ export default function ReviewSessionPage() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 pt-4">
-                                <Button
-                                    onClick={handleReject}
-                                    variant="outline"
-                                    className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    disabled={reviewMutation.isPending}
-                                >
-                                    <XCircle className="w-4 h-4 mr-2" />
-                                    Reject
-                                </Button>
-                                <Button
-                                    onClick={handleApprove}
-                                    disabled={reviewMutation.isPending}
-                                >
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Approve
-                                </Button>
-                            </div>
+                            {isReviewed ? (
+                                <div className="pt-4">
+                                    <Button
+                                        onClick={handleUpdate}
+                                        className="w-full"
+                                        disabled={reviewMutation.isPending}
+                                    >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Update
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3 pt-4">
+                                    <Button
+                                        onClick={handleReject}
+                                        variant="outline"
+                                        className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                        disabled={reviewMutation.isPending}
+                                    >
+                                        <XCircle className="w-4 h-4 mr-2" />
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        onClick={handleApprove}
+                                        disabled={reviewMutation.isPending}
+                                    >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Approve
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
