@@ -284,7 +284,7 @@ export default function RequestAccessPage() {
                                             <Input
                                                 id="full_name"
                                                 {...register('full_name')}
-                                                placeholder="Dr. Jane Doe"
+                                                placeholder="Dr. Priya Sharma"
                                                 className="h-10 pl-9 rounded-xl bg-white/[0.04] border-white/[0.06] text-white placeholder:text-white/20 focus:border-white/20 focus:bg-white/[0.06] transition-all duration-200"
                                             />
                                         </div>
@@ -330,7 +330,7 @@ export default function RequestAccessPage() {
                                             id="email"
                                             type="email"
                                             {...register('email')}
-                                            placeholder="jane@university.edu"
+                                            placeholder="priya.sharma@university.edu.in"
                                             className="h-10 pl-9 rounded-xl bg-white/[0.04] border-white/[0.06] text-white placeholder:text-white/20 focus:border-white/20 focus:bg-white/[0.06] transition-all duration-200"
                                         />
                                     </div>
@@ -370,7 +370,7 @@ export default function RequestAccessPage() {
                                         <Input
                                             id="name"
                                             {...register('name')}
-                                            placeholder="Acme University"
+                                            placeholder="Delhi University"
                                             className="h-10 pl-9 rounded-xl bg-white/[0.04] border-white/[0.06] text-white placeholder:text-white/20 focus:border-white/20 focus:bg-white/[0.06] transition-all duration-200"
                                         />
                                     </div>
@@ -401,7 +401,7 @@ export default function RequestAccessPage() {
                                                 {...register('slug', {
                                                     onChange: () => setSlugManuallyEdited(true),
                                                 })}
-                                                placeholder="acme-uni"
+                                                placeholder="du"
                                                 className="h-10 pl-9 rounded-r-none border-r-0 rounded-l-xl bg-white/[0.04] border-white/[0.06] text-white placeholder:text-white/20 focus:border-white/20 focus:bg-white/[0.06] transition-all duration-200 font-mono text-sm"
                                             />
                                         </div>
@@ -495,11 +495,11 @@ export default function RequestAccessPage() {
                     {/* Bottom legal */}
                     <motion.p variants={itemVariants} className="text-center text-[10px] text-white/20 mt-4">
                         By submitting, you agree to our{' '}
-                        <Link href="/legal/terms" className="underline underline-offset-2 hover:text-white/30 transition-colors">
+                        <Link href="/terms" className="underline underline-offset-2 hover:text-white/30 transition-colors">
                             Terms
                         </Link>{' '}
                         and{' '}
-                        <Link href="/legal/privacy" className="underline underline-offset-2 hover:text-white/30 transition-colors">
+                        <Link href="/privacy" className="underline underline-offset-2 hover:text-white/30 transition-colors">
                             Privacy Policy
                         </Link>
                         .
