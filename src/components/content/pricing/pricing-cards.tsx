@@ -145,7 +145,7 @@ const PricingCard = ({
                             <Button
                                 variant="outline"
                                 className="w-full"
-                                onClick={() => window.open('mailto:sales@scire.app', '_blank')}
+                                onClick={() => window.open('mailto:sales@scire.in', '_blank')}
                             >
                                 Contact Sales
                             </Button>

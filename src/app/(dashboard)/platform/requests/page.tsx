@@ -360,7 +360,7 @@ export default function PlatformRequestsPage() {
                                                         </div>
                                                         <div>
                                                             <div className="font-medium text-sm">{req.name}</div>
-                                                            <div className="text-xs text-muted-foreground font-mono">{req.slug}.scire.app</div>
+                                                            <div className="text-xs text-muted-foreground font-mono">{req.slug}.scire.in</div>
                                                         </div>
                                                     </div>
                                                 </TableCell>
@@ -507,7 +507,7 @@ export default function PlatformRequestsPage() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Subdomain</span>
-                                            <span className="font-mono text-xs">{approveTarget.slug}.scire.app</span>
+                                            <span className="font-mono text-xs">{approveTarget.slug}.scire.in</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Admin Email</span>
