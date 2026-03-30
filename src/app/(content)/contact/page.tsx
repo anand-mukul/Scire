@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, MessageSquare, MapPin, ArrowRight, HelpCircle, FileText } from "lucide-react";
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import { ProtectedMailLink } from "@/components/ui/protected-mail-link";
 
 export default function ContactPage() {
     return (
@@ -27,9 +28,9 @@ export default function ContactPage() {
                         <div className="flex-1">
                             <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">Email Us</h3>
                             <p className="text-muted-foreground text-sm mb-3">For general inquiries, partnerships, and support.</p>
-                            <a href="mailto:contact@scire.in" className="inline-flex items-center text-primary font-medium hover:underline">
+                            <ProtectedMailLink email="contact@scire.in" className="inline-flex items-center text-primary font-medium hover:underline">
                                 contact@scire.in <ArrowRight className="w-4 h-4 ml-1" />
-                            </a>
+                            </ProtectedMailLink>
                         </div>
                     </div>
                 </div>
@@ -59,8 +60,7 @@ export default function ContactPage() {
                         <div className="flex-1">
                             <h3 className="font-bold text-lg mb-1 group-hover:text-orange-500 transition-colors">Office</h3>
                             <p className="text-muted-foreground text-sm leading-relaxed">
-                                123 Innovation Drive<br />
-                                San Francisco, CA 94103
+                                Remote, India
                             </p>
                         </div>
                     </div>

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { showMailRedirectAlert } from '@/components/ui/protected-mail-link';
 
 // Shared Interface for Plan Data
 export interface PlanData {
@@ -145,7 +146,11 @@ const PricingCard = ({
                             <Button
                                 variant="outline"
                                 className="w-full"
-                                onClick={() => window.open('mailto:sales@scire.in', '_blank')}
+                                onClick={() => {
+                                    if (!showMailRedirectAlert()) {
+                                        window.open('mailto:sales@scire.in', '_blank');
+                                    }
+                                }}
                             >
                                 Contact Sales
                             </Button>

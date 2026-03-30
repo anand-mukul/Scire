@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ProtectedMailLink } from "@/components/ui/protected-mail-link";
+
+const mailLinkClass = "text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors";
 
 const toc = [
     { id: "infrastructure", label: "Infrastructure Security" },
@@ -162,7 +165,7 @@ export default function SecurityPage() {
                         We acknowledge valid reports within <strong className="text-foreground">48 hours</strong> and provide a remediation timeline within <strong className="text-foreground">5 business days</strong>. Valid reports are eligible for our Security Hall of Fame and monetary rewards based on severity.
                     </p>
                     <p>
-                        Report vulnerabilities to: <a href="mailto:security@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">security@scire.in</a><br />
+                        Report vulnerabilities to: <ProtectedMailLink email="security@scire.in" className={mailLinkClass}>security@scire.in</ProtectedMailLink><br />
                         PGP key available at <code className="text-xs bg-muted/30 px-1.5 py-0.5 rounded">scire.in/.well-known/security.txt</code>
                     </p>
                 </section>
@@ -199,7 +202,7 @@ export default function SecurityPage() {
                     </h2>
                     <p className="mb-5">For security-related questions or to report a vulnerability:</p>
                     <p>
-                        Email: <a href="mailto:security@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">security@scire.in</a> · <a href="mailto:ciso@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">ciso@scire.in</a><br />
+                        Email: <ProtectedMailLink email="security@scire.in" className={mailLinkClass}>security@scire.in</ProtectedMailLink> · <ProtectedMailLink email="ciso@scire.in" className={mailLinkClass}>ciso@scire.in</ProtectedMailLink><br />
                         Address: Remote, India
                     </p>
                 </section>

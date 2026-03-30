@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ProtectedMailLink } from "@/components/ui/protected-mail-link";
+
+const mailLinkClass = "text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors";
 
 const toc = [
     { id: "information-we-collect", label: "Information We Collect" },
@@ -37,7 +40,7 @@ export default function PrivacyPage() {
                     This Policy is published in compliance with the <strong className="text-foreground">Information Technology Act, 2000</strong>, the <strong className="text-foreground">Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong> (&ldquo;SPDI Rules&rdquo;), and the <strong className="text-foreground">Digital Personal Data Protection Act, 2023</strong> (&ldquo;DPDPA&rdquo;). Where our Services are used by individuals in the European Economic Area, we also comply with the <strong className="text-foreground">General Data Protection Regulation (EU) 2016/679</strong> (&ldquo;GDPR&rdquo;).
                 </p>
                 <p>
-                    Remember that your use of Scire&apos;s Services is at all times subject to our <Link href="/terms" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">Terms of Service</Link>. If you have a disability, you may access this Privacy Policy in an alternative format by contacting <a href="mailto:hello@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">hello@scire.in</a>.
+                    Remember that your use of Scire&apos;s Services is at all times subject to our <Link href="/terms" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">Terms of Service</Link>. If you have a disability, you may access this Privacy Policy in an alternative format by contacting <ProtectedMailLink email="hello@scire.in" className={mailLinkClass}>hello@scire.in</ProtectedMailLink>.
                 </p>
             </div>
 
@@ -191,7 +194,7 @@ export default function PrivacyPage() {
                         <li><strong className="text-foreground">Lodge Complaint.</strong> File a complaint with the Data Protection Board of India or your local supervisory authority.</li>
                     </ul>
                     <p className="mt-6">
-                        To exercise any of these rights, submit a written request to <a href="mailto:dpo@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">dpo@scire.in</a>. We will respond within <strong className="text-foreground">30 days</strong>. Identity verification may be required.
+                        To exercise any of these rights, submit a written request to <ProtectedMailLink email="dpo@scire.in" className={mailLinkClass}>dpo@scire.in</ProtectedMailLink>. We will respond within <strong className="text-foreground">30 days</strong>. Identity verification may be required.
                     </p>
                 </section>
 
@@ -214,7 +217,7 @@ export default function PrivacyPage() {
                         Children&apos;s Privacy
                     </h2>
                     <p>
-                        As noted in the <Link href="/terms" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">Terms of Service</Link>, we do not knowingly collect or solicit Personal Data from anyone under the age of <strong className="text-foreground">13</strong>. If you are under 13, please do not attempt to register for the Services or send any Personal Data to us. If we learn that we have collected Personal Data from a child under age 13, we will delete that information as quickly as possible. If you believe that a child under 13 may have provided us Personal Data, please contact us at <a href="mailto:hello@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">hello@scire.in</a>.
+                        As noted in the <Link href="/terms" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">Terms of Service</Link>, we do not knowingly collect or solicit Personal Data from anyone under the age of <strong className="text-foreground">13</strong>. If you are under 13, please do not attempt to register for the Services or send any Personal Data to us. If we learn that we have collected Personal Data from a child under age 13, we will delete that information as quickly as possible. If you believe that a child under 13 may have provided us Personal Data, please contact us at <ProtectedMailLink email="hello@scire.in" className={mailLinkClass}>hello@scire.in</ProtectedMailLink>.
                     </p>
                 </section>
 
@@ -250,7 +253,7 @@ export default function PrivacyPage() {
                         If you have any questions or comments about this Privacy Policy, the ways in which we collect and use your Personal Data, or your choices and rights regarding such collection and use, please do not hesitate to contact us at:
                     </p>
                     <p>
-                        Email: <a href="mailto:grievance@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">grievance@scire.in</a> · <a href="mailto:dpo@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">dpo@scire.in</a><br />
+                        Email: <ProtectedMailLink email="grievance@scire.in" className={mailLinkClass}>grievance@scire.in</ProtectedMailLink> · <ProtectedMailLink email="dpo@scire.in" className={mailLinkClass}>dpo@scire.in</ProtectedMailLink><br />
                         Address: Remote, India
                     </p>
                 </section>

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ProtectedMailLink } from "@/components/ui/protected-mail-link";
+
+const mailLinkClass = "text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors";
 
 const toc = [
     { id: "acceptance", label: "Acceptance of Terms" },
@@ -136,7 +139,7 @@ export default function TermsPage() {
                         <strong className="text-foreground">Billing Cycle.</strong> Paid subscriptions are billed in advance on a monthly or annual basis. You authorize Scire to charge your designated payment method at the start of each cycle.
                     </p>
                     <p className="mb-5">
-                        <strong className="text-foreground">Refunds.</strong> Subscription fees are generally non-refundable, except where required by applicable law or expressly provided in a separate written agreement. Contact <a href="mailto:billing@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">billing@scire.in</a> within 14 days for refund requests.
+                        <strong className="text-foreground">Refunds.</strong> Subscription fees are generally non-refundable, except where required by applicable law or expressly provided in a separate written agreement. Contact <ProtectedMailLink email="billing@scire.in" className={mailLinkClass}>billing@scire.in</ProtectedMailLink> within 14 days for refund requests.
                     </p>
                     <p>
                         <strong className="text-foreground">Taxes.</strong> You are responsible for all applicable taxes, including GST. Scire will collect and remit taxes where required by law.
@@ -218,7 +221,7 @@ export default function TermsPage() {
                         12. Termination
                     </h2>
                     <p className="mb-5">
-                        <strong className="text-foreground">By You.</strong> You may terminate your account at any time via account settings or by contacting <a href="mailto:support@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">support@scire.in</a>. Pre-paid fees are non-refundable.
+                        <strong className="text-foreground">By You.</strong> You may terminate your account at any time via account settings or by contacting <ProtectedMailLink email="support@scire.in" className={mailLinkClass}>support@scire.in</ProtectedMailLink>. Pre-paid fees are non-refundable.
                     </p>
                     <p className="mb-5">
                         <strong className="text-foreground">By Scire.</strong> We may suspend or terminate your access at any time, with or without cause, with reasonable notice where practicable. Grounds include violation of these Terms, non-payment, or actions harming the Platform.
@@ -253,7 +256,7 @@ export default function TermsPage() {
                         <li><strong className="text-foreground">Waiver.</strong> Failure to enforce any right does not constitute a waiver.</li>
                         <li><strong className="text-foreground">Assignment.</strong> You may not assign without our consent. Scire may assign without restriction.</li>
                         <li><strong className="text-foreground">Force Majeure.</strong> Scire is not liable for delays or failures caused by events beyond reasonable control, including natural disasters, pandemics, war, or third-party service failures.</li>
-                        <li><strong className="text-foreground">Notices.</strong> Sent to your account email (for you) or <a href="mailto:legal@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">legal@scire.in</a> (for Scire).</li>
+                        <li><strong className="text-foreground">Notices.</strong> Sent to your account email (for you) or <ProtectedMailLink email="legal@scire.in" className={mailLinkClass}>legal@scire.in</ProtectedMailLink> (for Scire).</li>
                     </ul>
                 </section>
 
@@ -265,7 +268,7 @@ export default function TermsPage() {
                         If you have any questions or comments about these Terms, please do not hesitate to contact us at:
                     </p>
                     <p>
-                        Email: <a href="mailto:legal@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">legal@scire.in</a><br />
+                        Email: <ProtectedMailLink email="legal@scire.in" className={mailLinkClass}>legal@scire.in</ProtectedMailLink><br />
                         Address: Remote, India
                     </p>
                 </section>

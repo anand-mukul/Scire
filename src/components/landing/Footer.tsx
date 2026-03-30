@@ -11,6 +11,7 @@ import {
     ArrowUp
 } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
+import { showMailRedirectAlert } from '@/components/ui/protected-mail-link';
 
 export const Footer = () => {
     const currentYear = new Date().getFullYear();
@@ -67,14 +68,19 @@ export const Footer = () => {
                         </p>
                         <div className="flex items-center gap-4 pt-4">
                             {[
-                                { icon: Twitter, href: '#' },
-                                { icon: Github, href: '#' },
-                                { icon: Linkedin, href: '#' },
+                                { icon: Twitter, href: 'https://x.com/' },
+                                { icon: Github, href: 'https://github.com/anand-mukul' },
+                                { icon: Linkedin, href: 'https://www.linkedin.com/in/dev-mukul' },
                                 { icon: Mail, href: 'mailto:contact@scire.in' }
                             ].map((social, i) => (
                                 <motion.a
                                     key={i}
                                     href={social.href}
+                                    onClick={(e) => {
+                                        if (social.href.startsWith('mailto:') && showMailRedirectAlert()) {
+                                            e.preventDefault();
+                                        }
+                                    }}
                                     whileHover={{ y: -3, scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                     className="p-3 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 hover:border-black/20 dark:hover:border-white/20 transition-all duration-300"

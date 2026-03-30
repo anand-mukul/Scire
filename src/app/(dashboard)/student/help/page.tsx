@@ -11,6 +11,7 @@ import {
     Sparkles, FileText, GraduationCap, Scale
 } from 'lucide-react';
 import { SUPPORT_MAIL } from '@/lib/constants';
+import { ProtectedMailLink } from '@/components/ui/protected-mail-link';
 
 interface HelpItem {
     icon: React.ReactNode;
@@ -262,13 +263,13 @@ export default function StudentHelpPage() {
                             <p className="text-sm text-muted-foreground">Contact your instructor or reach out to support.</p>
                         </div>
                     </div>
-                    <a
-                        href={`mailto:${SUPPORT_MAIL}`}
+                    <ProtectedMailLink
+                        email={SUPPORT_MAIL}
                         className="flex items-center gap-2 text-foreground bg-secondary/50 hover:bg-primary hover:text-primary-foreground px-4 py-2.5 rounded-lg transition-all border border-border hover:border-primary shadow-sm button-press text-sm font-semibold w-fit"
                     >
                         <Mail className="w-4 h-4" />
                         {SUPPORT_MAIL}
-                    </a>
+                    </ProtectedMailLink>
                 </div>
             </Card>
         </main>

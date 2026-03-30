@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { ProtectedMailLink } from '@/components/ui/protected-mail-link';
 
 export const metadata = {
     title: 'Organization Suspended | Scire',
@@ -31,12 +32,12 @@ export default function TenantSuspendedPage() {
                         Manage Billing
                     </Link>
 
-                    <Link
-                        href="mailto:support@scire.in"
+                    <ProtectedMailLink
+                        email="support@scire.in"
                         className="inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-white/5"
                     >
                         Contact Support
-                    </Link>
+                    </ProtectedMailLink>
 
                     <Link
                         href="/auth/login"

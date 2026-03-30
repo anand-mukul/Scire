@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ProtectedMailLink } from "@/components/ui/protected-mail-link";
+
+const mailLinkClass = "text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors";
 
 const toc = [
     { id: "what-are-cookies", label: "What Are Cookies" },
@@ -150,7 +153,7 @@ export default function CookiesPage() {
                         If you have any questions about cookies or tracking technologies, please contact us at:
                     </p>
                     <p>
-                        Email: <a href="mailto:privacy@scire.in" className="text-foreground underline decoration-muted-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors">privacy@scire.in</a><br />
+                        Email: <ProtectedMailLink email="privacy@scire.in" className={mailLinkClass}>privacy@scire.in</ProtectedMailLink><br />
                         Address: Remote, India
                     </p>
                 </section>

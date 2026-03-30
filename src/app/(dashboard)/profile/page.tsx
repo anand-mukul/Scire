@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { SUPPORT_MAIL } from '@/lib/constants';
+import { ProtectedMailLink } from '@/components/ui/protected-mail-link';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -182,10 +183,10 @@ export default function ProfilePage() {
                             </div>
                             <div className="mt-6 flex flex-col sm:flex-row gap-3">
                                 <Button variant="outline" size="sm" asChild className="w-full sm:flex-1 cursor-pointer hover:bg-muted/50">
-                                    <Link href={`mailto:${SUPPORT_MAIL || 'support@example.com'}`}>
+                                    <ProtectedMailLink email={SUPPORT_MAIL || 'support@example.com'}>
                                         <Mail className="mr-2 h-4 w-4" />
                                         Contact Support
-                                    </Link>
+                                    </ProtectedMailLink>
                                 </Button>
                                 <Button
                                     variant="ghost"

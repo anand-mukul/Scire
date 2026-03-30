@@ -1,6 +1,7 @@
 "use client";
 
 import { PricingCards, PlanData } from "@/components/content/pricing/pricing-cards";
+import { showMailRedirectAlert } from "@/components/ui/protected-mail-link";
 
 const PUBLIC_PLANS: PlanData[] = [
     {
@@ -50,7 +51,11 @@ const PUBLIC_PLANS: PlanData[] = [
             { label: "SSO Integration", included: true },
         ],
         ctaText: "Contact Sales",
-        ctaAction: () => window.open('mailto:sales@scire.in', '_blank')
+        ctaAction: () => {
+            if (!showMailRedirectAlert()) {
+                window.open('mailto:sales@scire.in', '_blank');
+            }
+        }
     }
 ];
 

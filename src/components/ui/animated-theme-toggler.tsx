@@ -38,9 +38,6 @@ export function AnimatedThemeToggler() {
                 `circle(${endRadius}px at ${x}px ${y}px)`,
             ];
 
-            // Animate the new view coming in for Light Mode (expanding circle of light)
-            // Animate the old view going out for Dark Mode (collapsing circle of dark)
-            // Actually, standard implementation is usually expanding the new theme
             document.documentElement.animate(
                 {
                     clipPath: clipPath,
@@ -85,11 +82,11 @@ export function AnimatedThemeToggler() {
             >
                 <div className="relative w-full h-full flex items-center justify-center">
                     <Sun
-                        className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme === "dark" ? "scale-0 -rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100 text-amber-500"
+                        className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme === "dark" ? "scale-0 -rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100 text-primary"
                             }`}
                     />
                     <Moon
-                        className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme === "dark" ? "scale-100 rotate-0 opacity-100 text-violet-400" : "scale-0 rotate-90 opacity-0"
+                        className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme === "dark" ? "scale-100 rotate-0 opacity-100 text-primary" : "scale-0 rotate-90 opacity-0"
                             }`}
                     />
                 </div>
