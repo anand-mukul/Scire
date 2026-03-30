@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { useSystemCheck, SystemStatus } from '@/hooks/use-system-check';
-import { Trophy, Zap, RefreshCw, CheckCircle, AlertCircle, Loader2, Clock, FileText } from 'lucide-react';
+import { Trophy, Zap, RefreshCw, CheckCircle, AlertCircle, Loader2, Clock, FileText, BookOpen, Repeat, ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import { VivaSession, SessionStatus } from '@/types/backend';
-import { useMySessions } from '@/hooks/use-dashboard-data';
+import { VivaSession, SessionStatus, Exam, ExamStatus } from '@/types/backend';
+import { useMySessions, useExams } from '@/hooks/use-dashboard-data';
 import { formatToLocalDateTime } from '@/lib/date-utils';
 import { XCircle, Flag } from 'lucide-react';
 import {
@@ -94,13 +94,41 @@ const StatusBadge = ({ status, label, index = 0 }: { status: SystemStatus, label
     );
 }
 
-export default function StudentDashboard() {
+export default function StudentDashboardPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+            <StudentDashboard />
+        </Suspense>
+    );
+}
+
+function StudentDashboard() {
     const { data: sessions, isLoading } = useMySessions();
+    const { data: exams, isLoading: isLoadingExams } = useExams();
     const queryClient = useQueryClient();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const defaultTab = searchParams.get('tab') || 'active';
     const [sessionToTerminate, setSessionToTerminate] = React.useState<string | null>(null);
     const [codeError, setCodeError] = React.useState<string | null>(null);
+    const [joiningExamId, setJoiningExamId] = React.useState<string | null>(null);
     const { status, checkSystem } = useSystemCheck();
+
+    const joinMutation = useMutation({
+        mutationFn: api.exams.join,
+        onSuccess: (session) => {
+            toast.success('Joined exam successfully!');
+            queryClient.invalidateQueries({ queryKey: ['my-sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['exams'] });
+            router.push(`/student/exam/${(session as any).id}/onboarding`);
+        },
+        onError: (error) => {
+            toast.error(error.message || 'Failed to join exam');
+        },
+        onSettled: () => {
+            setJoiningExamId(null);
+        },
+    });
 
     const terminateMutation = useMutation({
         mutationFn: api.sessions.end,
@@ -127,6 +155,20 @@ export default function StudentDashboard() {
     const allSessions = (sessions || []) as StudentSession[];
     const activeSessions = allSessions.filter(s => s.status === SessionStatus.IN_PROGRESS || s.status === SessionStatus.PENDING);
     const historySessions = allSessions.filter(s => s.status === SessionStatus.COMPLETED || s.status === SessionStatus.TERMINATED || s.status === SessionStatus.ABANDONED);
+
+    // Compute available exams: published/active exams with remaining attempts
+    const availableExams = React.useMemo(() => {
+        const publishedExams = ((exams || []) as Exam[]).filter(
+            e => e.status === ExamStatus.PUBLISHED || e.status === ExamStatus.ACTIVE
+        );
+        return publishedExams.map(exam => {
+            const sessionsForExam = allSessions.filter(s => s.exam_id === exam.id);
+            const attemptCount = sessionsForExam.length;
+            const attemptsLeft = exam.max_attempts - attemptCount;
+            const isNew = attemptCount === 0;
+            return { exam, attemptCount, attemptsLeft, isNew };
+        }).filter(e => e.attemptsLeft > 0);
+    }, [exams, allSessions]);
 
     // Derived overall status
     const isSystemReady = status.microphone === 'ready' && status.camera === 'ready' && status.network === 'ready';
@@ -260,8 +302,16 @@ export default function StudentDashboard() {
 
             {/* Activity Tabs */}
             <div className="space-y-6">
-                <Tabs defaultValue="active" className="w-full">
+                <Tabs defaultValue={defaultTab} className="w-full">
                     <TabsList>
+                        <TabsTrigger value="available" className="gap-2">
+                            <BookOpen className="h-4 w-4" /> Available
+                            {availableExams.length > 0 && (
+                                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+                                    {availableExams.length}
+                                </span>
+                            )}
+                        </TabsTrigger>
                         <TabsTrigger value="active" className="gap-2">
                             <Clock className="h-4 w-4" /> In Progress
                         </TabsTrigger>
@@ -269,6 +319,104 @@ export default function StudentDashboard() {
                             <FileText className="h-4 w-4" /> History
                         </TabsTrigger>
                     </TabsList>
+
+                    {/* ─── Available Exams Tab ─── */}
+                    <TabsContent value="available" className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {isLoadingExams ? (
+                            Array(3).fill(0).map((_, i) => (
+                                <Card key={i} className="p-6 space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <div className="space-y-2 flex-1">
+                                            <Skeleton className="h-6 w-3/4" />
+                                            <Skeleton className="h-3 w-1/3" />
+                                        </div>
+                                        <Skeleton className="h-6 w-16 rounded-full" />
+                                    </div>
+                                    <Skeleton className="h-20 rounded-xl" />
+                                    <Skeleton className="h-10 w-full" />
+                                </Card>
+                            ))
+                        ) : availableExams.length === 0 ? (
+                            <div className="col-span-full">
+                                <EmptyState
+                                    icon={BookOpen}
+                                    title="No Available Exams"
+                                    description="There are no exams available for you right now. Check back later or enter an exam code above."
+                                />
+                            </div>
+                        ) : (
+                            availableExams.map(({ exam, attemptCount, attemptsLeft, isNew }) => (
+                                <Card key={exam.id} className="p-6 group hover:border-primary/50 transition-all card-hover relative overflow-hidden">
+                                    {isNew && (
+                                        <div className="absolute top-0 right-0 w-20 h-20 pointer-events-none">
+                                            <div className="absolute top-2 right-[-28px] rotate-45 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest px-8 py-0.5 shadow-md">
+                                                New
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-start mb-4 gap-4">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-bold text-foreground text-lg truncate group-hover:text-primary transition-colors" title={exam.title}>
+                                                {exam.title}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground font-mono mt-1">Code: {exam.exam_code}</div>
+                                        </div>
+                                        {isNew ? (
+                                            <Badge className="shrink-0 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1.5">
+                                                <Sparkles className="h-3 w-3" />
+                                                New
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="shrink-0 text-amber-500 border-amber-500/30 bg-amber-500/10 gap-1.5">
+                                                <Repeat className="h-3 w-3" />
+                                                Retry
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-card/50 rounded-xl p-4 mb-6 space-y-2 border border-border/50">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">Duration</span>
+                                            <span className="text-foreground font-mono">{exam.settings?.duration_minutes ? `${exam.settings.duration_minutes} min` : 'Varies'}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">Questions</span>
+                                            <span className="text-foreground font-mono">{exam.settings?.number_of_questions ?? '—'}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">Attempts</span>
+                                            <span className="text-foreground font-mono">
+                                                {attemptCount}/{exam.max_attempts}
+                                                <span className="text-muted-foreground ml-1">({attemptsLeft} left)</span>
+                                            </span>
+                                        </div>
+                                        {exam.start_time && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Window</span>
+                                                <span className="text-foreground font-mono text-xs">{formatToLocalDateTime(exam.start_time)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <Button
+                                        className="w-full h-10 font-semibold gap-2"
+                                        disabled={joinMutation.isPending && joiningExamId === exam.id}
+                                        onClick={() => {
+                                            setJoiningExamId(exam.id);
+                                            joinMutation.mutate(exam.exam_code);
+                                        }}
+                                    >
+                                        {joinMutation.isPending && joiningExamId === exam.id ? (
+                                            <><Loader2 className="h-4 w-4 animate-spin" /> Joining...</>
+                                        ) : (
+                                            <>{isNew ? 'Start Exam' : 'Retry Exam'} <ArrowRight className="h-4 w-4" /></>
+                                        )}
+                                    </Button>
+                                </Card>
+                            ))
+                        )}
+                    </TabsContent>
 
                     <TabsContent value="active" className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {isLoading ? (
