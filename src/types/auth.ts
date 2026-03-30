@@ -136,12 +136,25 @@ export interface SSOProvider {
     id: 'google' | 'microsoft';
     name: string;
     login_url: string;
-    // ...
 }
 
 export interface SSOProvidersResponse {
     providers: SSOProvider[];
     sso_enabled: boolean;
+}
+
+/**
+ * A single linked OAuth provider connection.
+ * Matches backend OAuthConnectionOut schema.
+ */
+export interface OAuthConnection {
+    provider: 'google' | 'microsoft';
+    provider_email: string | null;
+    connected_at: string; // ISO-8601
+}
+
+export interface OAuthConnectionsResponse {
+    connections: OAuthConnection[];
 }
 
 /**

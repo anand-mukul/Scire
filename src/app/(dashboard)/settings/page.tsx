@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { SubscriptionTab, getSubscriptionTabLabel, shouldShowSubscriptionTab } from '@/components/dashboard/settings/subscription-tab';
+import { ConnectedAccounts } from '@/components/dashboard/settings/connected-accounts';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NotificationPreference } from '@/types/backend';
 
@@ -265,8 +266,8 @@ function SettingsContent() {
                             <Shield className="h-5 w-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold tracking-tight">Security & Authentication</h2>
-                            <p className="text-sm text-muted-foreground">Manage your password and account access.</p>
+                            <h2 className="text-lg font-semibold tracking-tight">Security &amp; Authentication</h2>
+                            <p className="text-sm text-muted-foreground">Manage your password and linked sign-in methods.</p>
                         </div>
                     </div>
 
@@ -338,6 +339,22 @@ function SettingsContent() {
                                     {isChangingPassword ? 'Updating...' : 'Update Password'}
                                 </Button>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Connected Accounts */}
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-muted/10 border-b border-border/50 pb-4">
+                            <CardTitle className="text-base font-medium flex items-center gap-2">
+                                Connected Accounts
+                            </CardTitle>
+                            <CardDescription>
+                                Link your Google or Microsoft account to enable single sign-on.
+                                You can connect multiple providers to the same account.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <ConnectedAccounts />
                         </CardContent>
                     </Card>
                 </TabsContent>

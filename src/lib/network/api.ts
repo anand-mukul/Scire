@@ -1,6 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
-import { LoginCredentials, RegisterData, User, AuthTokens, SSOProvidersResponse } from '@/types/auth';
+import { LoginCredentials, RegisterData, User, AuthTokens, SSOProvidersResponse, OAuthConnectionsResponse } from '@/types/auth';
 import { Exam, ExamStatus, ExamSettings, VivaSession, Rubric, GradingDetail } from '@/types/backend';
 import { AdminStats, AuditLog } from '@/types/admin';
 import { getAccessToken, setAccessToken } from '@/lib/auth-token';
@@ -210,9 +210,29 @@ export const api = {
             const { data } = await apiClient.get<SSOProvidersResponse>('/auth/sso/providers');
             return data;
         },
-        getLoginUrl: (provider: 'google' | 'microsoft'): string => {
+        /**
+         * Returns the backend URL that initiates the OAuth flow.
+         * When action === 'link', the backend will embed the current
+         * user session into the CSRF state so the callback can link
+         * the provider to the existing account instead of logging in.
+         */
+        getLoginUrl: (
+            provider: 'google' | 'microsoft',
+            action: 'login' | 'link' = 'login',
+        ): string => {
             const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-            return `${backendUrl}/auth/sso/${provider}/login`;
+            const base = `${backendUrl}/auth/sso/${provider}/login`;
+            return action === 'link' ? `${base}?action=link` : base;
+        },
+        /** Fetch all OAuth providers currently linked to the signed-in user. */
+        getConnections: async (): Promise<OAuthConnectionsResponse> => {
+            const { data } = await apiClient.get<OAuthConnectionsResponse>('/auth/sso/connections');
+            return data;
+        },
+        /** Remove a linked OAuth provider from the signed-in user's account. */
+        unlinkConnection: async (provider: 'google' | 'microsoft'): Promise<{ message: string }> => {
+            const { data } = await apiClient.delete<{ message: string }>(`/auth/sso/connections/${provider}`);
+            return data;
         },
     },
 
