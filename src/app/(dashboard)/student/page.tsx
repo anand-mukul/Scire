@@ -10,14 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { useSystemCheck, SystemStatus } from '@/hooks/use-system-check';
-import { Trophy, Zap, RefreshCw, CheckCircle, AlertCircle, Loader2, Clock, FileText, BookOpen, Repeat, ArrowRight, Sparkles } from 'lucide-react';
+import { Trophy, Clock, Search, Lock, ShieldAlert, Sparkles, Zap, Flag, XCircle, Loader2, ArrowRight, PlayCircle, Repeat, FileText, Calendar, HelpCircle, Activity, CheckCircle, AlertCircle, RefreshCw, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { VivaSession, SessionStatus, Exam, ExamStatus } from '@/types/backend';
 import { useMySessions, useExams } from '@/hooks/use-dashboard-data';
 import { formatToLocalDateTime } from '@/lib/date-utils';
-import { XCircle, Flag } from 'lucide-react';
+
 import {
     AlertDialog,
     AlertDialogAction,
@@ -346,73 +346,67 @@ function StudentDashboard() {
                             </div>
                         ) : (
                             availableExams.map(({ exam, attemptCount, attemptsLeft, isNew }) => (
-                                <Card key={exam.id} className="p-6 group hover:border-primary/50 transition-all card-hover relative overflow-hidden">
-                                    {isNew && (
-                                        <div className="absolute top-0 right-0 w-20 h-20 pointer-events-none">
-                                            <div className="absolute top-2 right-[-28px] rotate-45 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest px-8 py-0.5 shadow-md">
-                                                New
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="flex justify-between items-start mb-4 gap-4">
+                                <Card key={exam.id} className="p-6 flex flex-col border border-border hover:border-border/80 transition-colors">
+                                    {/* Header */}
+                                    <div className="flex justify-between items-start mb-5 gap-3">
                                         <div className="min-w-0 flex-1">
-                                            <div className="font-bold text-foreground text-lg truncate group-hover:text-primary transition-colors" title={exam.title}>
+                                            {isNew ? (
+                                                <Badge className="mb-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10">
+                                                    New
+                                                </Badge>
+                                            ) : (
+                                                <Badge className="mb-2 bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/10">
+                                                    Retry
+                                                </Badge>
+                                            )}
+                                            <div className="font-semibold text-foreground text-base truncate" title={exam.title}>
                                                 {exam.title}
                                             </div>
-                                            <div className="text-xs text-muted-foreground font-mono mt-1">Code: {exam.exam_code}</div>
+                                            <div className="text-xs text-muted-foreground font-mono mt-0.5">CODE: {exam.exam_code}</div>
                                         </div>
-                                        {isNew ? (
-                                            <Badge className="shrink-0 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1.5">
-                                                <Sparkles className="h-3 w-3" />
-                                                New
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="shrink-0 text-amber-500 border-amber-500/30 bg-amber-500/10 gap-1.5">
-                                                <Repeat className="h-3 w-3" />
-                                                Retry
-                                            </Badge>
-                                        )}
                                     </div>
 
-                                    <div className="bg-card/50 rounded-xl p-4 mb-6 space-y-2 border border-border/50">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-muted-foreground">Duration</span>
-                                            <span className="text-foreground font-mono">{exam.settings?.duration_minutes ? `${exam.settings.duration_minutes} min` : 'Varies'}</span>
+                                    {/* Stats */}
+                                    <div className="space-y-2.5 text-sm mb-5 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Duration</span>
+                                            <span className="font-medium text-foreground">{exam.settings?.duration_minutes ? `${exam.settings.duration_minutes} min` : 'Varies'}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-muted-foreground">Questions</span>
-                                            <span className="text-foreground font-mono">{exam.settings?.number_of_questions ?? '—'}</span>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Questions</span>
+                                            <span className="font-medium text-foreground">{exam.settings?.number_of_questions ?? '—'}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-muted-foreground">Attempts</span>
-                                            <span className="text-foreground font-mono">
-                                                {attemptCount}/{exam.max_attempts}
-                                                <span className="text-muted-foreground ml-1">({attemptsLeft} left)</span>
-                                            </span>
-                                        </div>
-                                        {exam.start_time && (
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Window</span>
-                                                <span className="text-foreground font-mono text-xs">{formatToLocalDateTime(exam.start_time)}</span>
+                                        {(exam.start_time || exam.end_time) && (
+                                            <div className="flex items-start justify-between gap-4">
+                                                <span className="text-muted-foreground flex items-center gap-1.5 shrink-0"><Calendar className="h-3.5 w-3.5" /> Ends</span>
+                                                <span className="font-medium text-foreground text-right text-xs">{exam.end_time ? formatToLocalDateTime(exam.end_time) : 'No end date'}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    <Button
-                                        className="w-full h-10 font-semibold gap-2"
-                                        disabled={joinMutation.isPending && joiningExamId === exam.id}
-                                        onClick={() => {
-                                            setJoiningExamId(exam.id);
-                                            joinMutation.mutate(exam.exam_code);
-                                        }}
-                                    >
-                                        {joinMutation.isPending && joiningExamId === exam.id ? (
-                                            <><Loader2 className="h-4 w-4 animate-spin" /> Joining...</>
-                                        ) : (
-                                            <>{isNew ? 'Start Exam' : 'Retry Exam'} <ArrowRight className="h-4 w-4" /></>
-                                        )}
-                                    </Button>
+                                    {/* Footer */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-border">
+                                        <div>
+                                            <div className="text-[11px] text-muted-foreground uppercase tracking-wide mb-0.5">Attempts left</div>
+                                            <div className="text-lg font-bold text-foreground">
+                                                {attemptsLeft} <span className="text-sm font-normal text-muted-foreground">/ {exam.max_attempts}</span>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            disabled={joinMutation.isPending && joiningExamId === exam.id}
+                                            onClick={() => {
+                                                setJoiningExamId(exam.id);
+                                                joinMutation.mutate(exam.exam_code);
+                                            }}
+                                        >
+                                            {joinMutation.isPending && joiningExamId === exam.id ? (
+                                                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Joining...</>
+                                            ) : (
+                                                isNew ? 'Start Exam' : 'Retry'
+                                            )}
+                                        </Button>
+                                    </div>
                                 </Card>
                             ))
                         )}
@@ -443,66 +437,58 @@ function StudentDashboard() {
                             </div>
                         ) : (
                             activeSessions.map((session) => (
-                                <Card key={session.id} className="p-6 group hover:border-primary/50 transition-all card-hover">
-                                    <div className="flex justify-between items-start mb-4 gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="font-bold text-foreground text-lg truncate group-hover:text-primary transition-colors" title={session.exam?.title || session.exam_title || 'Untitled Exam'}>
-                                                {session.exam?.title || session.exam_title || 'Untitled Exam'}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground font-mono mt-1">ID: {session.id.slice(0, 8)}</div>
-                                        </div>
+                                <Card key={session.id} className="p-6 flex flex-col border border-border hover:border-border/80 transition-colors">
+                                    {/* Header */}
+                                    <div className="mb-5">
                                         {session.status === SessionStatus.IN_PROGRESS ? (
-                                            <Badge className="shrink-0 bg-primary/10 text-primary border-primary/20">
-                                                <span className="relative flex h-2 w-2 mr-2" aria-hidden="true">
+                                            <Badge className="mb-2 bg-primary/10 text-primary border-primary/20 hover:bg-primary/10">
+                                                <span className="relative flex h-1.5 w-1.5 mr-1.5" aria-hidden="true">
                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
                                                 </span>
-                                                <span className="sr-only">Session is </span>Live
+                                                In Progress
                                             </Badge>
                                         ) : (
-                                            <Badge variant="outline" className="shrink-0 text-muted-foreground border-border/50">
+                                            <Badge variant="outline" className="mb-2 text-muted-foreground">
                                                 Not Started
                                             </Badge>
                                         )}
+                                        <div className="font-semibold text-foreground text-base truncate" title={session.exam?.title || session.exam_title || 'Untitled Exam'}>
+                                            {session.exam?.title || session.exam_title || 'Untitled Exam'}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground font-mono mt-0.5">SESSION: {session.id.slice(0, 8)}</div>
                                     </div>
 
-                                    <div className="bg-card/50 rounded-xl p-4 mb-6 space-y-2 border border-border/50">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-muted-foreground">Started</span>
-                                            <span className="text-foreground font-mono">{formatToLocalDateTime(session.created_at)}</span>
+                                    {/* Stats */}
+                                    <div className="space-y-2.5 text-sm mb-5 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Started</span>
+                                            <span className="font-medium text-foreground">{formatToLocalDateTime(session.created_at)}</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-muted-foreground">Duration</span>
-                                            <span className="text-foreground font-mono">{session.exam?.settings?.duration_minutes ? `${session.exam.settings.duration_minutes}m` : 'Varies'}</span>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Duration</span>
+                                            <span className="font-medium text-foreground">{session.exam?.settings?.duration_minutes ? `${session.exam.settings.duration_minutes} min` : 'Varies'}</span>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        <Button asChild className="w-full h-10 font-semibold">
+                                    {/* Footer */}
+                                    <div className="space-y-2 pt-4 border-t border-border">
+                                        <Button asChild className="w-full" size="sm">
                                             <Link href={`/student/exam/${session.id}/session`}>
-                                                {session.status === SessionStatus.PENDING ? 'START SESSION' : 'RESUME SESSION'}
+                                                {session.status === SessionStatus.PENDING ? 'Start Session' : 'Resume Session'}
                                             </Link>
                                         </Button>
-
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                disabled
-                                                className="w-full border-border text-muted-foreground opacity-60 cursor-not-allowed"
-                                            >
-                                                <Flag className="mr-2 h-3 w-3" />
-                                                Report
-                                                <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-primary/80 bg-primary/10 px-1 py-0.5 rounded">Soon</span>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed">
+                                                <Flag className="mr-1.5 h-3 w-3" /> Report
                                             </Button>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => setSessionToTerminate(session.id)}
-                                                className="w-full border-border hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                                                className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
                                             >
-                                                <XCircle className="mr-2 h-3 w-3" />
-                                                End
+                                                <XCircle className="mr-1.5 h-3 w-3" /> End
                                             </Button>
                                         </div>
                                     </div>
@@ -532,34 +518,43 @@ function StudentDashboard() {
                                 />
                             </div>
                         ) : (
-                            historySessions.map((session) => (
-                                <Card key={session.id} className="p-6 group hover:border-primary/30 transition-all card-hover">
-                                    <div className="flex justify-between items-start mb-6 gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="font-bold text-foreground text-lg truncate group-hover:text-foreground/80 transition-colors" title={session.exam?.title || session.exam_title || 'Untitled Exam'}>
+                            historySessions.map((session) => {
+                                const score = Math.round(session.final_score ?? session.score ?? 0);
+                                const passed = score >= 40;
+                                return (
+                                    <Card key={session.id} className="p-6 flex flex-col border border-border hover:border-border/80 transition-colors">
+                                        {/* Header */}
+                                        <div className="mb-5">
+                                            <Badge className={`mb-2 ${passed ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10' : 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/10'}`}>
+                                                {passed ? 'Passed' : 'Completed'}
+                                            </Badge>
+                                            <div className="font-semibold text-foreground text-base truncate" title={session.exam?.title || session.exam_title || 'Untitled Exam'}>
                                                 {session.exam?.title || session.exam_title || 'Untitled Exam'}
                                             </div>
-                                            <div className="text-xs text-muted-foreground font-mono mt-1">ID: {session.id.slice(0, 8)}</div>
+                                            <div className="text-xs text-muted-foreground font-mono mt-0.5">SESSION: {session.id.slice(0, 8)}</div>
                                         </div>
-                                        <Badge variant="secondary" className={`shrink-0 ${(session.final_score ?? session.score ?? 0) >= 40
-                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                            : 'bg-destructive/10 text-destructive border-destructive/20'
-                                            }`}>
-                                            {(session.final_score ?? session.score ?? 0) >= 40 ? 'Passed' : 'Completed'}
-                                        </Badge>
-                                    </div>
 
-                                    <div className="flex items-end justify-between border-t border-border pt-4">
-                                        <div>
-                                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Score</div>
-                                            <div className="text-2xl font-semibold text-primary">{Math.round(session.final_score ?? session.score ?? 0)}%</div>
+                                        {/* Stats */}
+                                        <div className="space-y-2.5 text-sm mb-5 flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Completed</span>
+                                                <span className="font-medium text-foreground">{formatToLocalDateTime(session.created_at)}</span>
+                                            </div>
                                         </div>
-                                        <Button asChild size="sm" variant="ghost" className="text-muted-foreground hover:text-primary group-hover:translate-x-1 transition-all">
-                                            <Link href={`/student/exam/${session.id}/result`}>Details →</Link>
-                                        </Button>
-                                    </div>
-                                </Card>
-                            ))
+
+                                        {/* Footer */}
+                                        <div className="flex items-center justify-between pt-4 border-t border-border">
+                                            <div>
+                                                <div className="text-[11px] text-muted-foreground uppercase tracking-wide mb-0.5">Score</div>
+                                                <div className={`text-2xl font-bold ${passed ? 'text-emerald-500' : 'text-foreground'}`}>{score}%</div>
+                                            </div>
+                                            <Button asChild size="sm" variant="outline">
+                                                <Link href={`/student/exam/${session.id}/result`}>View Results</Link>
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                );
+                            })
                         )}
                     </TabsContent>
                 </Tabs>
