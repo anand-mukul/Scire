@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Lock, Bell, CheckCircle2, AlertCircle, Shield, UserCog, Mail, CreditCard, LayoutDashboard, Palette, Languages, Loader2 } from 'lucide-react';
+import { Lock, Bell, CheckCircle2, AlertCircle, Shield, UserCog, Mail, CreditCard, LayoutDashboard, Palette, Languages, Loader2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/dashboard/page-header';
+import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -121,6 +122,14 @@ function SettingsContent() {
             <PageHeader
                 title="Settings"
                 description="Manage your account security and preferences."
+                actions={
+                    <Button variant="outline" asChild>
+                        <Link href="/profile">
+                            <User className="mr-2 h-4 w-4" />
+                            Profile
+                        </Link>
+                    </Button>
+                }
             />
 
             <Tabs defaultValue={initialTab} className="w-full">

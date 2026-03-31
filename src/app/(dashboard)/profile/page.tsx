@@ -50,8 +50,8 @@ export default function ProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-8 pb-10 p-6 md:p-8">
-                <div className="flex items-center justify-between">
+            <main className="flex flex-col gap-8 p-6 md:p-8 pb-24">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pt-4">
                     <div className="space-y-2">
                         <Skeleton className="h-8 w-32" />
                         <Skeleton className="h-4 w-64" />
@@ -99,7 +99,7 @@ export default function ProfilePage() {
                         </Card>
                     </div>
                 </div>
-            </div>
+            </main>
         );
     }
 
@@ -115,7 +115,7 @@ export default function ProfilePage() {
     const roleColor = isStudent ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20' : 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20';
 
     return (
-        <div className="space-y-8 animate-fade-in pb-10">
+        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
             <PageHeader
                 title="Profile"
                 description="Manage your personal information and account details."
@@ -132,8 +132,10 @@ export default function ProfilePage() {
             <div className="grid gap-6 md:grid-cols-12">
                 {/* Left Column: User Identity */}
                 <div className="md:col-span-4 space-y-6">
-                    <Card className="overflow-hidden border-border/50 shadow-sm transition-all duration-300">
-                        <div className="h-28 bg-gradient-to-r from-primary/5 via-background to-background border-b" />
+                    <Card className="overflow-hidden border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-border/80">
+                        <div className="h-32 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
+                            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
+                        </div>
                         <CardContent className="relative pt-0">
                             <div className="absolute -top-12 left-6">
                                 <Avatar className="h-24 w-24 border-4 border-background shadow-md">
@@ -204,34 +206,34 @@ export default function ProfilePage() {
 
                 {/* Right Column: Details & Stats */}
                 <div className="md:col-span-8 space-y-6">
-                    <Card className="border-border/50 shadow-sm">
+                    <Card className="border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-border/80">
                         <CardHeader className="pb-4">
                             <CardTitle>Account Overview</CardTitle>
                             <CardDescription>Your account status and role-specific information.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-6 sm:grid-cols-2">
-                            <div className="flex items-start space-x-4 p-4 rounded-lg bg-muted/40 border">
-                                <div className="p-2 bg-primary/10 rounded-full text-primary">
+                            <div className="flex items-start space-x-4 p-5 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-border hover:border-primary/20 transition-all">
+                                <div className="p-2.5 bg-background shadow-sm border border-border rounded-xl text-primary">
                                     <Shield className="w-5 h-5" />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="font-medium text-sm">Security Level</p>
-                                    <p className="text-xs text-muted-foreground">Standard encryption and protection enabled.</p>
+                                    <p className="font-medium text-sm text-foreground">Security Level</p>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">Standard encryption and protection enabled for your account.</p>
                                 </div>
                             </div>
-                            <div className="flex items-start space-x-4 p-4 rounded-lg bg-muted/40 border">
-                                <div className="p-2 bg-primary/10 rounded-full text-primary">
+                            <div className="flex items-start space-x-4 p-5 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-border hover:border-primary/20 transition-all">
+                                <div className="p-2.5 bg-background shadow-sm border border-border rounded-xl text-primary">
                                     <GraduationCap className="w-5 h-5" />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="font-medium text-sm">Academic Standing</p>
+                                    <p className="font-medium text-sm text-foreground">Academic Standing</p>
                                     <p className="text-xs text-muted-foreground">{isStudent ? 'Active Student' : 'Faculty Member'}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-border/50 shadow-sm">
+                    <Card className="border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-border/80">
                         <CardHeader>
                             <CardTitle>Capabilities & Permissions</CardTitle>
                             <CardDescription>
@@ -286,7 +288,7 @@ export default function ProfilePage() {
                     </Card>
                 </div>
             </div>
-        </div >
+        </main>
     );
 }
 
