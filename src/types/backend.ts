@@ -81,6 +81,9 @@ export interface ExamSettings {
     strict_mode: boolean;
     number_of_questions?: number;
     difficulty?: 'easy' | 'medium' | 'hard';
+    max_tab_switches?: number;
+    require_face_tracking?: boolean;
+    record_ambient_audio?: boolean;
 }
 
 export interface Exam {

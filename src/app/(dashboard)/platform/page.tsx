@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/network/api';
 import {
     Users,
@@ -20,8 +20,24 @@ import {
     BarChart3,
     Bug,
     ArrowRight,
+    Trash2,
 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +87,42 @@ const SCORE_COLORS = [
 ];
 
 export default function PlatformPage() {
+    const queryClient = useQueryClient();
+    const [deleteUserId, setDeleteUserId] = useState('');
+    const [deleteExamId, setDeleteExamId] = useState('');
+    const [showUserDialog, setShowUserDialog] = useState(false);
+    const [showExamDialog, setShowExamDialog] = useState(false);
+    const [confirmText, setConfirmText] = useState('');
+
+    const deleteUserMutation = useMutation({
+        mutationFn: (id: string) => api.admin.forceDeleteUser(id),
+        onSuccess: () => {
+            toast.success('User permanently deleted (bypassing safeguards)');
+            setDeleteUserId('');
+            setShowUserDialog(false);
+            setConfirmText('');
+            queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to delete user');
+        }
+    });
+
+    const deleteExamMutation = useMutation({
+        mutationFn: (id: string) => api.admin.forceDeleteExam(id),
+        onSuccess: () => {
+            toast.success('Exam permanently deleted (bypassing safeguards)');
+            setDeleteExamId('');
+            setShowExamDialog(false);
+            setConfirmText('');
+            queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['platform-analytics'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to delete exam');
+        }
+    });
+
     const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ['platform-stats'],
         queryFn: () => api.platform.getStats(),
@@ -388,6 +440,252 @@ export default function PlatformPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* ── Danger Zone ── */}
+            <div className="relative mt-4 space-y-6">
+                <Card className="border border-destructive/20 shadow-xl rounded-2xl overflow-hidden">
+
+                    {/* Header */}
+                    <CardHeader className="pb-6 border-b border-destructive/20">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-destructive/10 ring-1 ring-destructive/20">
+                                <Shield className="h-5 w-5 text-destructive" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-semibold text-foreground">
+                                    Danger Zone
+                                </CardTitle>
+                                <CardDescription className="text-muted-foreground text-sm mt-1">
+                                    Irreversible actions — proceed with extreme caution
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+
+                    {/* Content */}
+                    <CardContent className="pt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                            {/* Force Delete User */}
+                            <div className="rounded-xl border border-border bg-muted/40 p-5 space-y-5 hover:shadow-md transition">
+                                <div className="flex items-center gap-2.5">
+                                    <Users className="h-4 w-4 text-destructive/70" />
+                                    <h4 className="text-sm font-semibold text-foreground">
+                                        Force Delete User
+                                    </h4>
+                                </div>
+
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Permanently removes a user and all associated data including exams,
+                                    sessions, transcripts, grading, and audit logs.
+                                </p>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="dangerUserId" className="text-xs text-muted-foreground">
+                                        User UUID
+                                    </Label>
+                                    <Input
+                                        id="dangerUserId"
+                                        placeholder="e.g. 288107a5-e440-46a3-97ea-2a05dcbcfe4e"
+                                        value={deleteUserId}
+                                        onChange={(e) => setDeleteUserId(e.target.value)}
+                                        className="font-mono text-sm h-10 border border-border focus-visible:ring-2 focus-visible:ring-destructive/50 rounded-lg"
+                                    />
+                                </div>
+
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="w-full gap-2 font-medium tracking-wide shadow-sm hover:shadow-md transition active:scale-[0.98]"
+                                    disabled={!deleteUserId.trim() || deleteUserMutation.isPending}
+                                    onClick={() => {
+                                        setConfirmText('');
+                                        setShowUserDialog(true);
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    {deleteUserMutation.isPending ? 'Deleting…' : 'Force Delete User'}
+                                </Button>
+                            </div>
+
+                            {/* Force Delete Exam */}
+                            <div className="rounded-xl border border-border bg-muted/40 p-5 space-y-5 hover:shadow-md transition">
+                                <div className="flex items-center gap-2.5">
+                                    <BookOpen className="h-4 w-4 text-destructive/70" />
+                                    <h4 className="text-sm font-semibold text-foreground">
+                                        Force Delete Exam
+                                    </h4>
+                                </div>
+
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Permanently removes an exam and all associated sessions, rubrics,
+                                    knowledge base entries, grading data, and audit logs.
+                                </p>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="dangerExamId" className="text-xs text-muted-foreground">
+                                        Exam UUID
+                                    </Label>
+                                    <Input
+                                        id="dangerExamId"
+                                        placeholder="e.g. 13abb558-3edf-437c-a343-07c8bc83df3a"
+                                        value={deleteExamId}
+                                        onChange={(e) => setDeleteExamId(e.target.value)}
+                                        className="font-mono text-sm h-10 border border-border focus-visible:ring-2 focus-visible:ring-destructive/50 rounded-lg"
+                                    />
+                                </div>
+
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="w-full gap-2 font-medium tracking-wide shadow-sm hover:shadow-md transition active:scale-[0.98]"
+                                    disabled={!deleteExamId.trim() || deleteExamMutation.isPending}
+                                    onClick={() => {
+                                        setConfirmText('');
+                                        setShowExamDialog(true);
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    {deleteExamMutation.isPending ? 'Deleting…' : 'Force Delete Exam'}
+                                </Button>
+                            </div>
+
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* ── Confirmation Dialog: Delete User ── */}
+            <AlertDialog open={showUserDialog} onOpenChange={(open) => { setShowUserDialog(open); if (!open) setConfirmText(''); }}>
+                <AlertDialogContent className="border-destructive/30">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="h-5 w-5" />
+                            Permanently Delete User
+                        </AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="space-y-3">
+                                <p>
+                                    You are about to <strong className="text-destructive">permanently delete</strong> a user and all associated data. This operation:
+                                </p>
+                                <ul className="list-disc list-inside text-xs space-y-1 text-muted-foreground">
+                                    <li>Deletes all exams created by this user</li>
+                                    <li>Removes all exam sessions and transcripts</li>
+                                    <li>Erases grading data and integrity snapshots</li>
+                                    <li>Bypasses audit log immutability and purges audit trails</li>
+                                </ul>
+                                <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 mt-2">
+                                    <p className="text-xs font-medium text-destructive mb-1.5">Target User ID</p>
+                                    <code className="text-xs font-mono bg-background/80 px-2 py-1 rounded border">{deleteUserId}</code>
+                                </div>
+                                <div className="space-y-1.5 pt-1">
+                                    <Label className="text-xs text-muted-foreground">
+                                        Type <span className="font-mono font-bold text-destructive">DELETE</span> to confirm
+                                    </Label>
+                                    <Input
+                                        placeholder="Type DELETE"
+                                        value={confirmText}
+                                        onChange={(e) => setConfirmText(e.target.value)}
+                                        className="h-9 font-mono text-sm border-destructive/20 focus-visible:ring-destructive/40"
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteUserMutation.isPending}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className={buttonVariants({ variant: 'destructive' })}
+                            disabled={confirmText !== 'DELETE' || deleteUserMutation.isPending}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                deleteUserMutation.mutate(deleteUserId);
+                            }}
+                        >
+                            {deleteUserMutation.isPending ? (
+                                <>
+                                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white mr-2" />
+                                    Deleting…
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                    Force Delete User
+                                </>
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* ── Confirmation Dialog: Delete Exam ── */}
+            <AlertDialog open={showExamDialog} onOpenChange={(open) => { setShowExamDialog(open); if (!open) setConfirmText(''); }}>
+                <AlertDialogContent className="border-destructive/30">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="h-5 w-5" />
+                            Permanently Delete Exam
+                        </AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="space-y-3">
+                                <p>
+                                    You are about to <strong className="text-destructive">permanently delete</strong> an exam and all associated data. This operation:
+                                </p>
+                                <ul className="list-disc list-inside text-xs space-y-1 text-muted-foreground">
+                                    <li>Deletes all sessions (active, completed, pending)</li>
+                                    <li>Removes all rubrics and knowledge base entries</li>
+                                    <li>Erases transcripts, grading data, and integrity snapshots</li>
+                                    <li>Bypasses audit log immutability and purges audit trails</li>
+                                </ul>
+                                <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 mt-2">
+                                    <p className="text-xs font-medium text-destructive mb-1.5">Target Exam ID</p>
+                                    <code className="text-xs font-mono bg-background/80 px-2 py-1 rounded border">{deleteExamId}</code>
+                                </div>
+                                <div className="space-y-1.5 pt-1">
+                                    <Label className="text-xs text-muted-foreground">
+                                        Type <span className="font-mono font-bold text-destructive">DELETE</span> to confirm
+                                    </Label>
+                                    <Input
+                                        placeholder="Type DELETE"
+                                        value={confirmText}
+                                        onChange={(e) => setConfirmText(e.target.value)}
+                                        className="h-9 font-mono text-sm border-destructive/20 focus-visible:ring-destructive/40"
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteExamMutation.isPending}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className={buttonVariants({ variant: 'destructive' })}
+                            disabled={confirmText !== 'DELETE' || deleteExamMutation.isPending}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                deleteExamMutation.mutate(deleteExamId);
+                            }}
+                        >
+                            {deleteExamMutation.isPending ? (
+                                <>
+                                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white mr-2" />
+                                    Deleting…
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                    Force Delete Exam
+                                </>
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

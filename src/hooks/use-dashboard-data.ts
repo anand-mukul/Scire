@@ -36,3 +36,19 @@ export function useReviewQueue(filters?: { exam_code?: string }) {
         queryFn: () => api.reviewer.getQueue(filters),
     });
 }
+
+export function useLiveBehaviorSummary(sessionId: string, options?: { refetchInterval?: number }) {
+    return useQuery({
+        queryKey: ['behavior-summary', sessionId],
+        queryFn: () => api.sessions.behaviorSummary(sessionId),
+        refetchInterval: options?.refetchInterval,
+    });
+}
+
+export function useLiveBehaviorTimeline(sessionId: string, limit?: number, options?: { refetchInterval?: number }) {
+    return useQuery({
+        queryKey: ['behavior-timeline', sessionId, limit],
+        queryFn: () => api.sessions.behaviorTimeline(sessionId, limit),
+        refetchInterval: options?.refetchInterval,
+    });
+}

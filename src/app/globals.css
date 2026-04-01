@@ -22,6 +22,7 @@ html.lenis body {
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
 }
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

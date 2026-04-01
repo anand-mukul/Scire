@@ -289,7 +289,7 @@ export const api = {
             const { data } = await apiClient.post(`/sessions/${sessionId}/start`);
             return data;
         },
-        submitOnboarding: async (sessionId: string, snapshot: Blob) => {
+        submitOnboarding: async (sessionId: string, snapshot: Blob, faceDescriptor?: number[]) => {
             const { data: presignData } = await apiClient.post<{ upload_url: string; file_url: string }>(
                 `/sessions/${sessionId}/media/presign`,
                 {
@@ -309,6 +309,7 @@ export const api = {
             await apiClient.post(`/sessions/${sessionId}/media/confirm`, {
                 purpose: 'identity_snapshot',
                 file_url: presignData.file_url,
+                ...(faceDescriptor && { face_descriptor: faceDescriptor })
             });
 
             const { data } = await apiClient.post(`/sessions/${sessionId}/onboarding`, {
@@ -349,6 +350,14 @@ export const api = {
         },
         sendReminder: async (sessionId: string) => {
             const { data } = await apiClient.post(`/sessions/${sessionId}/send-reminder`);
+            return data;
+        },
+        behaviorSummary: async (sessionId: string) => {
+            const { data } = await apiClient.get(`/sessions/${sessionId}/behavior/summary`);
+            return data;
+        },
+        behaviorTimeline: async (sessionId: string, limit: number = 100) => {
+            const { data } = await apiClient.get(`/sessions/${sessionId}/behavior/timeline`, { params: { limit } });
             return data;
         },
     },
@@ -401,6 +410,14 @@ export const api = {
         },
         getAuditLogs: async (params?: { skip?: number; limit?: number; user_id?: string; action?: string }): Promise<AuditLog[]> => {
             const { data } = await apiClient.get<AuditLog[]>('/tenants/me/audit-logs', { params });
+            return data;
+        },
+        forceDeleteUser: async (userId: string) => {
+            const { data } = await apiClient.delete(`/admin/force-delete/user/${userId}`);
+            return data;
+        },
+        forceDeleteExam: async (examId: string) => {
+            const { data } = await apiClient.delete(`/admin/force-delete/exam/${examId}`);
             return data;
         },
     },

@@ -67,12 +67,16 @@ export interface SessionState {
     // Integrity Violation
     violation: {
         isWarning: boolean;
-        type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | null;
+        type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT' | null;
         remainingSeconds: number;
+        strikes: number;
+        maxStrikes: number;
     };
 
-    setViolationState: (isWarning: boolean, type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | null, remainingSeconds: number) => void;
+    setViolationState: (isWarning: boolean, type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT' | null, remainingSeconds: number) => void;
     decrementViolationTimer: () => void;
+    incrementStrike: () => number;
+    resetStrikes: () => void;
 
     // Actions
     setSessionInfo: (sessionId: string, examId: string, studentId: string) => void;
@@ -132,6 +136,8 @@ export const useSessionStore = create<SessionState>()(
             isWarning: false,
             type: null,
             remainingSeconds: 0,
+            strikes: 0,
+            maxStrikes: 3,
         },
 
         // Actions
@@ -147,6 +153,20 @@ export const useSessionStore = create<SessionState>()(
                 if (state.violation.remainingSeconds > 0) {
                     state.violation.remainingSeconds -= 1;
                 }
+            }),
+
+        incrementStrike: () => {
+            let newCount = 0;
+            set((state) => {
+                state.violation.strikes += 1;
+                newCount = state.violation.strikes;
+            });
+            return newCount;
+        },
+
+        resetStrikes: () =>
+            set((state) => {
+                state.violation.strikes = 0;
             }),
 
         setSessionInfo: (sessionId, examId, studentId) =>

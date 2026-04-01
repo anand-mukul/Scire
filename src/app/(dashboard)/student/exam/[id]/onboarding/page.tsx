@@ -11,11 +11,12 @@ import { cn } from '@/lib/utils';
 import {
     CheckCircle, AlertCircle,
     ArrowRight, RefreshCw, Aperture, ShieldCheck,
-    FileText, ScanFace
+    FileText, ScanFace, Info, Sun, UserCheck, Focus, Laptop, Minimize, Maximize, MonitorSmartphone, Smartphone, Users, MicOff
 } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { CameraOverlay } from '@/components/viva/CameraOverlay';
 import MobileBlockScreen from '@/components/viva/MobileBlockScreen';
+import { faceVerificationService } from '@/services/biometrics/faceVerificationService';
 
 
 
@@ -36,7 +37,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
     const [error, setError] = useState<string | null>(null);
 
     const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
-    const [scanMessage, setScanMessage] = useState("Position your face within the frame");
+    const [scanMessage, setScanMessage] = useState("Position your face. Security checks active.");
 
     // --- Media Logic (Simplified) ---
     const startMedia = async () => {
@@ -73,13 +74,16 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
     }, [hasMediaAccess]);
 
     useEffect(() => {
-        if (step === 2) {
+        if (step === 3) {
             startMedia();
             setScanStatus('idle');
-            setScanMessage("Position your face within the frame");
+            setScanMessage("Position your face. Security checks active.");
         }
         return () => {
-            if (streamRef.current) {
+            if (streamRef.current && step !== 3) {
+                // Keep stream alive if we are just switching back and forth, 
+                // but actually we only mount local tracking on step 3. 
+                // For safety, cleanup on unmount.
                 streamRef.current.getTracks().forEach(t => t.stop());
                 streamRef.current = null;
             }
@@ -111,13 +115,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Draw and Flip
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+        // Draw directly (unmirrored for ML processing, but CSS flips it visually for UI)
         ctx.drawImage(videoRef.current, 0, 0);
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset for data extraction
 
-        // --- INTELLIGENT VALIDATION ---
         const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = frame.data;
 
@@ -185,8 +185,21 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         setScanStatus('scanning');
         setScanMessage("Analyzing facial features...");
 
-        // 1.5s delay
-        await new Promise(r => setTimeout(r, 1500));
+        // Real ML face detection instead of fake delay
+        try {
+            await faceVerificationService.initialize();
+            const detection = await faceVerificationService.captureBaseline(videoRef.current);
+
+            if (!detection.detected || !detection.descriptor) {
+                setError("We couldn't clearly detect your face. Please ensure you are well-lit and looking directly at the camera.");
+                setScanStatus('idle');
+                return;
+            }
+        } catch (err) {
+            console.error("ML Face detection failed to load or run:", err);
+            // If the models fail to load entirely (e.g. adblocker blocking jsdelivr), 
+            // we don't block the user, we just capture the image without embeddings.
+        }
 
         setCapturedImage(dataUrl);
         setScanStatus('success');
@@ -196,7 +209,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
     const handleRetake = () => {
         setCapturedImage(null);
         setScanStatus('idle');
-        setScanMessage("Position your face within the frame");
+        setScanMessage("Position your face. Security checks active.");
         // Re-attach stream if it was lost (though typically it stays Active)
         if (videoRef.current && streamRef.current) {
             videoRef.current.srcObject = streamRef.current;
@@ -210,14 +223,24 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         setError(null);
 
         try {
+            // Request full screen
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen().catch(err => {
+                    console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            }
+
             const res = await fetch(capturedImage);
             const blob = await res.blob();
-            await api.sessions.submitOnboarding(sessionId, blob);
+
+            // Get the descriptor if ML detection succeeded
+            const descriptor = faceVerificationService.getBaseline() || undefined;
+
+            await api.sessions.submitOnboarding(sessionId, blob, descriptor);
             router.push(`/student/exam/${sessionId}/session`);
         } catch (err: unknown) {
             const error = err as AxiosError<{ detail: string }>;
             setError(error.response?.data?.detail || 'Submission failed.');
-        } finally {
             setIsLoading(false);
         }
     };
@@ -231,13 +254,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
             {/* Main Card Container */}
             <div
-                className="w-full max-w-[900px] h-[600px] md:h-[550px] max-h-[85vh] bg-card/40 backdrop-blur-2xl border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative group animate-in fade-in zoom-in-95 duration-300"
+                className="w-full max-w-[900px] min-h-[600px] md:min-h-[550px] h-auto max-h-[90vh] bg-card/40 backdrop-blur-2xl border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative group animate-in fade-in zoom-in-95 duration-300"
             >
                 {/* Glow Effect */}
                 <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/20 transition-colors duration-1000" />
 
                 {/* Left Sidebar: Stepper */}
-                <div className="w-full md:w-64 bg-muted/30 border-b md:border-b-0 md:border-r border-border p-6 flex flex-col justify-between z-10">
+                <div className="w-full md:w-72 bg-muted/30 border-b md:border-b-0 md:border-r border-border p-6 flex flex-col justify-between z-10">
                     <div>
                         <div className="flex items-center gap-3 mb-8">
                             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
@@ -249,7 +272,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                         <nav className="space-y-1">
                             {[
                                 { id: 1, label: 'Agreement', icon: FileText },
-                                { id: 2, label: 'Identity Check', icon: ScanFace }
+                                { id: 2, label: 'Integrity Rules', icon: Info },
+                                { id: 3, label: 'Identity Check', icon: ScanFace }
                             ].map((s) => (
                                 <div
                                     key={s.id}
@@ -299,18 +323,38 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                     <p className="text-muted-foreground">Review and accept the session terms to proceed.</p>
                                 </div>
 
-                                <ScrollArea className="flex-1 h-full bg-muted/20 rounded-xl border border-border p-4 mb-6">
-                                    <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
-                                        <p className="font-semibold text-foreground">By proceeding, you agree that:</p>
-                                        <ul className="list-disc pl-4 space-y-2">
-                                            <li>You are the registered student for this assessment.</li>
-                                            <li>You will remain in the camera frame for the entire duration.</li>
-                                            <li>Your microphone and screen activity will be monitored.</li>
-                                            <li>Using external devices (phones, tablets) is strictly prohibited.</li>
-                                            <li>Leaving full-screen mode may result in immediate termination.</li>
-                                        </ul>
-                                        <p className="text-xs text-muted-foreground/70 pt-4 italic">
-                                            * This session is recorded for automated proctoring analysis.
+                                <ScrollArea className="flex-1 h-full bg-muted/10 rounded-xl border border-border p-5 mb-6">
+                                    <div className="space-y-6">
+                                        <p className="font-semibold text-foreground">By proceeding, you agree to the following conditions:</p>
+
+                                        <div className="space-y-4">
+                                            <div className="flex gap-4 items-start">
+                                                <div className="mt-0.5 bg-primary/10 p-2 rounded-lg"><UserCheck className="w-5 h-5 text-primary" /></div>
+                                                <div>
+                                                    <h4 className="text-sm font-semibold text-foreground">Identity Verification</h4>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">You must be the registered student for this assessment. Your session will be biometrically matched against your baseline profile.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-4 items-start">
+                                                <div className="mt-0.5 bg-primary/10 p-2 rounded-lg"><MonitorSmartphone className="w-5 h-5 text-primary" /></div>
+                                                <div>
+                                                    <h4 className="text-sm font-semibold text-foreground">Continuous Monitoring</h4>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">Your webcam, microphone, head pose, and ambient lighting will be continuously monitored by our AI tracking engine.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-4 items-start">
+                                                <div className="mt-0.5 bg-primary/10 p-2 rounded-lg"><Maximize className="w-5 h-5 text-primary" /></div>
+                                                <div>
+                                                    <h4 className="text-sm font-semibold text-foreground">Environment Control</h4>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">The exam requires Fullscreen mode. Exiting fullscreen, switching tabs, or using external devices may result in immediate termination.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-muted-foreground/70 pt-4 border-t border-border mt-4 italic">
+                                            * This session is recorded for automated proctoring analysis. Data is processed securely according to our privacy policy.
                                         </p>
                                     </div>
                                 </ScrollArea>
@@ -324,7 +368,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                             className="border-primary/50 data-[state=checked]:bg-primary"
                                         />
                                         <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer select-none">
-                                            I accept the policy
+                                            I accept the academic integrity policy
                                         </label>
                                     </div>
                                     <Button
@@ -332,14 +376,102 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                         disabled={!termsAccepted}
                                         className="bg-primary hover:bg-primary/90 text-primary-foreground"
                                     >
-                                        Continue <ArrowRight className="ml-2 w-4 h-4" />
+                                        Next <ArrowRight className="ml-2 w-4 h-4" />
                                     </Button>
                                 </div>
                             </div>
                         )}
 
-                        {/* Step 2: Camera */}
+                        {/* Step 2: Rules (Do's and Don'ts) */}
                         {step === 2 && (
+                            <div className="h-full flex flex-col animate-in slide-in-from-right-8 duration-500">
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-foreground mb-2">Exam Environment</h2>
+                                    <p className="text-muted-foreground">Please review these critical guidelines before beginning.</p>
+                                </div>
+
+                                <ScrollArea className="flex-1 border border-border bg-muted/10 rounded-xl p-4 mb-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Do's Column */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2 text-green-500 font-semibold border-b border-green-500/20 pb-2">
+                                                <CheckCircle size={20} />
+                                                <h3>Do's</h3>
+                                            </div>
+                                            <ul className="space-y-4">
+                                                <li className="flex gap-3 bg-green-500/5 p-3 rounded-lg border border-green-500/10">
+                                                    <Sun className="text-green-500 shrink-0" size={20} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-medium text-foreground">Sit in a well-lit room</span>
+                                                        <span className="text-muted-foreground">Ensure your face is clearly visible to the camera.</span>
+                                                    </div>
+                                                </li>
+                                                <li className="flex gap-3 bg-green-500/5 p-3 rounded-lg border border-green-500/10">
+                                                    <Laptop className="text-green-500 shrink-0" size={20} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-medium text-foreground">Keep your device stable</span>
+                                                        <span className="text-muted-foreground">Place your laptop on a flat surface.</span>
+                                                    </div>
+                                                </li>
+                                                <li className="flex gap-3 bg-green-500/5 p-3 rounded-lg border border-green-500/10">
+                                                    <Focus className="text-green-500 shrink-0" size={20} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-medium text-foreground">Look directly at the screen</span>
+                                                        <span className="text-muted-foreground">Gaze tracking is active; maintain eye contact.</span>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        {/* Don'ts Column */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2 text-rose-500 font-semibold border-b border-rose-500/20 pb-2">
+                                                <AlertCircle size={20} />
+                                                <h3>Don'ts</h3>
+                                            </div>
+                                            <ul className="space-y-4">
+                                                <li className="flex gap-3 bg-rose-500/5 p-3 rounded-lg border border-rose-500/10">
+                                                    <Smartphone className="text-rose-500 shrink-0" size={20} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-medium text-foreground">No secondary devices</span>
+                                                        <span className="text-muted-foreground">Phones/tablets will trigger an illumination spike.</span>
+                                                    </div>
+                                                </li>
+                                                <li className="flex gap-3 bg-rose-500/5 p-3 rounded-lg border border-rose-500/10">
+                                                    <Users className="text-rose-500 shrink-0" size={20} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-medium text-foreground">No other people</span>
+                                                        <span className="text-muted-foreground">Your microphone listens for whispering/voices.</span>
+                                                    </div>
+                                                </li>
+                                                <li className="flex gap-3 bg-rose-500/5 p-3 rounded-lg border border-rose-500/10">
+                                                    <Minimize className="text-rose-500 shrink-0" size={20} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-medium text-foreground">Do not exit Fullscreen</span>
+                                                        <span className="text-muted-foreground">Leaving the exam tab halts the assessment.</span>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </ScrollArea>
+
+                                <div className="flex items-center justify-between pt-2">
+                                    <Button variant="ghost" onClick={() => goToStep(1)}>
+                                        Back
+                                    </Button>
+                                    <Button
+                                        onClick={() => goToStep(3)}
+                                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                                    >
+                                        I Understand <ArrowRight className="ml-2 w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 3: Camera */}
+                        {step === 3 && (
                             <div className="h-full flex flex-col items-center">
                                 <div className="relative w-full flex-1 bg-black rounded-2xl overflow-hidden border border-border shadow-2xl group mb-6">
                                     {/* Video / Image */}
@@ -375,8 +507,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                 </div>
 
                                 {/* Footer Controls */}
-                                <div className="w-full flex items-center justify-between">
-                                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => goToStep(1)}>
+                                <div className="w-full flex items-center justify-between pt-2">
+                                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => goToStep(2)}>
                                         Back
                                     </Button>
 

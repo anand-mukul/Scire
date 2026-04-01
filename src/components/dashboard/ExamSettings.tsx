@@ -69,6 +69,9 @@ import {
     BookOpen,
     ListChecks,
     AlertTriangle,
+    Eye,
+    Mic,
+    ShieldCheck,
 } from 'lucide-react';
 import { getTimezoneAbbreviation } from '@/lib/date-utils';
 
@@ -83,6 +86,10 @@ const examSettingsSchema = z.object({
     start_time: z.date().optional().nullable(),
     end_time: z.date().optional().nullable(),
     auto_publish: z.boolean(),
+    // Granular Proctoring Settings
+    max_tab_switches: z.number().min(1).max(10),
+    require_face_tracking: z.boolean(),
+    record_ambient_audio: z.boolean(),
 });
 
 type ExamSettingsValues = z.infer<typeof examSettingsSchema>;
@@ -117,11 +124,15 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
             start_time: exam.start_time ? new Date(exam.start_time) : null,
             end_time: exam.end_time ? new Date(exam.end_time) : null,
             auto_publish: exam.auto_publish || false,
+            max_tab_switches: exam.settings?.max_tab_switches || 3,
+            require_face_tracking: exam.settings?.require_face_tracking ?? true,
+            record_ambient_audio: exam.settings?.record_ambient_audio ?? true,
         },
     });
 
     const watchAutoPublish = form.watch('auto_publish');
     const watchStartTime = form.watch('start_time');
+    const watchStrictMode = form.watch('strict_mode');
 
     // Update form when exam data changes (e.g. after refetch)
     useEffect(() => {
@@ -137,6 +148,9 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                 start_time: exam.start_time ? new Date(exam.start_time) : null,
                 end_time: exam.end_time ? new Date(exam.end_time) : null,
                 auto_publish: exam.auto_publish || false,
+                max_tab_switches: exam.settings?.max_tab_switches || 3,
+                require_face_tracking: exam.settings?.require_face_tracking ?? true,
+                record_ambient_audio: exam.settings?.record_ambient_audio ?? true,
             });
         }
     }, [exam, form]);
@@ -155,6 +169,9 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                     number_of_questions: values.number_of_questions,
                     strict_mode: values.strict_mode,
                     difficulty: values.difficulty,
+                    max_tab_switches: values.max_tab_switches,
+                    require_face_tracking: values.require_face_tracking,
+                    record_ambient_audio: values.record_ambient_audio,
                 }
             });
         },
@@ -496,7 +513,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                                             Strict Mode
                                                         </FormLabel>
                                                         <FormDescription>
-                                                            Enforce fullscreen & tab monitoring
+                                                            Enforce fullscreen, tab monitoring & copy protection
                                                         </FormDescription>
                                                     </div>
                                                     <FormControl>
@@ -535,6 +552,98 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                             )}
                                         />
                                     </div>
+
+                                    {/* Granular Proctoring Settings — visible when Strict Mode is ON */}
+                                    {watchStrictMode && (
+                                        <>
+                                            <Separator className="mt-4" />
+                                            <div className="space-y-4 pt-2">
+                                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                    <ShieldCheck className="w-4 h-4" />
+                                                    Integrity & Proctoring
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="max_tab_switches"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel className="text-sm">Max Violations (Strikes)</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        value={field.value}
+                                                                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 3)}
+                                                                        onBlur={field.onBlur}
+                                                                        ref={field.ref}
+                                                                        name={field.name}
+                                                                        disabled={isPublished}
+                                                                        min={1}
+                                                                        max={10}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormDescription className="text-xs">
+                                                                    Session terminates after this many violations.
+                                                                </FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="require_face_tracking"
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/60 p-3 shadow-sm bg-card/30">
+                                                                <div className="space-y-0.5">
+                                                                    <FormLabel className="text-sm flex items-center gap-1.5">
+                                                                        <Eye className="w-3.5 h-3.5 text-primary" />
+                                                                        Face Tracking
+                                                                    </FormLabel>
+                                                                    <FormDescription className="text-xs">
+                                                                        Gaze & identity checks
+                                                                    </FormDescription>
+                                                                </div>
+                                                                <FormControl>
+                                                                    <Switch
+                                                                        checked={field.value}
+                                                                        onCheckedChange={field.onChange}
+                                                                        disabled={isPublished}
+                                                                    />
+                                                                </FormControl>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="record_ambient_audio"
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/60 p-3 shadow-sm bg-card/30">
+                                                                <div className="space-y-0.5">
+                                                                    <FormLabel className="text-sm flex items-center gap-1.5">
+                                                                        <Mic className="w-3.5 h-3.5 text-primary" />
+                                                                        Ambient Audio
+                                                                    </FormLabel>
+                                                                    <FormDescription className="text-xs">
+                                                                        Record noise levels
+                                                                    </FormDescription>
+                                                                </div>
+                                                                <FormControl>
+                                                                    <Switch
+                                                                        checked={field.value}
+                                                                        onCheckedChange={field.onChange}
+                                                                        disabled={isPublished}
+                                                                    />
+                                                                </FormControl>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </CardContent>
                                 <CardFooter className="bg-muted/10 border-t border-border/60 px-6 py-4 flex justify-end">
                                     <Button
@@ -591,9 +700,44 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                             Settings is locked to preserve integrity.
                                         </AlertDescription>
                                     </Alert>
-                                    <p className="text-xs text-muted-foreground">
-                                        To make changes, you must archive or duplicate this exam.
-                                    </p>
+                                    <div className="flex flex-col gap-2 w-full pt-2">
+                                        {exam.status === ExamStatus.PUBLISHED && (
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    if(confirm("Are you sure you want to unpublish this exam? This will only work if no students have joined it yet.")) {
+                                                        statusMutation.mutate(ExamStatus.DRAFT);
+                                                    }
+                                                }}
+                                                disabled={statusMutation.isPending || updateMutation.isPending}
+                                                className="w-full"
+                                            >
+                                                Unpublish to Draft
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="secondary"
+                                            className="w-full text-destructive hover:bg-destructive/10"
+                                            onClick={() => {
+                                                if(confirm("Are you sure you want to archive this exam? This will hide it from students.")) {
+                                                    statusMutation.mutate(ExamStatus.ARCHIVED);
+                                                }
+                                            }}
+                                            disabled={statusMutation.isPending || updateMutation.isPending}
+                                        >
+                                            Archive Exam
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : exam.status === ExamStatus.COMPLETED || exam.status === ExamStatus.ARCHIVED ? (
+                                <>
+                                     <Alert className="bg-muted border-border text-muted-foreground">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        <AlertTitle>Exam Closed</AlertTitle>
+                                        <AlertDescription className="text-xs mt-1 opacity-90">
+                                            This exam is no longer active.
+                                        </AlertDescription>
+                                    </Alert>
                                 </>
                             ) : isScheduled ? (
                                 <>
@@ -614,14 +758,14 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                         onClick={handlePublish}
                                         disabled={statusMutation.isPending || updateMutation.isPending}
                                     >
-                                        {statusMutation.isPending ? (
+                                        {statusMutation.isPending && exam.status === ExamStatus.DRAFT ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                         ) : (
                                             "Publish Now"
                                         )}
                                     </Button>
                                 </>
-                            ) : (
+                            ) : exam.status === ExamStatus.DRAFT ? (
                                 <>
                                     <Alert className="bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200">
                                         <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -642,7 +786,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                         )}
                                     </Button>
                                 </>
-                            )}
+                            ) : null}
                         </CardContent>
                     </Card>
 

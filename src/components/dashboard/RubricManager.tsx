@@ -191,8 +191,7 @@ export default function RubricManager({ examId, isEditable }: RubricManagerProps
                                             name="is_mandatory"
                                             render={({ field }) => (
                                                 <FormItem
-                                                    className="flex flex-row items-center gap-3 space-y-0 rounded-lg border border-border/40 p-3.5 bg-muted/20 hover:bg-muted/40 dark:bg-muted/10 dark:hover:bg-muted/20 transition-colors cursor-pointer self-start mt-8"
-                                                    onClick={() => field.onChange(!field.value)}
+                                                    className="flex flex-row items-center gap-3 space-y-0 rounded-lg border border-border/40 p-3.5 bg-muted/20 hover:bg-muted/40 dark:bg-muted/10 dark:hover:bg-muted/20 transition-colors self-start mt-8"
                                                 >
                                                     <FormControl>
                                                         <Checkbox

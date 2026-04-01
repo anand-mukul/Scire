@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSessions } from '@/hooks/use-dashboard-data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +13,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatDistanceToNow } from 'date-fns';
+import { LiveMonitorDetails } from '@/components/viva/LiveMonitorDetails';
 
-interface DashboardSession extends VivaSession {
+export interface DashboardSession extends VivaSession {
     student_name?: string;
     exam_title?: string;
     state?: string;
@@ -26,6 +27,7 @@ interface DashboardSession extends VivaSession {
 export default function InstructorMonitorPage() {
     const { data: sessions, isLoading } = useSessions({ status: SessionStatus.IN_PROGRESS });
     const dashboardSessions = (sessions || []) as DashboardSession[];
+    const [selectedSession, setSelectedSession] = useState<DashboardSession | null>(null);
 
     const stats = {
         total: dashboardSessions.length,
@@ -104,9 +106,14 @@ export default function InstructorMonitorPage() {
                                 </div>
 
                                 <div className="mt-auto grid grid-cols-2 gap-2 pt-2">
-                                    <Button size="sm" variant="outline" className="w-full text-xs h-8 gap-1.5 border-border/60 hover:bg-background hover:text-foreground">
+                                    <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        className="w-full text-xs h-8 gap-1.5 border-border/60 hover:bg-background hover:text-foreground"
+                                        onClick={() => setSelectedSession(session)}
+                                    >
                                         <Activity className="w-3.5 h-3.5" />
-                                        Logs
+                                        Behavior Logs
                                     </Button>
                                     <Button size="sm" variant={session.integrity_status === 'flagged' ? 'destructive' : 'default'} className="w-full text-xs h-8 gap-1.5 shadow-sm">
                                         <Headphones className="w-3.5 h-3.5" />
@@ -117,7 +124,13 @@ export default function InstructorMonitorPage() {
                         </Card>
                     ))
                 )}
-            </div >
-        </div >
+            </div>
+
+            <LiveMonitorDetails 
+                session={selectedSession} 
+                open={!!selectedSession} 
+                onOpenChange={(open) => !open && setSelectedSession(null)} 
+            />
+        </div>
     );
 }
