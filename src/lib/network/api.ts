@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
 import { LoginCredentials, RegisterData, User, AuthTokens, SSOProvidersResponse, OAuthConnectionsResponse } from '@/types/auth';
-import { Exam, ExamStatus, ExamSettings, VivaSession, Rubric, GradingDetail } from '@/types/backend';
+import { Exam, ExamStatus, ExamSettings, VivaSession, Rubric, GradingDetail, ExamException, ExamExceptionListResponse, ExamExceptionCreate, ExamExceptionApprove, ExamExceptionReject } from '@/types/backend';
 import { AdminStats, AuditLog } from '@/types/admin';
 import { getAccessToken, setAccessToken } from '@/lib/auth-token';
 
@@ -837,4 +837,26 @@ export const api = {
             return data;
         },
     },
+    exceptions: {
+        list: async (params?: { status?: string; exam_id?: string; skip?: number; limit?: number }) => {
+            const { data } = await apiClient.get<ExamExceptionListResponse>('/exam-exceptions', { params });
+            return data;
+        },
+        get: async (id: string) => {
+            const { data } = await apiClient.get<ExamException>(`/exam-exceptions/${id}`);
+            return data;
+        },
+        create: async (payload: ExamExceptionCreate) => {
+            const { data } = await apiClient.post<ExamException>('/exam-exceptions', payload);
+            return data;
+        },
+        approve: async (id: string, payload?: ExamExceptionApprove) => {
+            const { data } = await apiClient.post<ExamException>(`/exam-exceptions/${id}/approve`, payload || {});
+            return data;
+        },
+        reject: async (id: string, payload: ExamExceptionReject) => {
+            const { data } = await apiClient.post<ExamException>(`/exam-exceptions/${id}/reject`, payload);
+            return data;
+        }
+    }
 };

@@ -53,6 +53,11 @@ export interface TenantSettings {
         tab_switch_limit?: number;
         auto_terminate_on_violation?: boolean;
     };
+    exceptions?: {
+        instructor_self_approve_window_days?: number;
+        auto_approve_enabled?: boolean;
+        auto_approve_delay_hours?: number;
+    };
     compliance?: {
         gdpr_mode?: boolean;
         anonymize_after_days?: number;

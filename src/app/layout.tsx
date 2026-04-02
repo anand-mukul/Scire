@@ -59,10 +59,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
         className="font-sans antialiased scrollbar-thin"
-        suppressHydrationWarning
       >
         <a href="#main-content" className="skip-to-content">Skip to content</a>
         <ThemeProvider

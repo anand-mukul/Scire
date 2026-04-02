@@ -228,3 +228,63 @@ export interface NotificationPreference {
     type_overrides: Record<string, unknown>;
 }
 
+export enum ExceptionStatus {
+    PENDING = 'PENDING',
+    APPROVED = 'APPROVED',
+    REJECTED = 'REJECTED',
+    EXPIRED = 'EXPIRED'
+}
+
+export enum ExceptionApprovalType {
+    SELF = 'SELF',
+    AUTO = 'AUTO',
+    MANUAL = 'MANUAL'
+}
+
+export interface ExamException {
+    id: string;
+    tenant_id: string;
+    exam_id: string;
+    student_id: string;
+    requested_by: string;
+    approved_by?: string;
+    
+    status: ExceptionStatus;
+    approval_type?: ExceptionApprovalType;
+    auto_approved: boolean;
+    
+    reason: string;
+    rejection_reason?: string;
+    
+    original_granted_until: string;
+    granted_until: string;
+    
+    created_at: string;
+    updated_at: string;
+    
+    // Optional joined fields from backend
+    exam_title?: string;
+    student_name?: string;
+    student_email?: string;
+    requested_by_name?: string;
+}
+
+export interface ExamExceptionCreate {
+    exam_id: string;
+    student_email: string;
+    reason: string;
+    granted_until: string;
+}
+
+export interface ExamExceptionApprove {
+    granted_until?: string;
+}
+
+export interface ExamExceptionReject {
+    reason: string;
+}
+
+export interface ExamExceptionListResponse {
+    items: ExamException[];
+    total: number;
+}

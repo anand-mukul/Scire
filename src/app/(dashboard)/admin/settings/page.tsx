@@ -64,6 +64,11 @@ const DEFAULT_SETTINGS: TenantSettings = {
         tab_switch_limit: 3,
         auto_terminate_on_violation: true
     },
+    exceptions: {
+        instructor_self_approve_window_days: 2,
+        auto_approve_enabled: false,
+        auto_approve_delay_hours: 12
+    },
     compliance: {
         gdpr_mode: false,
         anonymize_after_days: 365,
@@ -200,7 +205,8 @@ export default function TenantSettingsPage() {
                     <TabsTrigger value="ai" className="gap-2"><Brain className="w-3.5 h-3.5" /> AI Model</TabsTrigger>
                     <TabsTrigger value="grading" className="gap-2"><CheckCircle className="w-3.5 h-3.5" /> Grading</TabsTrigger>
                     <TabsTrigger value="proctoring" className="gap-2"><Shield className="w-3.5 h-3.5" /> Security</TabsTrigger>
-                    <TabsTrigger value="compliance" className="gap-2"><AlertTriangle className="w-3.5 h-3.5" /> Compliance</TabsTrigger>
+                    <TabsTrigger value="exceptions" className="gap-2"><AlertTriangle className="w-3.5 h-3.5" /> Exceptions</TabsTrigger>
+                    <TabsTrigger value="compliance" className="gap-2"><Lock className="w-3.5 h-3.5" /> Compliance</TabsTrigger>
                 </TabsList>
 
                 {/* === PROFILE TAB === */}
@@ -552,6 +558,54 @@ export default function TenantSettingsPage() {
                         </CardContent>
                         <CardFooter className="justify-end border-t border-border/10 pt-4 bg-muted/20">
                             <Button onClick={saveSettings} disabled={updateSettingsMutation.isPending}><Save className="w-4 h-4 mr-2" /> Save Security Settings</Button>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+
+                {/* === EXCEPTIONS TAB === */}
+                <TabsContent value="exceptions">
+                    <Card className="border-border/60 bg-card/40 backdrop-blur-sm shadow-sm max-w-2xl mx-auto">
+                        <CardHeader>
+                            <CardTitle>Deadline Extensions (Exceptions)</CardTitle>
+                            <CardDescription>Configure how student Late Tickets are handled.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label>Instructor Self-Approve Window (Days)</Label>
+                                <Input
+                                    type="number"
+                                    value={settingsState.exceptions?.instructor_self_approve_window_days}
+                                    onChange={(e) => updateSetting('exceptions', 'instructor_self_approve_window_days', parseInt(e.target.value))}
+                                    className="bg-background/50"
+                                />
+                                <p className="text-xs text-muted-foreground">Extensions within this window past exam end time skip admin review.</p>
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Auto-Approve Requests</Label>
+                                    <p className="text-xs text-muted-foreground">Automatically approve requests after a delay if admins don't acting.</p>
+                                </div>
+                                <Switch
+                                    checked={settingsState.exceptions?.auto_approve_enabled}
+                                    onCheckedChange={(c) => updateSetting('exceptions', 'auto_approve_enabled', c)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Auto-Approve Delay (Hours)</Label>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    disabled={!settingsState.exceptions?.auto_approve_enabled}
+                                    value={settingsState.exceptions?.auto_approve_delay_hours}
+                                    onChange={(e) => updateSetting('exceptions', 'auto_approve_delay_hours', parseInt(e.target.value))}
+                                    className="bg-background/50"
+                                />
+                                <p className="text-xs text-muted-foreground">Set to 0 for instant approval.</p>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="justify-end border-t border-border/10 pt-4 bg-muted/20">
+                            <Button onClick={saveSettings} disabled={updateSettingsMutation.isPending}><Save className="w-4 h-4 mr-2" /> Save Exception Rules</Button>
                         </CardFooter>
                     </Card>
                 </TabsContent>
