@@ -197,14 +197,14 @@ export function NotificationSheet() {
                         </div>
                         {unreadCount > 0 && (
                             <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="h-8 text-[11px] font-bold uppercase tracking-widest gap-2 rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary transition-all"
+                                className="h-8 text-xs font-medium text-muted-foreground hover:text-foreground transition-all px-2"
                                 onClick={() => markAllReadMutation.mutate()}
                                 disabled={markAllReadMutation.isPending}
                             >
-                                <CheckCheck className="h-3.5 w-3.5" />
-                                Mark Read
+                                <CheckCheck className="h-4 w-4 mr-1.5" />
+                                Mark all read
                             </Button>
                         )}
                     </div>
@@ -227,7 +227,7 @@ export function NotificationSheet() {
                             </p>
                         </div>
                     ) : (
-                        <div className="p-4 space-y-2">
+                        <div className="flex flex-col">
                             {notifications.map((n) => {
                                 const Icon = (TYPE_ICONS[n.type] ?? Bell) as React.FC<{ className?: string }>;
                                 const style = TYPE_COLORS[n.type] || { text: 'text-muted-foreground', bg: 'bg-muted/40', ring: 'ring-border/40' };
@@ -238,49 +238,50 @@ export function NotificationSheet() {
                                         key={n.id}
                                         onClick={() => handleNotificationClick(n)}
                                         className={cn(
-                                            "w-full flex items-start gap-4 p-4 rounded-2xl text-left transition-all border group relative",
+                                            "w-full flex items-start gap-4 p-5 text-left transition-all border-b border-border/40 group relative last:border-0",
                                             !n.is_read
-                                                ? cn("bg-primary/[0.02] shadow-sm shadow-primary/5", priorityStyle?.border || "border-primary/10")
-                                                : "bg-background hover:bg-muted/30 border-transparent"
+                                                ? "bg-primary/[0.02] hover:bg-primary/[0.04]"
+                                                : "bg-background hover:bg-muted/30"
                                         )}
                                     >
-                                        <div className={cn(
-                                            "flex-shrink-0 p-2.5 rounded-xl border ring-1 transition-all",
-                                            style.bg, style.text, style.ring, "border-transparent"
-                                        )}>
-                                            <Icon className="h-4 w-4" />
+                                        <div className="relative">
+                                            <div className={cn(
+                                                "flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full transition-all",
+                                                style.bg, style.text
+                                            )}>
+                                                <Icon className="h-4 w-4" />
+                                            </div>
+                                            {!n.is_read && (
+                                                <div className="absolute -top-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full border-2 border-background bg-primary"></div>
+                                            )}
                                         </div>
 
                                         <div className="flex-1 min-w-0 space-y-1">
-                                            <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-start justify-between gap-2">
                                                 <p className={cn(
-                                                    "text-sm font-bold truncate",
+                                                    "text-sm font-semibold leading-tight pr-4",
                                                     !n.is_read ? "text-foreground" : "text-muted-foreground"
                                                 )}>
                                                     {n.title}
                                                 </p>
-                                                <span className="text-[10px] font-medium text-muted-foreground/50 whitespace-nowrap flex items-center gap-1.5 underline-offset-4 decoration-primary/20 group-hover:underline">
-                                                    <Clock className="h-2.5 w-2.5" />
-                                                    {timeAgo(n.created_at)}
+                                                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                                    <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                                                        <Clock className="h-3 w-3" />
+                                                        {timeAgo(n.created_at)}
+                                                    </span>
                                                     {priorityStyle && (
-                                                        <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border ml-1', priorityStyle.badge)}>
+                                                        <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded border', priorityStyle.badge)}>
                                                             {n.priority}
                                                         </span>
                                                     )}
-                                                </span>
+                                                </div>
                                             </div>
                                             {n.message && (
-                                                <p className="text-xs text-muted-foreground/70 leading-relaxed line-clamp-2 pr-2">
+                                                <p className="text-[13px] text-muted-foreground/80 leading-relaxed pr-2 pt-1">
                                                     {n.message}
                                                 </p>
                                             )}
                                         </div>
-
-                                        {!n.is_read && (
-                                            <div className="absolute top-4 right-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            </div>
-                                        )}
                                     </button>
                                 );
                             })}
