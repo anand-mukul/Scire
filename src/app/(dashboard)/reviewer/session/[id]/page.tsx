@@ -137,13 +137,7 @@ export default function ReviewSessionPage() {
 
     const isReviewed = session.review_status !== ReviewStatus.PENDING && session.review_status !== ReviewStatus.UNDER_REVIEW;
 
-    const handleUpdate = () => {
-        reviewMutation.mutate({
-            status: session.review_status,
-            notes: notes || 'Updated Review Notes',
-            final_score_override: overrideScore ? parseFloat(overrideScore) : undefined
-        });
-    };
+
 
     const handleAddPredefinedNote = () => {
         const score = session.final_score || 0;
@@ -284,9 +278,23 @@ export default function ReviewSessionPage() {
                                 <Input
                                     id="score"
                                     type="number"
+                                    min={0}
+                                    max={100}
+                                    step={0.1}
                                     placeholder={session.final_score?.toFixed(2) || "0.00"}
                                     value={overrideScore}
-                                    onChange={(e) => setOverrideScore(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === '') {
+                                            setOverrideScore('');
+                                            return;
+                                        }
+                                        const num = parseFloat(val);
+                                        if (num < 0) setOverrideScore('0');
+                                        else if (num > 100) setOverrideScore('100');
+                                        else setOverrideScore(val);
+                                    }}
+                                    disabled={isReviewed}
                                     className="bg-muted border-border"
                                 />
                                 <p className="text-xs text-muted-foreground">Leave empty to keep AI score.</p>
@@ -303,6 +311,7 @@ export default function ReviewSessionPage() {
                                                     size="icon" 
                                                     onClick={handleAddPredefinedNote}
                                                     type="button"
+                                                    disabled={isReviewed}
                                                     className="h-6 w-6 rounded-sm border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white" 
                                                 >
                                                     <Plus className="h-4 w-4" />
@@ -319,20 +328,16 @@ export default function ReviewSessionPage() {
                                     placeholder="Add internal notes for this review..."
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
+                                    disabled={isReviewed}
                                     className="bg-muted border-border min-h-[100px]"
                                 />
                             </div>
 
                             {isReviewed ? (
-                                <div className="pt-4">
-                                    <Button
-                                        onClick={handleUpdate}
-                                        className="w-full"
-                                        disabled={reviewMutation.isPending}
-                                    >
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        Update
-                                    </Button>
+                                <div className="pt-4 text-center">
+                                    <Badge variant="outline" className="text-muted-foreground w-full py-2 flex justify-center text-sm border-dashed">
+                                        Review Completed
+                                    </Badge>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3 pt-4">
