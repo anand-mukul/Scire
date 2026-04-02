@@ -12,7 +12,7 @@ import { FaceApiProvider } from './providers/faceApiProvider';
 import type { IFaceVerificationProvider, FaceDetectionResult } from './types';
 
 // ── Configuration ──────────────────────────────────────────────
-const DEFAULT_MONITORING_INTERVAL_MS = 30_000; // Check face every 30 seconds
+const DEFAULT_MONITORING_INTERVAL_MS = 3000; // Check face every 3 seconds
 const FACE_SIMILARITY_THRESHOLD = 0.65; // Below this = possible different person
 
 class FaceVerificationService {
@@ -163,7 +163,13 @@ class FaceVerificationService {
           return;
         }
 
-        await this.verifyFace(videoElement);
+        const { result, similarity } = await this.verifyFace(videoElement);
+
+        if (similarity < FACE_SIMILARITY_THRESHOLD) {
+          window.dispatchEvent(new CustomEvent('viva:face_missing', { detail: { similarity } }));
+        } else {
+          window.dispatchEvent(new CustomEvent('viva:face_present', { detail: { similarity } }));
+        }
       } catch (error) {
         console.error('[FaceVerification] Monitoring check failed:', error);
       }

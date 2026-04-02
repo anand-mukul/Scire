@@ -88,6 +88,7 @@ const examSettingsSchema = z.object({
     auto_publish: z.boolean(),
     // Granular Proctoring Settings
     max_tab_switches: z.number().min(1).max(10),
+    max_violations: z.number().min(1).max(20),
     require_face_tracking: z.boolean(),
     record_ambient_audio: z.boolean(),
 });
@@ -125,6 +126,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
             end_time: exam.end_time ? new Date(exam.end_time) : null,
             auto_publish: exam.auto_publish || false,
             max_tab_switches: exam.settings?.max_tab_switches || 3,
+            max_violations: exam.settings?.max_violations || 3,
             require_face_tracking: exam.settings?.require_face_tracking ?? true,
             record_ambient_audio: exam.settings?.record_ambient_audio ?? true,
         },
@@ -149,6 +151,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                 end_time: exam.end_time ? new Date(exam.end_time) : null,
                 auto_publish: exam.auto_publish || false,
                 max_tab_switches: exam.settings?.max_tab_switches || 3,
+                max_violations: exam.settings?.max_violations || 3,
                 require_face_tracking: exam.settings?.require_face_tracking ?? true,
                 record_ambient_audio: exam.settings?.record_ambient_audio ?? true,
             });
@@ -170,6 +173,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                     strict_mode: values.strict_mode,
                     difficulty: values.difficulty,
                     max_tab_switches: values.max_tab_switches,
+                    max_violations: values.max_violations,
                     require_face_tracking: values.require_face_tracking,
                     record_ambient_audio: values.record_ambient_audio,
                 }
@@ -569,7 +573,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                                         name="max_tab_switches"
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel className="text-sm">Max Violations (Strikes)</FormLabel>
+                                                                <FormLabel className="text-sm">Max Tab Switches</FormLabel>
                                                                 <FormControl>
                                                                     <Input
                                                                         type="number"
@@ -581,6 +585,33 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                                                         disabled={isPublished}
                                                                         min={1}
                                                                         max={10}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormDescription className="text-xs">
+                                                                    Warning after switching tabs.
+                                                                </FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="max_violations"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel className="text-sm">Max Violations (Strikes)</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        value={field.value}
+                                                                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 3)}
+                                                                        onBlur={field.onBlur}
+                                                                        ref={field.ref}
+                                                                        name={field.name}
+                                                                        disabled={isPublished}
+                                                                        min={1}
+                                                                        max={20}
                                                                     />
                                                                 </FormControl>
                                                                 <FormDescription className="text-xs">
@@ -645,7 +676,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                         </>
                                     )}
                                 </CardContent>
-                                <CardFooter className="bg-muted/10 border-t border-border/60 px-6 py-4 flex justify-end">
+                                <CardFooter className="sticky bottom-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/80 px-6 py-4 flex justify-between md:justify-end gap-3 rounded-b-xl shadow-[0_-4px_14px_-8px_rgba(0,0,0,0.1)]">
                                     <Button
                                         type="submit"
                                         size="lg"

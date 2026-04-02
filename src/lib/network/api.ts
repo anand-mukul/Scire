@@ -353,11 +353,11 @@ export const api = {
             return data;
         },
         behaviorSummary: async (sessionId: string) => {
-            const { data } = await apiClient.get(`/sessions/${sessionId}/behavior/summary`);
+            const { data } = await apiClient.get(`/anticheat/sessions/${sessionId}/behavior/summary`);
             return data;
         },
         behaviorTimeline: async (sessionId: string, limit: number = 100) => {
-            const { data } = await apiClient.get(`/sessions/${sessionId}/behavior/timeline`, { params: { limit } });
+            const { data } = await apiClient.get(`/anticheat/sessions/${sessionId}/behavior/timeline`, { params: { limit } });
             return data;
         },
     },

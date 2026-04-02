@@ -94,7 +94,9 @@ export class AudioManager {
 
                 const rms = this.analyzeVolume(data);
 
-                const pcm16 = this.floatTo16BitPCM(data);
+                // Resample to 16kHz for backend STT / Voice Verification
+                const resampledData = this.downsampleBuffer(data, this.audioContext!.sampleRate, 16000);
+                const pcm16 = this.floatTo16BitPCM(resampledData);
                 vivaWebSocket.sendAudioChunk(pcm16.buffer as ArrayBuffer);
             };
 
@@ -169,6 +171,34 @@ export class AudioManager {
             int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
         }
         return int16Array;
+    }
+
+    private downsampleBuffer(buffer: Float32Array, sampleRate: number, outSampleRate: number): Float32Array {
+        if (outSampleRate === sampleRate) {
+            return buffer;
+        }
+        if (outSampleRate > sampleRate) {
+            return buffer; // Cannot magically upsample simply, let it pass (rare)
+        }
+        const sampleRateRatio = sampleRate / outSampleRate;
+        const newLength = Math.round(buffer.length / sampleRateRatio);
+        const result = new Float32Array(newLength);
+        let offsetResult = 0;
+        let offsetBuffer = 0;
+        // Simple linear interpolation
+        while (offsetResult < result.length) {
+            const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+            let accum = 0;
+            let count = 0;
+            for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                accum += buffer[i];
+                count++;
+            }
+            result[offsetResult] = count > 0 ? accum / count : 0;
+            offsetResult++;
+            offsetBuffer = nextOffsetBuffer;
+        }
+        return result;
     }
 
     private analyzeVolume(data: Float32Array): number {

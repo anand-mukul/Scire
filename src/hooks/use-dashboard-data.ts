@@ -15,15 +15,15 @@ export function useExams() {
     });
 }
 
-export function useSessions(filters?: { status?: string; exam_id?: string; exam_code?: string; review_status?: string; integrity_flag?: boolean; skip?: number; limit?: number }) {
+export function useSessions(filters?: { status?: string; exam_id?: string; exam_code?: string; review_status?: string; integrity_flag?: boolean; skip?: number; limit?: number }, options?: { refetchInterval?: number }) {
     return useQuery({
         queryKey: ['sessions', filters],
         queryFn: () => api.sessions.list(filters),
+        refetchInterval: options?.refetchInterval,
     });
 }
 
 export function useMySessions() {
-
     return useQuery({
         queryKey: ['my-sessions'],
         queryFn: () => api.sessions.list(),

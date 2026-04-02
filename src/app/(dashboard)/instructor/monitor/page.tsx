@@ -25,7 +25,10 @@ export interface DashboardSession extends VivaSession {
 }
 
 export default function InstructorMonitorPage() {
-    const { data: sessions, isLoading } = useSessions({ status: SessionStatus.IN_PROGRESS });
+    const { data: sessions, isLoading } = useSessions(
+        { status: SessionStatus.IN_PROGRESS },
+        { refetchInterval: 5000 }
+    );
     const dashboardSessions = (sessions || []) as DashboardSession[];
     const [selectedSession, setSelectedSession] = useState<DashboardSession | null>(null);
 

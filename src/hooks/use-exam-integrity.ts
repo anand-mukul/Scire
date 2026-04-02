@@ -26,7 +26,7 @@ export const useExamIntegrity = (sessionId: string | null) => {
 
     // Derive strict mode and max strikes from exam settings
     const strictMode = examSettings?.strict_mode ?? false;
-    const maxStrikes = examSettings?.max_tab_switches ?? 3;
+    const maxStrikes = examSettings?.max_violations ?? 3;
 
     // ═══════════════════════════════════════════════════════════════
     // Violation Handlers (Phase 3: 3-Strike System)
@@ -155,19 +155,25 @@ export const useExamIntegrity = (sessionId: string | null) => {
 
     useEffect(() => {
         const handleFocus = () => { if (!document.hidden) resolveViolation(); };
+        const handleFaceMissing = () => triggerViolation('FACE_MISSING', 'face_not_detected_or_mismatch');
+        const handleFacePresent = () => resolveViolation();
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('blur', handleVisibilityChange);
         window.addEventListener('focus', handleFocus);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
+        window.addEventListener('viva:face_missing', handleFaceMissing);
+        window.addEventListener('viva:face_present', handleFacePresent);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('blur', handleVisibilityChange);
             window.removeEventListener('focus', handleFocus);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            window.removeEventListener('viva:face_missing', handleFaceMissing);
+            window.removeEventListener('viva:face_present', handleFacePresent);
         };
-    }, [handleVisibilityChange, handleFullscreenChange, resolveViolation]);
+    }, [handleVisibilityChange, handleFullscreenChange, resolveViolation, triggerViolation]);
 
 
     // ═══════════════════════════════════════════════════════════════
