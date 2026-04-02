@@ -193,7 +193,7 @@ Requirements: Desktop/Laptop, Camera, Mic.`;
                                     <Button
                                         size="sm"
                                         variant="secondary"
-                                        className="h-7 text-xs gap-1.5 shadow-sm bg-background/80 backdrop-blur hover:bg-background"
+                                        className="h-7 text-xs gap-1.5 shadow-sm"
                                         onClick={() => handleCopy(shareMessage, 'message')}
                                     >
                                         {copiedField === 'message' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}

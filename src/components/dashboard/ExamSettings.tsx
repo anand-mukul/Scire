@@ -51,6 +51,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import {
     Save,
@@ -567,7 +568,7 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                                     Integrity & Proctoring
                                                 </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <FormField
                                                         control={form.control}
                                                         name="max_tab_switches"
@@ -746,18 +747,29 @@ export default function ExamSettings({ exam }: ExamSettingsProps) {
                                                 Unpublish to Draft
                                             </Button>
                                         )}
-                                        <Button
-                                            variant="secondary"
-                                            className="w-full text-destructive hover:bg-destructive/10"
-                                            onClick={() => {
-                                                if(confirm("Are you sure you want to archive this exam? This will hide it from students.")) {
-                                                    statusMutation.mutate(ExamStatus.ARCHIVED);
-                                                }
-                                            }}
-                                            disabled={statusMutation.isPending || updateMutation.isPending}
-                                        >
-                                            Archive Exam
-                                        </Button>
+                                        <TooltipProvider delayDuration={300}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="w-full">
+                                                        <Button
+                                                            variant="destructive"
+                                                            className="w-full"
+                                                            onClick={() => {
+                                                                if(confirm("Are you sure you want to archive this exam? This will hide it from students.")) {
+                                                                    statusMutation.mutate(ExamStatus.ARCHIVED);
+                                                                }
+                                                            }}
+                                                            disabled={statusMutation.isPending || updateMutation.isPending}
+                                                        >
+                                                            Archive Exam
+                                                        </Button>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="max-w-[250px] text-center">
+                                                    <p>Archive this exam when it is concluded to hide it from students. Results and data will be retained.</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     </div>
                                 </>
                             ) : exam.status === ExamStatus.COMPLETED || exam.status === ExamStatus.ARCHIVED ? (
