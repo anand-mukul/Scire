@@ -6,6 +6,7 @@ import {
     Bell, Check, CheckCheck, Clock, CreditCard, AlertTriangle, BookOpen,
     ShieldAlert, Megaphone, GraduationCap, Scale, UserCog, FileWarning,
     Brain, Eye, HandshakeIcon, Gavel, CircleAlert, Zap,
+    ChevronUp, ChevronsUp, ChevronDown, Minus,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -66,9 +67,11 @@ const TYPE_COLORS: Record<string, string> = {
     'system.announcement': 'text-cyan-500',
 };
 
-const PRIORITY_STYLES: Record<string, string> = {
-    CRITICAL: 'bg-red-500/10 text-red-600 border-red-500/20',
-    HIGH: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+const PRIORITY_CONFIG: Record<string, { icon: any; className: string }> = {
+    CRITICAL: { icon: ChevronsUp, className: 'text-red-500' },
+    HIGH: { icon: ChevronUp, className: 'text-orange-500/70' },
+    MEDIUM: { icon: Minus, className: 'text-muted-foreground/60' },
+    LOW: { icon: ChevronDown, className: 'text-muted-foreground/60' },
 };
 
 function timeAgo(dateString: string): string {
@@ -76,11 +79,11 @@ function timeAgo(dateString: string): string {
     const date = new Date(dateString);
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function NotificationBell() {
@@ -148,12 +151,12 @@ export default function NotificationBell() {
                 sideOffset={8}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-background/95 backdrop-blur-md rounded-t-xl sticky top-0 z-10">
                     <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm">Notifications</h3>
+                        <h3 className="font-semibold text-[14px]">Notifications</h3>
                         {unreadCount > 0 && (
-                            <span className="text-[10px] font-bold bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded-full">
-                                {unreadCount} new
+                            <span className="flex h-5 items-center justify-center rounded-full bg-primary/10 px-2 text-[11px] font-semibold text-primary">
+                                {unreadCount}
                             </span>
                         )}
                     </div>
@@ -161,12 +164,12 @@ export default function NotificationBell() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                            className="h-7 px-2 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-all"
                             onClick={() => markAllReadMutation.mutate()}
                             disabled={markAllReadMutation.isPending}
                         >
-                            <CheckCheck className="h-3.5 w-3.5" />
-                            Mark all read
+                            <Check className="h-3.5 w-3.5 mr-1" />
+                            Mark all as read
                         </Button>
                     )}
                 </div>
@@ -185,59 +188,65 @@ export default function NotificationBell() {
                             <p className="text-xs text-muted-foreground/60 mt-0.5">We&apos;ll notify you about important updates</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-border/30">
+                        <div className="flex flex-col">
                             {notifications.map((n) => {
                                 const Icon = TYPE_ICONS[n.type] ?? Bell;
                                 const color = TYPE_COLORS[n.type] || 'text-muted-foreground';
-                                const priorityStyle = PRIORITY_STYLES[n.priority];
+                                const priorityConfig = PRIORITY_CONFIG[n.priority];
+                                const PriorityIcon = priorityConfig?.icon;
 
                                 return (
                                     <button
                                         key={n.id}
                                         onClick={() => handleNotificationClick(n)}
                                         className={cn(
-                                            "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40",
-                                            !n.is_read && "bg-primary/[0.03]"
+                                            "group flex w-full items-start gap-3 border-b border-border/40 px-4 py-3.5 text-left transition-colors last:border-0",
+                                            !n.is_read
+                                                ? "bg-primary/[0.02]"
+                                                : "hover:bg-muted/40"
                                         )}
                                     >
-                                        <div className={cn(
-                                            "flex-shrink-0 mt-0.5 p-1.5 rounded-lg",
-                                            !n.is_read ? "bg-primary/10" : "bg-muted/40"
-                                        )}>
-                                            {(() => {
-                                                const IconComponent = Icon as React.FC<{ className?: string }>;
-                                                return <IconComponent className={cn("h-3.5 w-3.5", !n.is_read ? color : "text-muted-foreground/60")} />;
-                                            })()}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className={cn(
-                                                "text-sm leading-tight",
-                                                !n.is_read ? "font-medium text-foreground" : "text-muted-foreground"
+                                        <div className="relative mt-0.5 flex-shrink-0">
+                                            <div className={cn(
+                                                "flex h-7 w-7 items-center justify-center rounded-full border border-border/50 bg-background",
                                             )}>
-                                                {n.title}
-                                            </p>
+                                                {(() => {
+                                                    const IconComponent = Icon as React.FC<{ className?: string }>;
+                                                    return <IconComponent className={cn("h-3.5 w-3.5", color)} />;
+                                                })()}
+                                            </div>
+                                            {!n.is_read && (
+                                                <div className="absolute -right-0.5 -top-0.5 rounded-full border-2 border-background">
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-1 flex-col min-w-0">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-center gap-2 truncate">
+                                                    <p className={cn(
+                                                        "text-[13px] font-semibold tracking-tight",
+                                                        !n.is_read ? "text-foreground" : "text-foreground/80"
+                                                    )}>
+                                                        {n.title}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 shrink-0 border border-border/40 rounded px-1.5 py-0.5 bg-muted/20">
+                                                    {PriorityIcon && (
+                                                        <PriorityIcon className={cn("h-2.5 w-2.5", priorityConfig.className)} strokeWidth={3} />
+                                                    )}
+                                                    <span className="text-[10px] font-medium text-muted-foreground/70">
+                                                        {timeAgo(n.created_at)}
+                                                    </span>
+                                                </div>
+                                            </div>
                                             {n.message && (
-                                                <p className="text-xs text-muted-foreground/70 mt-0.5 line-clamp-2">
+                                                <p className="text-[13px] text-muted-foreground/90 leading-relaxed pr-2 mt-0.5 truncate">
                                                     {n.message}
                                                 </p>
                                             )}
-                                            <div className="flex items-center gap-1.5 mt-1">
-                                                <Clock className="h-2.5 w-2.5 text-muted-foreground/40" />
-                                                <span className="text-[10px] text-muted-foreground/50">
-                                                    {timeAgo(n.created_at)}
-                                                </span>
-                                                {priorityStyle && (
-                                                    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border', priorityStyle)}>
-                                                        {n.priority}
-                                                    </span>
-                                                )}
-                                            </div>
                                         </div>
-                                        {!n.is_read && (
-                                            <div className="flex-shrink-0 mt-1.5">
-                                                <div className="w-2 h-2 rounded-full bg-primary shadow-sm shadow-primary/30" />
-                                            </div>
-                                        )}
                                     </button>
                                 );
                             })}
