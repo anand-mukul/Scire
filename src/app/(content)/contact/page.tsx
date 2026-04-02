@@ -28,8 +28,8 @@ export default function ContactPage() {
                         <div className="flex-1">
                             <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">Email Us</h3>
                             <p className="text-muted-foreground text-sm mb-3">For general inquiries, partnerships, and support.</p>
-                            <ProtectedMailLink email="contact@scire.in" className="inline-flex items-center text-primary font-medium hover:underline">
-                                contact@scire.in <ArrowRight className="w-4 h-4 ml-1" />
+                            <ProtectedMailLink email="contact@mail.scire.in" className="inline-flex items-center text-primary font-medium hover:underline">
+                                contact@mail.scire.in <ArrowRight className="w-4 h-4 ml-1" />
                             </ProtectedMailLink>
                         </div>
                     </div>

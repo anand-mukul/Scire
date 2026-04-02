@@ -16,10 +16,10 @@ import { Mail, ArrowRight } from "lucide-react";
 const REDIRECT_ENABLED =
     process.env.NEXT_PUBLIC_REDIRECT_ALL_MAIL === "true";
 const SUPPORT_EMAIL =
-    process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@example.com";
+    process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@mail.scire.in";
 
 interface ProtectedMailLinkProps {
-    /** The @scire.in email displayed in the UI */
+    /** The @mail.scire.in email displayed in the UI */
     email: string;
     /** Optional className — preserves existing styling */
     className?: string;

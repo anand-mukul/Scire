@@ -53,7 +53,7 @@ const PUBLIC_PLANS: PlanData[] = [
         ctaText: "Contact Sales",
         ctaAction: () => {
             if (!showMailRedirectAlert()) {
-                window.open('mailto:sales@scire.in', '_blank');
+                window.open('mailto:sales@mail.scire.in', '_blank');
             }
         }
     }

@@ -153,7 +153,7 @@ export default function CookiesPage() {
                         If you have any questions about cookies or tracking technologies, please contact us at:
                     </p>
                     <p>
-                        Email: <ProtectedMailLink email="privacy@scire.in" className={mailLinkClass}>privacy@scire.in</ProtectedMailLink><br />
+                        Email: <ProtectedMailLink email="privacy@mail.scire.in" className={mailLinkClass}>privacy@mail.scire.in</ProtectedMailLink><br />
                         Address: Remote, India
                     </p>
                 </section>

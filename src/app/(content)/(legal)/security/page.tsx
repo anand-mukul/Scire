@@ -165,7 +165,7 @@ export default function SecurityPage() {
                         We acknowledge valid reports within <strong className="text-foreground">48 hours</strong> and provide a remediation timeline within <strong className="text-foreground">5 business days</strong>. Valid reports are eligible for our Security Hall of Fame and monetary rewards based on severity.
                     </p>
                     <p>
-                        Report vulnerabilities to: <ProtectedMailLink email="security@scire.in" className={mailLinkClass}>security@scire.in</ProtectedMailLink><br />
+                        Report vulnerabilities to: <ProtectedMailLink email="security@mail.scire.in" className={mailLinkClass}>security@mail.scire.in</ProtectedMailLink><br />
                         PGP key available at <code className="text-xs bg-muted/30 px-1.5 py-0.5 rounded">scire.in/.well-known/security.txt</code>
                     </p>
                 </section>
@@ -202,7 +202,7 @@ export default function SecurityPage() {
                     </h2>
                     <p className="mb-5">For security-related questions or to report a vulnerability:</p>
                     <p>
-                        Email: <ProtectedMailLink email="security@scire.in" className={mailLinkClass}>security@scire.in</ProtectedMailLink> · <ProtectedMailLink email="ciso@scire.in" className={mailLinkClass}>ciso@scire.in</ProtectedMailLink><br />
+                        Email: <ProtectedMailLink email="security@mail.scire.in" className={mailLinkClass}>security@mail.scire.in</ProtectedMailLink> · <ProtectedMailLink email="ciso@mail.scire.in" className={mailLinkClass}>ciso@mail.scire.in</ProtectedMailLink><br />
                         Address: Remote, India
                     </p>
                 </section>

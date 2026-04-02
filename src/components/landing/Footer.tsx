@@ -71,7 +71,7 @@ export const Footer = () => {
                                 { icon: Twitter, href: 'https://x.com/' },
                                 { icon: Github, href: 'https://github.com/anand-mukul' },
                                 { icon: Linkedin, href: 'https://www.linkedin.com/in/dev-mukul' },
-                                { icon: Mail, href: 'mailto:contact@scire.in' }
+                                { icon: Mail, href: 'mailto:contact@mail.scire.in' }
                             ].map((social, i) => (
                                 <motion.a
                                     key={i}

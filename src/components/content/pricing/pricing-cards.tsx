@@ -148,7 +148,7 @@ const PricingCard = ({
                                 className="w-full"
                                 onClick={() => {
                                     if (!showMailRedirectAlert()) {
-                                        window.open('mailto:sales@scire.in', '_blank');
+                                        window.open('mailto:sales@mail.scire.in', '_blank');
                                     }
                                 }}
                             >
