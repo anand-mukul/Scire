@@ -101,7 +101,7 @@ export default function PracticeDetailPage() {
 
     if (isLoading) {
         return (
-            <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24 max-w-4xl mx-auto w-full">
+            <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
                 <Skeleton className="h-8 w-48" />
                 <Skeleton className="h-64 w-full" />
             </main>
@@ -110,7 +110,7 @@ export default function PracticeDetailPage() {
 
     if (!exam) {
         return (
-            <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24 max-w-4xl mx-auto w-full">
+            <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
                 <p className="text-muted-foreground">Practice exam not found.</p>
                 <Button asChild variant="outline">
                     <Link href="/student/practice">← Back to Practice</Link>
@@ -126,18 +126,12 @@ export default function PracticeDetailPage() {
     const hasAccess = practiceStatus?.is_unlimited || (practiceStatus?.sessions_remaining ?? 0) > 0;
 
     return (
-        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24 max-w-4xl mx-auto w-full">
-            <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" asChild className="shrink-0">
-                    <Link href="/student/practice">
-                        <ArrowLeft className="h-4 w-4" />
-                    </Link>
-                </Button>
-                <PageHeader
-                    title={exam.title}
-                    description={`Code: ${exam.exam_code}`}
-                />
-            </div>
+        <main className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
+            <PageHeader
+                title={exam.title}
+                description={`Code: ${exam.exam_code}`}
+                backButton={true}
+            />
 
             {/* Status Card */}
             <Card className={`p-6 ${isProcessing ? 'border-amber-500/20 bg-amber-500/5' : isReady ? 'border-emerald-500/20 bg-emerald-500/5' : isFailed ? 'border-destructive/20 bg-destructive/5' : ''}`}>
