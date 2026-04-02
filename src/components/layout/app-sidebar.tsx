@@ -119,7 +119,7 @@ const ROLE_NAV: Record<string, NavSection> = {
             { label: 'Users', href: '/admin/users', icon: Users },
             { label: 'Subjects', href: '/admin/subjects', icon: GraduationCap },
             { label: 'System', href: '/admin/system', icon: Activity },
-            { label: 'Exceptions', href: '/admin/exceptions', icon: AlertTriangle },
+            { label: 'Extensions', href: '/admin/extensions', icon: AlertTriangle },
             { label: 'Settings', href: '/admin/settings', icon: Settings },
         ],
     },
@@ -132,7 +132,7 @@ const ROLE_NAV: Record<string, NavSection> = {
             { label: 'Create Exam', href: '/instructor/exam/create', icon: Plus },
             { label: 'Monitor', href: '/instructor/monitor', icon: MonitorPlay },
             { label: 'Rubrics', href: '/instructor/rubrics', icon: ClipboardCheck },
-            { label: 'Late Tickets', href: '/instructor/exceptions', icon: AlertTriangle },
+            { label: 'Extensions', href: '/instructor/extensions', icon: AlertTriangle },
         ],
     },
     REVIEWER: {

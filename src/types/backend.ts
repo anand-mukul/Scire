@@ -262,18 +262,30 @@ export interface ExamException {
     created_at: string;
     updated_at: string;
     
-    // Optional joined fields from backend
-    exam_title?: string;
-    student_name?: string;
-    student_email?: string;
-    requested_by_name?: string;
+    // Joined relationships from backend ORM
+    student?: { id: string; email: string; full_name: string };
+    exam?: { id: string; title: string; exam_code: string; status: string; end_time?: string };
+    requester?: { id: string; email: string; full_name: string };
 }
 
-export interface ExamExceptionCreate {
-    exam_id: string;
-    student_email: string;
+export interface StudentExceptionRequest {
+    email: string;
     reason: string;
+}
+
+export interface ExamExceptionBatchCreate {
+    exam_id: string;
+    requests: StudentExceptionRequest[];
     granted_until: string;
+}
+
+export interface VerifyEmailsRequest {
+    emails: string[];
+}
+
+export interface VerifyEmailsResponse {
+    valid: string[];
+    invalid: string[];
 }
 
 export interface ExamExceptionApprove {
@@ -288,3 +300,4 @@ export interface ExamExceptionListResponse {
     items: ExamException[];
     total: number;
 }
+

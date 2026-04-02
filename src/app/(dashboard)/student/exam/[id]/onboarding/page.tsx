@@ -496,11 +496,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                     <CameraOverlay status={scanStatus} message={scanMessage} />
 
                                     {error && (
-                                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 text-center z-20">
-                                            <div className="space-y-4">
+                                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 text-center z-20 backdrop-blur-sm">
+                                            <div className="max-w-md space-y-4 bg-black/50 border border-destructive/50 p-6 rounded-2xl shadow-2xl shadow-destructive/20">
                                                 <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-                                                <p className="text-destructive-foreground">{error}</p>
-                                                <Button variant="outline" onClick={handleSmartRetry} className="border-white/20 text-white hover:bg-white/10">Retry</Button>
+                                                <p className="text-white text-lg font-medium leading-relaxed">{error}</p>
+                                                <Button onClick={handleSmartRetry} className="bg-destructive hover:bg-destructive/90 text-white w-full">Retry Scanning</Button>
                                             </div>
                                         </div>
                                     )}

@@ -32,7 +32,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, AlertTriangle, CheckCircle, XCircle, Clock, SearchX, ShieldAlert } from 'lucide-react';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
+import { Search, AlertTriangle, CheckCircle, XCircle, Clock, SearchX, ShieldAlert, CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatToLocalDateTime } from '@/lib/date-utils';
 import { PageHeader } from '@/components/dashboard/page-header';
@@ -40,7 +41,7 @@ import { cn } from '@/lib/utils';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import { Label } from '@/components/ui/label';
 
-export default function AdminExceptionsPage() {
+export default function AdminExtensionsPage() {
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('PENDING');
@@ -49,7 +50,7 @@ export default function AdminExceptionsPage() {
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
-    const [overrideDate, setOverrideDate] = useState('');
+    const [overrideDate, setOverrideDate] = useState<Date | undefined>(undefined);
 
     const { data, isLoading } = useQuery({
         queryKey: ['admin-exceptions', statusFilter],
@@ -69,7 +70,7 @@ export default function AdminExceptionsPage() {
     };
 
     const approveMutation = useMutation({
-        mutationFn: (payload: { id: string, granted_until?: string }) => 
+        mutationFn: (payload: { id: string, granted_until?: string }) =>
             api.exceptions.approve(payload.id, payload.granted_until ? { granted_until: payload.granted_until } : undefined),
         onSuccess: () => {
             toast.success('Exception approved');
@@ -83,7 +84,7 @@ export default function AdminExceptionsPage() {
     });
 
     const rejectMutation = useMutation({
-        mutationFn: (payload: { id: string, reason: string }) => 
+        mutationFn: (payload: { id: string, reason: string }) =>
             api.exceptions.reject(payload.id, { reason: payload.reason }),
         onSuccess: () => {
             toast.success('Exception rejected');
@@ -99,7 +100,7 @@ export default function AdminExceptionsPage() {
 
     const handleApprove = () => {
         if (!selectedException) return;
-        const formattedDate = overrideDate ? new Date(overrideDate).toISOString() : undefined;
+        const formattedDate = overrideDate ? overrideDate.toISOString() : undefined;
         approveMutation.mutate({ id: selectedException.id, granted_until: formattedDate });
     };
 
@@ -112,50 +113,57 @@ export default function AdminExceptionsPage() {
         rejectMutation.mutate({ id: selectedException.id, reason: rejectReason });
     };
 
-    const filteredExceptions = exceptions.filter(e => {
+    const filteredExceptions = exceptions.filter((e: ExamException) => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
-            (e.student_email?.toLowerCase() || '').includes(q) ||
-            (e.student_name?.toLowerCase() || '').includes(q) ||
-            (e.exam_title?.toLowerCase() || '').includes(q)
+            (e.student?.email?.toLowerCase() || '').includes(q) ||
+            (e.student?.full_name?.toLowerCase() || '').includes(q) ||
+            (e.exam?.title?.toLowerCase() || '').includes(q)
         );
     });
 
-    const getStatusBadge = (status: ExceptionStatus) => {
-        switch (status) {
-            case ExceptionStatus.PENDING:
-                return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
-            case ExceptionStatus.APPROVED:
-                return <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
-            case ExceptionStatus.REJECTED:
-                return <Badge variant="outline" className="bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
-            case ExceptionStatus.EXPIRED:
-                return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">Expired</Badge>;
-            default:
-                return <Badge variant="outline">{status}</Badge>;
-        }
-    };
+    const StatusDisplay = ({ status, type }: { status: ExceptionStatus, type?: ExceptionApprovalType }) => {
+        let color = "bg-muted-foreground/30";
+        let text = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
-    const getApprovalTypeBadge = (type?: ExceptionApprovalType) => {
-        if (!type) return null;
-        switch (type) {
-            case ExceptionApprovalType.SELF:
-                return <Badge variant="secondary" className="text-xs">Self (Instructor)</Badge>;
-            case ExceptionApprovalType.AUTO:
-                return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs">System Auto</Badge>;
-            case ExceptionApprovalType.MANUAL:
-                return <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 text-xs">Admin Manual</Badge>;
-            default:
-                return <Badge variant="secondary" className="text-xs">{type}</Badge>;
-        }
+        if (status === ExceptionStatus.PENDING) color = "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]";
+        if (status === ExceptionStatus.APPROVED) color = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]";
+        if (status === ExceptionStatus.REJECTED) color = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]";
+
+        let subText = "";
+        if (type === ExceptionApprovalType.MANUAL) subText = "Admin Approved";
+        else if (type === ExceptionApprovalType.AUTO) subText = "System Auto";
+        else if (type === ExceptionApprovalType.SELF) subText = "Self Approved";
+
+        return (
+            <div className="flex flex-col pt-0.5 gap-0.5">
+                <div className="flex items-center gap-2">
+                    <div className={cn("h-1.5 w-1.5 rounded-full blur-[0.5px]", color)} />
+                    <span className={cn(
+                        "text-sm font-medium",
+                        status === ExceptionStatus.PENDING && "text-amber-600 dark:text-amber-500",
+                        status === ExceptionStatus.APPROVED && "text-emerald-600 dark:text-emerald-500",
+                        status === ExceptionStatus.REJECTED && "text-rose-600 dark:text-rose-500",
+                        status === ExceptionStatus.EXPIRED && "text-muted-foreground"
+                    )}>
+                        {text}
+                    </span>
+                </div>
+                {subText && status === ExceptionStatus.APPROVED && (
+                    <span className="text-[10px] text-muted-foreground/70 font-semibold pl-3.5 tracking-tight uppercase">
+                        {subText}
+                    </span>
+                )}
+            </div>
+        );
     };
 
     return (
         <div className="flex flex-col gap-8 p-6 md:p-8 animate-fade-in pb-24">
             <PageHeader
-                title="Exception Requests"
-                description="Manage deadline extensions and special access tickets for students."
+                title="Extensions"
+                description="Manage deadline extensions for students who need extra time on exams."
             />
 
             <div className="grid gap-6 md:grid-cols-4">
@@ -220,72 +228,86 @@ export default function AdminExceptionsPage() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm shadow-sm overflow-hidden">
                     <Table>
-                        <TableHeader className="bg-muted/30">
-                            <TableRow className="hover:bg-transparent border-border/50">
-                                <TableHead className="pl-6">Student</TableHead>
-                                <TableHead>Exam</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Granted Until</TableHead>
-                                <TableHead>Reason</TableHead>
-                                <TableHead className="text-right pr-6">Action</TableHead>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent border-border/30 bg-muted/20">
+                                <TableHead className="pl-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-10 w-[240px]">Student</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-10 w-[240px]">Exam</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-10 w-[140px]">Status</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-10 w-[180px]">Deadline</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-10">Reason</TableHead>
+                                <TableHead className="text-right pr-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 h-10">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 Array(3).fill(0).map((_, i) => (
-                                    <TableRow key={i} className="border-border/50">
-                                        <TableCell className="pl-6"><Skeleton className="h-4 w-32 mb-2"/><Skeleton className="h-3 w-40"/></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                    <TableRow key={i} className="border-border/20">
+                                        <TableCell className="pl-6"><div className="flex items-center gap-3"><Skeleton className="h-8 w-8 rounded-full shrink-0" /><div><Skeleton className="h-4 w-24 mb-1.5" /><Skeleton className="h-3 w-32" /></div></div></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-28 mb-1.5" /><Skeleton className="h-3 w-20" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                                         <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                                         <TableCell className="pr-6"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                                     </TableRow>
                                 ))
                             ) : filteredExceptions.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <SearchX className="w-8 h-8 opacity-20" />
-                                            <p>No exceptions found.</p>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableCell colSpan={6} className="h-40 text-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+                                                <CalendarClock className="w-6 h-6 text-muted-foreground/40" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-muted-foreground">No extensions found</p>
+                                                <p className="text-xs text-muted-foreground/60 mt-0.5">There are no requests matching your filters.</p>
+                                            </div>
                                         </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 filteredExceptions.map((ex) => (
-                                    <TableRow key={ex.id} className="hover:bg-muted/40 border-border/40 transition-colors">
-                                        <TableCell className="pl-6">
-                                            <div className="font-medium text-sm text-foreground">
-                                                {ex.student_name || 'Unknown Student'}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {ex.student_email || ex.student_id}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                            {ex.exam_title || 'Unknown Exam'}
-                                            <div className="text-xs text-muted-foreground mt-0.5 max-w-[200px] truncate">
-                                                Requested by: {ex.requested_by_name || 'Instructor'}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-1 items-start">
-                                                {getStatusBadge(ex.status)}
-                                                {getApprovalTypeBadge(ex.approval_type)}
+                                    <TableRow key={ex.id} className="group hover:bg-muted/30 border-border/20 transition-colors">
+                                        <TableCell className="pl-6 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                                                    <span className="text-xs font-semibold text-primary">
+                                                        {(ex.student?.full_name || 'N').charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="font-medium text-sm text-foreground truncate max-w-[180px]">
+                                                        {ex.student?.full_name || 'N/A'}
+                                                    </div>
+                                                    <div className="text-[11px] text-muted-foreground/70 truncate max-w-[180px] font-mono">
+                                                        {ex.student?.email || ex.student_id}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-sm font-medium">
-                                            {formatToLocalDateTime(ex.granted_until)}
+                                        <TableCell className="py-3">
+                                            <span className="text-sm text-foreground truncate block max-w-[180px]">{ex.exam?.title || 'N/A'}</span>
+                                            <div className="text-[11px] text-muted-foreground/70 mt-0.5 truncate max-w-[180px]">
+                                                Req by: {ex.requester?.full_name || 'Instructor'}
+                                            </div>
                                         </TableCell>
-                                        <TableCell>
-                                            <div className="text-sm max-w-[250px] truncate" title={ex.reason}>
+                                        <TableCell className="py-3">
+                                            <StatusDisplay status={ex.status} type={ex.approval_type} />
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                                <CalendarClock className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />
+                                                <span className="font-mono text-xs">{formatToLocalDateTime(ex.granted_until)}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                            <div className="text-sm max-w-[220px] truncate text-muted-foreground group-hover:text-foreground transition-colors" title={ex.reason}>
                                                 {ex.reason}
                                             </div>
                                             {ex.rejection_reason && (
-                                                <div className="text-xs text-rose-500 mt-1 max-w-[250px] truncate" title={ex.rejection_reason}>
-                                                    Rejected: {ex.rejection_reason}
+                                                <div className="text-[11px] text-rose-500/80 mt-1 max-w-[220px] truncate" title={ex.rejection_reason}>
+                                                    ✕ {ex.rejection_reason}
                                                 </div>
                                             )}
                                         </TableCell>
@@ -294,7 +316,7 @@ export default function AdminExceptionsPage() {
                                                 <div className="flex flex-col sm:flex-row gap-2 justify-end">
                                                     <Button variant="outline" size="sm" className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950/30 dark:text-emerald-400" onClick={() => {
                                                         setSelectedException(ex);
-                                                        setOverrideDate('');
+                                                        setOverrideDate(undefined);
                                                         setIsApproveDialogOpen(true);
                                                     }}>
                                                         Approve
@@ -323,7 +345,7 @@ export default function AdminExceptionsPage() {
                     <DialogHeader>
                         <DialogTitle>Approve Exception Request</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to approve this request for <strong className="text-foreground">{selectedException?.student_email}</strong>?
+                            Are you sure you want to approve this request for <strong className="text-foreground">{selectedException?.student?.email}</strong>?
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
@@ -331,13 +353,14 @@ export default function AdminExceptionsPage() {
                             <div><span className="font-semibold">Reason:</span> {selectedException?.reason}</div>
                             <div><span className="font-semibold">Requested Deadline:</span> {selectedException && formatToLocalDateTime(selectedException.granted_until)}</div>
                         </div>
-                        
+
                         <div className="space-y-2">
                             <Label>Override Requested Deadline (Optional)</Label>
-                            <Input 
-                                type="datetime-local" 
-                                value={overrideDate}
-                                onChange={(e) => setOverrideDate(e.target.value)}
+                            <DateTimePicker
+                                date={overrideDate}
+                                setDate={setOverrideDate}
+                                label="Override deadline (optional)"
+                                disablePastDates
                             />
                             <p className="text-xs text-muted-foreground">Leave blank to use the instructor's requested deadline.</p>
                         </div>
@@ -357,12 +380,12 @@ export default function AdminExceptionsPage() {
                     <DialogHeader>
                         <DialogTitle>Reject Exception Request</DialogTitle>
                         <DialogDescription>
-                            You are about to reject the extension request for <strong className="text-foreground">{selectedException?.student_email}</strong>.
+                            You are about to reject the extension request for <strong className="text-foreground">{selectedException?.student?.email}</strong>.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-2">
                         <Label>Reason for Rejection (Required)</Label>
-                        <Textarea 
+                        <Textarea
                             placeholder="e.g. Documentation not sufficient for extension."
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}

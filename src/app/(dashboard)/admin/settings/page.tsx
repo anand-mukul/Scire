@@ -566,8 +566,8 @@ export default function TenantSettingsPage() {
                 <TabsContent value="exceptions">
                     <Card className="border-border/60 bg-card/40 backdrop-blur-sm shadow-sm max-w-2xl mx-auto">
                         <CardHeader>
-                            <CardTitle>Deadline Extensions (Exceptions)</CardTitle>
-                            <CardDescription>Configure how student Late Tickets are handled.</CardDescription>
+                            <CardTitle>Deadline Extensions</CardTitle>
+                            <CardDescription>Configure how student extensions are handled.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
