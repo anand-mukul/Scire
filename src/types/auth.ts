@@ -92,6 +92,7 @@ export interface User {
     full_name: string;
     is_active: boolean;
     is_anonymized: boolean;
+    profile_photo_url?: string;
     // Tenant context from JWT claims
     tenant_id: string;
     tenant_slug: string;

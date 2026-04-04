@@ -203,6 +203,16 @@ export const api = {
             const { data: response } = await authClient.patch<User>('/auth/me', data);
             return response;
         },
+        uploadAvatar: async (file: File): Promise<User> => {
+            const formData = new FormData();
+            formData.append('file', file);
+            const { data } = await authClient.post<User>('/auth/me/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return data;
+        },
     },
 
     sso: {
@@ -514,7 +524,7 @@ export const api = {
         uploadLogo: async (file: File) => {
             const formData = new FormData();
             formData.append('file', file);
-            const { data } = await apiClient.post('/tenants/me/logo', formData, {
+            const { data } = await apiClient.put('/tenants/me/logo', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             return data;

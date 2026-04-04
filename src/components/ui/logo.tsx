@@ -46,8 +46,6 @@ export const Logo = ({
                         alt="Scire"
                         fill
                         className="object-contain"
-                        unoptimized
-                        priority
                     />
                 </div>
             )}

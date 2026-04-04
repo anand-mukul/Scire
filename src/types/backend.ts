@@ -48,6 +48,7 @@ export interface User {
     role: string;
     is_active: boolean;
     is_anonymized: boolean;
+    profile_photo_url?: string;
     created_at: string;
     updated_at: string;
 }
