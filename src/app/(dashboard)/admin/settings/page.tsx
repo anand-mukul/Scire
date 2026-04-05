@@ -449,22 +449,43 @@ export default function TenantSettingsPage() {
                                     </div>
                                     <div className="grid gap-2.5">
                                         <Label htmlFor="color" className="text-sm font-semibold tracking-wide text-foreground">Brand Color</Label>
-                                        <div className="flex gap-3">
-                                            <div className="relative">
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex gap-3">
+                                                <div className="relative">
+                                                    <Input
+                                                        id="color"
+                                                        type="color"
+                                                        className="w-12 h-11 p-0.5 cursor-pointer rounded-lg border-2 border-border overflow-hidden shrink-0"
+                                                        value={watchProfile('primary_color')}
+                                                        onChange={(e) => setProfileValue('primary_color', e.target.value)}
+                                                    />
+                                                </div>
                                                 <Input
-                                                    id="color"
-                                                    type="color"
-                                                    className="w-12 h-11 p-0.5 cursor-pointer rounded-lg border-2 border-border overflow-hidden"
                                                     value={watchProfile('primary_color')}
-                                                    onChange={(e) => setProfileValue('primary_color', e.target.value)}
+                                                    readOnly
+                                                    placeholder="#000000"
+                                                    className="font-mono flex-1 bg-muted/50 text-muted-foreground h-11 text-[15px] shadow-sm uppercase cursor-not-allowed focus-visible:ring-0"
                                                 />
                                             </div>
-                                            <Input
-                                                value={watchProfile('primary_color')}
-                                                onChange={(e) => setProfileValue('primary_color', e.target.value)}
-                                                placeholder="#000000"
-                                                className="font-mono flex-1 bg-background/50 h-11 text-[15px] shadow-sm"
-                                            />
+                                            <div className="flex flex-wrap gap-2 pt-1">
+                                                {[
+                                                    { name: 'Brand Orange', value: '#f97316' },
+                                                    { name: 'True Cobalt', value: '#2563eb' },
+                                                    { name: 'Cyber Emerald', value: '#059669' },
+                                                    { name: 'Vibrant Violet', value: '#7c3aed' },
+                                                    { name: 'Crimson Rose', value: '#e11d48' },
+                                                    { name: 'Ocean Sky', value: '#0284c7' },
+                                                ].map((preset) => (
+                                                    <button
+                                                        key={preset.value}
+                                                        type="button"
+                                                        onClick={() => setProfileValue('primary_color', preset.value)}
+                                                        className={`w-7 h-7 rounded-sm border-2 transition-all shadow-sm ${watchProfile('primary_color')?.toLowerCase() === preset.value.toLowerCase() ? 'border-primary ring-2 ring-primary/30 scale-110 z-10' : 'border-transparent hover:scale-105'}`}
+                                                        style={{ backgroundColor: preset.value }}
+                                                        title={preset.name}
+                                                    />
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

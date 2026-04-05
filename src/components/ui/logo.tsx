@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface LogoProps {
     className?: string;
@@ -10,6 +13,7 @@ interface LogoProps {
     showText?: boolean;
     showIcon?: boolean;
     href?: string;
+    forceDefaultBranding?: boolean;
 }
 
 export const Logo = ({
@@ -19,8 +23,13 @@ export const Logo = ({
     size = 'md',
     showText = true,
     showIcon = true,
-    href = '/'
+    href = '/',
+    forceDefaultBranding = false
 }: LogoProps) => {
+    const tenant = useTenant();
+    const logoSrc = (!forceDefaultBranding && tenant?.tenantLogoUrl) ? tenant.tenantLogoUrl : "/brand-logo.png";
+    const displayName = (!forceDefaultBranding && tenant?.tenantName) ? tenant.tenantName : "Scire";
+
     const sizeMap = {
         sm: { icon: 28, container: 'rounded-lg', text: 'text-xl', gap: 'gap-1.5' },
         md: { icon: 36, container: 'rounded-xl', text: 'text-2xl', gap: 'gap-2' },
@@ -42,10 +51,12 @@ export const Logo = ({
                     style={{ width: s.icon, height: s.icon }}
                 >
                     <Image
-                        src="/brand-logo.png"
-                        alt="Scire"
+                        src={logoSrc}
+                        alt={displayName}
                         fill
+                        priority
                         className="object-contain"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                 </div>
             )}
@@ -58,7 +69,7 @@ export const Logo = ({
                         textClassName
                     )}
                 >
-                    Scire
+                    {displayName}
                 </span>
             )}
         </div>

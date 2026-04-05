@@ -139,8 +139,10 @@ export default function ProfilePage() {
                         <CardContent className="relative pt-0">
                             <div className="absolute -top-12 left-6">
                                 <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name}`} />
-                                    <AvatarFallback className="text-3xl font-bold bg-primary/5 text-primary">
+                                    {user.profile_photo_url && (
+                                        <AvatarImage src={user.profile_photo_url} alt={user.full_name} />
+                                    )}
+                                    <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-inner">
                                         {getInitials(user.full_name)}
                                     </AvatarFallback>
                                 </Avatar>

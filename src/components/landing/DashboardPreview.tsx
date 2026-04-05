@@ -14,8 +14,8 @@ export const DashboardPreview = () => {
     ] as const;
 
     return (
-        <section className="py-20 bg-white dark:bg-neutral-950 overflow-hidden">
-            <div className="container mx-auto px-4">
+        <section className="relative py-20 bg-white dark:bg-neutral-950 overflow-hidden">
+            <div className="relative container mx-auto px-4">
                 <div className="flex flex-col items-center justify-center">
                     <ContainerScroll
                         titleComponent={

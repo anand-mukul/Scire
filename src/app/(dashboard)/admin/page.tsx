@@ -223,7 +223,7 @@ export default function AdminDashboard() {
                 <div className="space-y-10">
 
                     {/* Quick Actions Panel */}
-                    <div className="space-y-5">
+                    {/* <div className="space-y-5">
                         <h2 className="text-lg font-semibold tracking-tight">Quick Actions</h2>
                         <div className="bg-card/30 border border-border/40 rounded-2xl p-2.5 space-y-1.5 shadow-sm backdrop-blur-sm">
                             <QuickAction
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                                 colorClass="bg-rose-500/10 text-rose-600 border border-rose-500/20"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* User Distribution Widget */}
                     <div className="space-y-5">

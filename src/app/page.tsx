@@ -15,7 +15,7 @@ const Footer = dynamic(() => import('@/components/landing/Footer').then((mod) =>
 export default function Home() {
   return (
     <SmoothScroll>
-      <main className="bg-background min-h-screen text-foreground selection:bg-primary/30">
+      <main className="relative bg-background min-h-screen text-foreground selection:bg-primary/30">
         <Navbar />
         <HeroSection />
         <DashboardPreview />

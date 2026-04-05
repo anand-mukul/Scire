@@ -67,7 +67,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -78,6 +78,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
+import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -235,13 +236,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Sidebar collapsible="icon" {...props}>
                 <SidebarHeader>
                     <div className="flex items-center gap-2 py-3">
-                        <img
-                            src="/brand-logo.svg"
-                            alt="Scire"
-                            className={cn(
-                                'flex-shrink-1 transition-all duration-200',
-                                sidebarState === 'collapsed' ? 'w-6 h-6' : 'w-6 h-6'
-                            )}
+                        <Logo 
+                            size={sidebarState === 'collapsed' ? 'sm' : 'sm'} 
+                            showText={false} 
+                            className="mt-[3px]"
                         />
                         {sidebarState !== 'collapsed' && (
                             <div className="grid flex-1 text-left leading-tight min-w-0">
@@ -391,6 +389,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-all hover:bg-sidebar-accent/50"
                                     >
                                         <Avatar className="h-8 w-8 rounded-lg border">
+                                            {user?.profile_photo_url && (
+                                                <AvatarImage src={user.profile_photo_url} alt={user.full_name || 'User'} />
+                                            )}
                                             <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-medium text-xs">
                                                 {getInitials(user?.full_name || 'User')}
                                             </AvatarFallback>
@@ -411,6 +412,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <DropdownMenuLabel className="p-0 font-normal">
                                         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                             <Avatar className="h-8 w-8 rounded-lg">
+                                                {user?.profile_photo_url && (
+                                                    <AvatarImage src={user.profile_photo_url} alt={user.full_name || 'User'} />
+                                                )}
                                                 <AvatarFallback className="rounded-lg">
                                                     {getInitials(user?.full_name || 'User')}
                                                 </AvatarFallback>

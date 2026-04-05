@@ -73,7 +73,7 @@ export const HeroSection = () => {
                     className="flex flex-col sm:flex-row items-center gap-4 pt-4"
                 >
                     <Link href="/request-access">
-                        <Button size="lg" className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 font-medium group">
+                        <Button size="lg" className="rounded-full h-12 px-8 text-base bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-400 dark:to-orange-500 hover:from-orange-600 hover:to-orange-700 dark:hover:from-orange-500 dark:hover:to-orange-600 text-white shadow-lg hover:shadow-xl hover:shadow-orange-500/20 transition-all duration-300 font-medium group border-0">
                             Start Free Trial
                             <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Button>

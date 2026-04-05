@@ -44,7 +44,7 @@ export const Navbar = () => {
                 }`}
         >
             <div className="flex items-center gap-8">
-                <Logo size="sm" textClassName="text-neutral-900 dark:text-white" />
+                <Logo forceDefaultBranding size="sm" textClassName="text-neutral-900 dark:text-white" />
                 <div className="hidden md:flex items-center gap-8">
                     {navLinks.map((link) => (
                         <Link
@@ -111,7 +111,7 @@ export const Navbar = () => {
                         <SheetContent side="right" className="w-[300px] sm:w-[540px] border-l border-neutral-200 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl">
                             <SheetHeader className="mb-8 text-left">
                                 <SheetTitle>
-                                    <Logo textClassName="text-neutral-900 dark:text-white" />
+                                    <Logo forceDefaultBranding textClassName="text-neutral-900 dark:text-white" />
                                 </SheetTitle>
                             </SheetHeader>
                             <div className="flex flex-col gap-6">

@@ -13,6 +13,26 @@
 import { createContext, useContext, ReactNode, useMemo, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TenantStatus, TenantSettings, UserRole } from '@/types/auth';
+
+/**
+ * Calculates accessible foreground color (black/white) based on background hex luminance.
+ */
+function getContrastForeground(hexcolor: string): string {
+    if (!hexcolor) return '#ffffff';
+    let hex = hexcolor.replace('#', '');
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return '#ffffff';
+    
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? '#000000' : '#ffffff';
+}
 // ... imports
 
 export interface TenantContextType {
@@ -83,16 +103,28 @@ export function TenantProvider({ children }: TenantProviderProps) {
     useEffect(() => {
         if (tenantContext.tenantPrimaryColor) {
             const color = tenantContext.tenantPrimaryColor;
-            document.documentElement.style.setProperty('--primary', color);
-            document.documentElement.style.setProperty('--ring', color);
-            document.documentElement.style.setProperty('--sidebar-primary', color);
-            // Optional: Set brand-primary for consistency if used explicitly
-            document.documentElement.style.setProperty('--brand-primary', color);
+            const fgColor = getContrastForeground(color);
+            const root = document.documentElement;
+            
+            root.style.setProperty('--primary', color);
+            root.style.setProperty('--primary-foreground', fgColor);
+            root.style.setProperty('--ring', color);
+            
+            root.style.setProperty('--sidebar-primary', color);
+            root.style.setProperty('--sidebar-primary-foreground', fgColor);
+            root.style.setProperty('--brand-primary', color);
+            
+            // Generate visual derivatives
+            root.style.setProperty('--brand-gradient-text', `linear-gradient(to right, ${color}, color-mix(in oklch, ${color} 60%, white))`);
         } else {
-            document.documentElement.style.removeProperty('--primary');
-            document.documentElement.style.removeProperty('--ring');
-            document.documentElement.style.removeProperty('--sidebar-primary');
-            document.documentElement.style.removeProperty('--brand-primary');
+            const root = document.documentElement;
+            root.style.removeProperty('--primary');
+            root.style.removeProperty('--primary-foreground');
+            root.style.removeProperty('--ring');
+            root.style.removeProperty('--sidebar-primary');
+            root.style.removeProperty('--sidebar-primary-foreground');
+            root.style.removeProperty('--brand-primary');
+            root.style.removeProperty('--brand-gradient-text');
         }
     }, [tenantContext.tenantPrimaryColor]);
 
