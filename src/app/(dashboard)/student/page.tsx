@@ -153,13 +153,37 @@ function StudentDashboard() {
     };
 
     const allSessions = (sessions || []) as StudentSession[];
-    const activeSessions = allSessions.filter(s => s.status === SessionStatus.IN_PROGRESS || s.status === SessionStatus.PENDING);
-    const historySessions = allSessions.filter(s => s.status === SessionStatus.COMPLETED || s.status === SessionStatus.TERMINATED || s.status === SessionStatus.ABANDONED);
+    const now = new Date();
 
-    // Compute available exams: published/active exams with remaining attempts
+    // Check if a session's exam is currently expired
+    const isSessionExpired = (s: StudentSession) => {
+        if (!s.exam?.end_time) return false;
+        return now > new Date(s.exam.end_time);
+    };
+
+    const activeSessions = allSessions.filter(
+        s => (s.status === SessionStatus.IN_PROGRESS || s.status === SessionStatus.PENDING) && !isSessionExpired(s)
+    );
+
+    const historySessions = allSessions.filter(
+        s => s.status === SessionStatus.COMPLETED || s.status === SessionStatus.TERMINATED || s.status === SessionStatus.ABANDONED ||
+            ((s.status === SessionStatus.IN_PROGRESS || s.status === SessionStatus.PENDING) && isSessionExpired(s))
+    );
+
     const availableExams = React.useMemo(() => {
+        const now = new Date();
         const publishedExams = ((exams || []) as Exam[]).filter(
-            e => e.status === ExamStatus.PUBLISHED || e.status === ExamStatus.ACTIVE
+            e => {
+                const isActive = e.status === ExamStatus.PUBLISHED || e.status === ExamStatus.ACTIVE;
+                if (!isActive) return false;
+
+                // If the exam has an end time, ensure we haven't passed it
+                if (e.end_time) {
+                    const endTime = new Date(e.end_time);
+                    if (now > endTime) return false;
+                }
+                return true;
+            }
         );
         return publishedExams.map(exam => {
             const sessionsForExam = allSessions.filter(s => s.exam_id === exam.id);

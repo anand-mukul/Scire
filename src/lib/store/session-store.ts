@@ -67,13 +67,13 @@ export interface SessionState {
     // Integrity Violation
     violation: {
         isWarning: boolean;
-        type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT' | null;
+        type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT' | 'VOICE_MISMATCH' | 'NOISE_SPIKE' | 'ILLUMINATION_SPIKE' | 'FOCUS_LOSS' | 'SNAPSHOT_REUSE' | null;
         remainingSeconds: number;
         strikes: number;
         maxStrikes: number;
     };
 
-    setViolationState: (isWarning: boolean, type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT' | null, remainingSeconds: number) => void;
+    setViolationState: (isWarning: boolean, type: 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT' | 'VOICE_MISMATCH' | 'NOISE_SPIKE' | 'ILLUMINATION_SPIKE' | 'FOCUS_LOSS' | 'SNAPSHOT_REUSE' | null, remainingSeconds: number) => void;
     decrementViolationTimer: () => void;
     incrementStrike: () => number;
     resetStrikes: () => void;

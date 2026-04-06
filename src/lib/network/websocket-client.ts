@@ -2,6 +2,7 @@ import { useSessionStore, DialogueState } from '@/lib/store/session-store';
 import { Logger } from '@/lib/logger';
 import { TranscriptSpeaker } from '@/types/backend';
 import { getAccessToken } from '@/lib/auth-token';
+import type { IntegrityViolationType } from '@/services/integrityService';
 
 type WebSocketMessage =
     | { type: 'state_update'; state: DialogueState; questions_asked?: number }
@@ -325,7 +326,7 @@ class VivaWebSocketClient {
                 // Trigger warning modal
                 store.setViolationState(
                     true,
-                    message.violation_type as any,
+                    message.violation_type as IntegrityViolationType,
                     message.remaining_seconds || 10
                 );
                 break;

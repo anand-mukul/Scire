@@ -42,6 +42,7 @@ export function useLiveBehaviorSummary(sessionId: string, options?: { refetchInt
         queryKey: ['behavior-summary', sessionId],
         queryFn: () => api.sessions.behaviorSummary(sessionId),
         refetchInterval: options?.refetchInterval,
+        enabled: !!sessionId && sessionId.length > 0,
     });
 }
 
@@ -50,5 +51,6 @@ export function useLiveBehaviorTimeline(sessionId: string, limit?: number, optio
         queryKey: ['behavior-timeline', sessionId, limit],
         queryFn: () => api.sessions.behaviorTimeline(sessionId, limit),
         refetchInterval: options?.refetchInterval,
+        enabled: !!sessionId && sessionId.length > 0,
     });
 }

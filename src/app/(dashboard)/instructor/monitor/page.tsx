@@ -29,12 +29,21 @@ export default function InstructorMonitorPage() {
         { status: SessionStatus.IN_PROGRESS },
         { refetchInterval: 5000 }
     );
-    const dashboardSessions = (sessions || []) as DashboardSession[];
+    const dashboardSessions: DashboardSession[] = React.useMemo(() =>
+        (sessions || []).map((s: VivaSession) => ({
+            ...s,
+            student_name: s.student?.full_name,
+            exam_title: s.exam?.title,
+            started_at: s.start_time,
+            integrity_status: s.integrity_flag ? 'flagged' : 'ok',
+        })),
+        [sessions]
+    );
     const [selectedSession, setSelectedSession] = useState<DashboardSession | null>(null);
 
     const stats = {
         total: dashboardSessions.length,
-        flagged: dashboardSessions.filter(s => s.integrity_status === 'flagged').length,
+        flagged: dashboardSessions.filter(s => s.integrity_flag).length,
     };
 
     return (
@@ -105,7 +114,7 @@ export default function InstructorMonitorPage() {
 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/40">
                                     <Clock className="w-3.5 h-3.5" />
-                                    <span>Started {session.started_at ? formatDistanceToNow(new Date(session.started_at), { addSuffix: true }) : 'Just now'}</span>
+                                    <span>Started {(session.started_at || session.start_time) ? formatDistanceToNow(new Date((session.started_at || session.start_time)!), { addSuffix: true }) : 'Just now'}</span>
                                 </div>
 
                                 <div className="mt-auto grid grid-cols-2 gap-2 pt-2">

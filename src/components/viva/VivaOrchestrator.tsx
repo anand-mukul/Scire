@@ -35,6 +35,7 @@ import { vivaWebSocket } from '@/lib/network/websocket-client';
 import { TranscriptSheet } from './TranscriptSheet';
 import { PremiumLoader } from '@/components/ui/premium-loader';
 import { cn } from '@/lib/utils';
+import { StudentToolbar } from './StudentToolbar';
 
 
 // Push-to-Talk Mic Toolbar — Fixed at bottom center
@@ -363,6 +364,7 @@ export const VivaOrchestrator: React.FC = () => {
     const [longConnect, setLongConnect] = React.useState(false);
     const [isFullscreen, setIsFullscreen] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [needsResumeInteraction, setNeedsResumeInteraction] = React.useState(false);
     
     const userVolume = useSessionStore((state) => state.userVolume);
     const isMicActive = useSessionStore((state) => state.isMicActive);
@@ -431,6 +433,39 @@ export const VivaOrchestrator: React.FC = () => {
         }
         return () => clearTimeout(timer);
     }, [connectionState]);
+
+    // Reconnection Gateway Logic
+    React.useEffect(() => {
+        if (
+            connectionState === 'CONNECTED' &&
+            fsmState !== DialogueState.AUTH &&
+            fsmState !== DialogueState.END &&
+            fsmState !== DialogueState.TERMINATED
+        ) {
+            // Check if audioManager needs user gesture to start
+            if (!audioManager.isInitialized()) {
+                setNeedsResumeInteraction(true);
+            }
+        }
+    }, [connectionState, fsmState]);
+
+    const handleResumeConnection = async () => {
+        try {
+            await audioManager.initialize();
+            
+            // If the exam requires fullscreen, also request it
+            if (examSettings.require_fullscreen) {
+                await requestFullscreen();
+            }
+
+            setNeedsResumeInteraction(false);
+            
+            // Un-suspend TTS player logic if needed or notify backend
+            vivaWebSocket.send({ type: 'session_resume' });
+        } catch (err) {
+            toast.error('Failed to initialize session. Please check your microphone permissions.');
+        }
+    };
 
     // Handle Leave Session — sends abandon signal to backend
     const handleLeaveSession = async () => {
@@ -559,21 +594,41 @@ export const VivaOrchestrator: React.FC = () => {
                 "flex flex-col h-screen w-full bg-background overflow-hidden relative selection:bg-primary/30 transition-colors duration-500",
                 violation.isWarning ? 'border-[8px] border-destructive' : ''
             )}>
-                {/* Fullscreen Alert Overlay (Initial) */}
-                {examSettings.require_fullscreen && !isFullscreen && fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && !violation.isWarning && (
+                {/* Fullscreen Alert Overlay (Initial & Reconnect) */}
+                {examSettings.require_fullscreen && (!isFullscreen || needsResumeInteraction) && fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && fsmState !== DialogueState.TERMINATED && !violation.isWarning && (
                     <div className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
                         <div className="flex flex-col items-center space-y-6 max-w-md text-center animate-in zoom-in-95 duration-300">
                             <div className="p-4 bg-neutral-900 rounded-full border border-neutral-800 shadow-2xl">
                                 <Maximize className="w-8 h-8 text-blue-400" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-foreground mb-2">Fullscreen Required</h2>
+                                <h2 className="text-2xl font-bold text-foreground mb-2">Resume Session</h2>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    This exam session requires fullscreen mode for integrity. Please enable it to proceed with the assessment.
+                                    Your session requires fullscreen mode and microphone access to proceed. Click below to resume your assessment.
                                 </p>
                             </div>
-                            <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" onClick={requestFullscreen}>
-                                Enter Fullscreen
+                            <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" onClick={handleResumeConnection}>
+                                Enter Fullscreen & Resume
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Resume Exam Component (If fullscreen is NOT required, but audio still needs gesture) */}
+                {!examSettings.require_fullscreen && needsResumeInteraction && fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && fsmState !== DialogueState.TERMINATED && !violation.isWarning && (
+                    <div className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                         <div className="flex flex-col items-center space-y-6 max-w-md text-center animate-in zoom-in-95 duration-300">
+                            <div className="p-4 bg-emerald-900/40 rounded-full border border-emerald-800 shadow-2xl">
+                                <Monitor className="w-8 h-8 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-foreground mb-2">Resume Session</h2>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    You have reconnected successfully. Click below to resume your assessment.
+                                </p>
+                            </div>
+                            <Button size="lg" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" onClick={handleResumeConnection}>
+                                <Mic className="w-4 h-4 mr-2" /> Resume Exam
                             </Button>
                         </div>
                     </div>
@@ -756,7 +811,10 @@ export const VivaOrchestrator: React.FC = () => {
 
                 {/* Push-to-Talk Mic Toolbar — Fixed bottom center */}
                 {fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && fsmState !== DialogueState.TERMINATED && (
-                    <MicToolbar />
+                    <>
+                        <StudentToolbar />
+                        <MicToolbar />
+                    </>
                 )}
 
             </div>

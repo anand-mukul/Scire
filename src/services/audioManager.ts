@@ -22,6 +22,10 @@ export class AudioManager {
         });
     }
 
+    public isInitialized(): boolean {
+        return this.audioContext !== null && this.audioContext.state === 'running';
+    }
+
     async initialize() {
         if (!this.audioContext) {
             // Use the browser's native sample rate (usually 44100 or 48000).
@@ -94,9 +98,9 @@ export class AudioManager {
 
                 const rms = this.analyzeVolume(data);
 
-                // Resample to 16kHz for backend STT / Voice Verification
-                const resampledData = this.downsampleBuffer(data, this.audioContext!.sampleRate, 16000);
-                const pcm16 = this.floatTo16BitPCM(resampledData);
+                // Data is already 16kHz from the AudioWorklet (recorder-processor.js)
+                // — send directly without redundant main-thread resampling
+                const pcm16 = this.floatTo16BitPCM(data);
                 vivaWebSocket.sendAudioChunk(pcm16.buffer as ArrayBuffer);
             };
 
@@ -173,33 +177,7 @@ export class AudioManager {
         return int16Array;
     }
 
-    private downsampleBuffer(buffer: Float32Array, sampleRate: number, outSampleRate: number): Float32Array {
-        if (outSampleRate === sampleRate) {
-            return buffer;
-        }
-        if (outSampleRate > sampleRate) {
-            return buffer; // Cannot magically upsample simply, let it pass (rare)
-        }
-        const sampleRateRatio = sampleRate / outSampleRate;
-        const newLength = Math.round(buffer.length / sampleRateRatio);
-        const result = new Float32Array(newLength);
-        let offsetResult = 0;
-        let offsetBuffer = 0;
-        // Simple linear interpolation
-        while (offsetResult < result.length) {
-            const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
-            let accum = 0;
-            let count = 0;
-            for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
-                accum += buffer[i];
-                count++;
-            }
-            result[offsetResult] = count > 0 ? accum / count : 0;
-            offsetResult++;
-            offsetBuffer = nextOffsetBuffer;
-        }
-        return result;
-    }
+
 
     private analyzeVolume(data: Float32Array): number {
         // RMS

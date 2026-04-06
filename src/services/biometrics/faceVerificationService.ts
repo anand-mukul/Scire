@@ -22,6 +22,7 @@ class FaceVerificationService {
   private latestDetection: FaceDetectionResult | null = null;
   private monitoringTimer: ReturnType<typeof setInterval> | null = null;
   private _initPromise: Promise<void> | null = null;
+  private currentVideoElement: HTMLVideoElement | null = null;
 
   constructor() {
     // ── Swap provider here ──
@@ -156,6 +157,8 @@ class FaceVerificationService {
 
     console.log(`[FaceVerification] Monitoring started (every ${intervalMs / 1000}s)`);
 
+    this.currentVideoElement = videoElement;
+
     this.monitoringTimer = setInterval(async () => {
       try {
         // Don't check if video is paused or not playing
@@ -202,6 +205,26 @@ class FaceVerificationService {
     return this.latestDetection;
   }
 
+  /** Captures a low-resolution base64 JPEG from the active video stream for backend verification. */
+  getSnapshotBase64(): string | null {
+    if (!this.currentVideoElement || this.currentVideoElement.readyState < 2) {
+      return null;
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 240;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(this.currentVideoElement, 0, 0, 320, 240);
+        return canvas.toDataURL('image/jpeg', 0.6);
+      }
+    } catch (err) {
+      console.warn('[FaceVerification] Snapshot failed:', err);
+    }
+    return null;
+  }
+
   // ── Cleanup ─────────────────────────────────────────────────
 
   /** Full cleanup: stop monitoring, release provider resources, clear state. */
@@ -211,6 +234,7 @@ class FaceVerificationService {
     this.baseline = null;
     this.latestSimilarity = 1.0;
     this.latestDetection = null;
+    this.currentVideoElement = null;
     this._initPromise = null;
   }
 }

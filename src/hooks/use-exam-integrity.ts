@@ -5,10 +5,9 @@ import { api } from '@/lib/network/api';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Logger } from '@/lib/logger';
-import { integrityService } from '@/services/integrityService';
+import { integrityService, IntegrityViolationType } from '@/services/integrityService';
 
-// Narrowed type that matches what the session store accepts (excludes 'UNKNOWN')
-type ViolationType = 'FULLSCREEN' | 'TAB_SWITCH' | 'FACE_MISSING' | 'GAZE_DEVIATION' | 'COPY_ATTEMPT';
+
 
 const GRACE_PERIOD_SECONDS = 15; // Give 15s to return (up from 10)
 
@@ -32,7 +31,7 @@ export const useExamIntegrity = (sessionId: string | null) => {
     // Violation Handlers (Phase 3: 3-Strike System)
     // ═══════════════════════════════════════════════════════════════
 
-    const triggerViolation = useCallback((type: ViolationType, reason: string) => {
+    const triggerViolation = useCallback((type: IntegrityViolationType, reason: string) => {
         if (!sessionId || connectionState !== 'CONNECTED') return;
 
         // If already in warning state, do nothing (timer continues)
@@ -197,7 +196,7 @@ export const useExamIntegrity = (sessionId: string | null) => {
     useEffect(() => {
         if (connectionState === 'CONNECTED' && sessionId) {
             integrityService.setGazeViolationCallback(
-                (type: ViolationType, reason: string) => {
+                (type: IntegrityViolationType, reason: string) => {
                     triggerViolation(type, reason);
                 }
             );

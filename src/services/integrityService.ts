@@ -13,7 +13,12 @@ export type IntegrityViolationType =
     | 'FULLSCREEN'
     | 'FACE_MISSING'
     | 'GAZE_DEVIATION'
-    | 'COPY_ATTEMPT';
+    | 'COPY_ATTEMPT'
+    | 'VOICE_MISMATCH'
+    | 'NOISE_SPIKE'
+    | 'ILLUMINATION_SPIKE'
+    | 'FOCUS_LOSS'
+    | 'SNAPSHOT_REUSE';
 
 export interface IntegrityMetrics {
     tab_switches: number;
@@ -24,6 +29,7 @@ export interface IntegrityMetrics {
     illumination_variance: number | null;
     gaze_deviation_count: number;
     copy_attempts: number;
+    webcam_snapshot: string | null;
     timestamp: string;
 }
 
@@ -266,6 +272,8 @@ class IntegrityService {
      */
     public getMetrics(): IntegrityMetrics {
         const detection = faceVerificationService.getLatestDetection();
+        const base64Snapshot = faceVerificationService.getSnapshotBase64();
+        
         return {
             tab_switches: this.tabSwitchCount,
             noise_score: this.estimateNoiseScore(),
@@ -275,6 +283,7 @@ class IntegrityService {
             illumination_variance: detection?.illuminationVariance || null,
             gaze_deviation_count: this.gazeDeviationCount,
             copy_attempts: this.copyAttemptCount,
+            webcam_snapshot: base64Snapshot,
             timestamp: new Date().toISOString(),
         };
     }
