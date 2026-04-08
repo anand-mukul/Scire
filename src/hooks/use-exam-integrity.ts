@@ -57,7 +57,7 @@ export const useExamIntegrity = (sessionId: string | null) => {
         // Notify Backend with full metrics
         const metrics = integrityService.getMetrics();
         vivaWebSocket.send({
-            type: 'integrity_snapshot',
+            type: 'INTEGRITY_SNAPSHOT',
             data: {
                 ...metrics,
                 reason: reason,
@@ -138,7 +138,9 @@ export const useExamIntegrity = (sessionId: string | null) => {
         if (!document.fullscreenElement) {
             triggerViolation('FULLSCREEN', 'fullscreen_exit');
         } else {
-            resolveViolation();
+            if (useSessionStore.getState().violation.type === 'FULLSCREEN') {
+                resolveViolation();
+            }
         }
     }, [triggerViolation, resolveViolation]);
 
@@ -147,15 +149,25 @@ export const useExamIntegrity = (sessionId: string | null) => {
             triggerViolation('TAB_SWITCH', 'tab_switch_focus_lost');
         } else {
             if (!examSettings.require_fullscreen || document.fullscreenElement) {
-                resolveViolation();
+                if (useSessionStore.getState().violation.type === 'TAB_SWITCH') {
+                    resolveViolation();
+                }
             }
         }
     }, [triggerViolation, resolveViolation, examSettings.require_fullscreen]);
 
     useEffect(() => {
-        const handleFocus = () => { if (!document.hidden) resolveViolation(); };
+        const handleFocus = () => {
+            if (!document.hidden && useSessionStore.getState().violation.type === 'TAB_SWITCH') {
+                resolveViolation();
+            }
+        };
         const handleFaceMissing = () => triggerViolation('FACE_MISSING', 'face_not_detected_or_mismatch');
-        const handleFacePresent = () => resolveViolation();
+        const handleFacePresent = () => {
+            if (useSessionStore.getState().violation.type === 'FACE_MISSING') {
+                resolveViolation();
+            }
+        };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('blur', handleVisibilityChange);

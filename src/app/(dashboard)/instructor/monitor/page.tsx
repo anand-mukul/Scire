@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatDistanceToNow } from 'date-fns';
 import { LiveMonitorDetails } from '@/components/viva/LiveMonitorDetails';
+import { LiveConnectModal } from '@/components/viva/LiveConnectModal';
 
 export interface DashboardSession extends VivaSession {
     student_name?: string;
@@ -40,6 +41,7 @@ export default function InstructorMonitorPage() {
         [sessions]
     );
     const [selectedSession, setSelectedSession] = useState<DashboardSession | null>(null);
+    const [connectSessionId, setConnectSessionId] = useState<string | null>(null);
 
     const stats = {
         total: dashboardSessions.length,
@@ -127,7 +129,12 @@ export default function InstructorMonitorPage() {
                                         <Activity className="w-3.5 h-3.5" />
                                         Behavior Logs
                                     </Button>
-                                    <Button size="sm" variant={session.integrity_status === 'flagged' ? 'destructive' : 'default'} className="w-full text-xs h-8 gap-1.5 shadow-sm">
+                                    <Button 
+                                        size="sm" 
+                                        variant={session.integrity_status === 'flagged' ? 'destructive' : 'default'} 
+                                        className="w-full text-xs h-8 gap-1.5 shadow-sm"
+                                        onClick={() => setConnectSessionId(session.id)}
+                                    >
                                         <Headphones className="w-3.5 h-3.5" />
                                         Connect
                                     </Button>
@@ -142,6 +149,12 @@ export default function InstructorMonitorPage() {
                 session={selectedSession} 
                 open={!!selectedSession} 
                 onOpenChange={(open) => !open && setSelectedSession(null)} 
+            />
+
+            <LiveConnectModal
+                sessionId={connectSessionId}
+                open={!!connectSessionId}
+                onOpenChange={(open) => !open && setConnectSessionId(null)}
             />
         </div>
     );

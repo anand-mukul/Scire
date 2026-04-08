@@ -3,22 +3,26 @@ import { Logger } from '@/lib/logger';
 import { TranscriptSpeaker } from '@/types/backend';
 import { getAccessToken } from '@/lib/auth-token';
 import type { IntegrityViolationType } from '@/services/integrityService';
+import { toast } from 'sonner';
 
 type WebSocketMessage =
-    | { type: 'state_update'; state: DialogueState; questions_asked?: number }
-    | { type: 'transcript'; text: string; is_final: boolean; role: 'STUDENT' | 'ASSISTANT' | 'SYSTEM'; timestamp: string }
-    | { type: 'audio_chunk'; data: string } // base64
-    | { type: 'ping' }
-    | { type: 'pong' }
-    | { type: 'heartbeat'; timestamp: string }
-    | { type: 'agent_speaking'; status: boolean }
-    | { type: 'integrity_snapshot'; data: any }
-    | { type: 'integrity_alert'; reason: string; severity: string; violation_type: string; remaining_seconds: number }
-    | { type: 'session_start' }
-    | { type: 'session_leave' }
-    | { type: 'session_metadata'; expiry_time: string | null; settings: Record<string, any> }
-    | { type: 'interrupt' }
-    | { type: 'error'; code: string; message: string };
+    | { type: 'STATE_UPDATE'; state: DialogueState; questions_asked?: number }
+    | { type: 'TRANSCRIPT'; text: string; is_final: boolean; role: 'STUDENT' | 'ASSISTANT' | 'SYSTEM'; timestamp: string }
+    | { type: 'AUDIO_CHUNK'; data: string } // base64
+    | { type: 'PING' }
+    | { type: 'PONG' }
+    | { type: 'HEARTBEAT'; timestamp: string }
+    | { type: 'AGENT_SPEAKING'; status: boolean }
+    | { type: 'INTEGRITY_SNAPSHOT'; data: any }
+    | { type: 'INTEGRITY_ALERT'; reason: string; severity: string; violation_type: string; remaining_seconds: number }
+    | { type: 'SESSION_START' }
+    | { type: 'SESSION_RESUME' }
+    | { type: 'SESSION_LEAVE' }
+    | { type: 'SESSION_METADATA'; expiry_time: string | null; settings: Record<string, any> }
+    | { type: 'INTERRUPT' }
+    | { type: 'WEBRTC_SIGNAL'; signalData: any; senderRole?: string; senderId?: string }
+    | { type: 'INSTRUCTOR_INTERVENTION'; action: 'TERMINATE' | 'WARN'; reason: string }
+    | { type: 'ERROR'; code: string; message: string };
 
 const WS_CODES = {
     NORMAL: 1000,
@@ -125,7 +129,7 @@ class VivaWebSocketClient {
 
             // On first connect (0 reconnects), wait for explicit startSession() call.
             if (this.reconnectAttempts > 0) {
-                this.send({ type: 'session_resume' });
+                this.send({ type: 'SESSION_RESUME' });
             }
 
             this.reconnectAttempts = 0;
@@ -241,7 +245,7 @@ class VivaWebSocketClient {
     }
 
     public startSession() {
-        this.send({ type: 'session_start' });
+        this.send({ type: 'SESSION_START' });
     }
 
     private handleConnectionFailure() {
@@ -253,26 +257,28 @@ class VivaWebSocketClient {
         const store = useSessionStore.getState();
 
         switch (message.type) {
-            case 'state_update':
+            case 'STATE_UPDATE':
                 if (Object.values(DialogueState).includes(message.state)) {
                     store.setFsmState(message.state, message.questions_asked);
                 }
                 break;
 
-            case 'transcript':
+            case 'TRANSCRIPT':
                 if (message.is_final) {
                     store.addTranscript({
                         text: message.text,
                         speaker: message.role as TranscriptSpeaker,
-                        timestamp: message.timestamp,
+                        timestamp: message.timestamp || new Date().toISOString(),
                         is_final: true,
                     });
                 } else {
-                    store.updatePartialTranscript(message.text);
+                    if (store.updatePartialTranscript) {
+                        store.updatePartialTranscript(message.text);
+                    }
                 }
                 break;
 
-            case 'audio_chunk':
+            case 'AUDIO_CHUNK':
                 // 1. Dispatch event for legacy/other listeners
                 const audioEvent = new CustomEvent('viva:audio_chunk', { detail: message.data });
                 window.dispatchEvent(audioEvent);
@@ -309,30 +315,37 @@ class VivaWebSocketClient {
                 }
                 break;
 
-            case 'agent_speaking':
+            case 'AGENT_SPEAKING':
                 store.setAgentSpeaking(message.status);
                 if (!message.status) store.setAgentVolume(0); // Reset volume when stop speaking
                 break;
 
-            case 'session_metadata':
+            case 'SESSION_METADATA':
                 store.setSessionMetadata(message.expiry_time, message.settings);
                 break;
 
-            case 'ping':
-                this.send({ type: 'pong' });
+            case 'PING':
+                this.send({ type: 'PONG' });
                 break;
 
-            case 'integrity_alert':
+            case 'INTEGRITY_ALERT':
                 // Trigger warning modal
                 store.setViolationState(
                     true,
                     message.violation_type as IntegrityViolationType,
                     message.remaining_seconds || 10
                 );
+                const currentStrikes = store.violation.strikes;
+                const maxStrikesVal = store.violation.maxStrikes;
+                const strikesRemaining = maxStrikesVal - currentStrikes;
+                toast.error("⚠️ Integrity Violation Detected", {
+                    description: `Return to the exam immediately. ${strikesRemaining} strike${strikesRemaining !== 1 ? 's' : ''} remaining before termination.`,
+                    duration: 7000,
+                });
                 break;
 
-            case 'error':
-                // Handle specific backend error messages that might not be close codes
+            case 'ERROR':
+                Logger.error('VivaWS: Remote Error', message.code, message.message);
                 if (message.code === ERROR_CODES.VOICE_UNAVAILABLE) {
                     Logger.warn(`VivaWS: ${message.message}`);
                     store.setAudioStatus(false);
@@ -347,6 +360,10 @@ class VivaWebSocketClient {
                     Logger.error(`VivaWS Error [${message.code}]: ${message.message}`);
                     store.setError(message.message);
                 }
+                break;
+
+            case 'WEBRTC_SIGNAL':
+                window.dispatchEvent(new CustomEvent('viva:webrtc_signal', { detail: message }));
                 break;
         }
     }
@@ -371,7 +388,7 @@ class VivaWebSocketClient {
     }
 
     sendIntegritySnapshot(payload: { data: string;[key: string]: any }) {
-        this.send({ type: 'integrity_snapshot', ...payload });
+        this.send({ type: 'INTEGRITY_SNAPSHOT', ...payload });
     }
 
     private flushQueue() {
@@ -388,7 +405,7 @@ class VivaWebSocketClient {
     private startHeartbeat() {
         this.stopHeartbeat();
         this.pingInterval = setInterval(() => {
-            this.send({ type: 'ping' });
+            this.send({ type: 'PING' });
         }, 10000);
     }
 

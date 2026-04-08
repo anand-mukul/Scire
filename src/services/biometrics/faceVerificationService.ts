@@ -144,15 +144,14 @@ class FaceVerificationService {
    * Start periodic face verification.
    * Silently checks every intervalMs that the same person is still present.
    */
-  startMonitoring(
+  public startMonitoring(
     videoElement: HTMLVideoElement,
     intervalMs: number = DEFAULT_MONITORING_INTERVAL_MS
   ): void {
     this.stopMonitoring(); // Prevent duplicate timers
 
     if (!this.baseline) {
-      console.warn('[FaceVerification] Cannot start monitoring without baseline');
-      return;
+      console.warn('[FaceVerification] No baseline found. Identity matching is disabled, but general face presence monitoring will continue.');
     }
 
     console.log(`[FaceVerification] Monitoring started (every ${intervalMs / 1000}s)`);

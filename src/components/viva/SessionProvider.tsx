@@ -54,9 +54,9 @@ export function SessionProvider({ sessionId, token, children }: SessionProviderP
 
     const startSession = () => {
         // Trigger explicit start if needed, or just let auto-connect work
-        // vivaWebSocket.send({ type: 'session_start' }); // Type string works
+        // vivaWebSocket.send({ type: 'SESSION_START' }); // Type string works
         // Or if MessageType enum is available? New client uses string literals mostly.
-        vivaWebSocket.send({ type: 'session_start' });
+        vivaWebSocket.send({ type: 'SESSION_START' });
     };
 
     const endSession = () => {

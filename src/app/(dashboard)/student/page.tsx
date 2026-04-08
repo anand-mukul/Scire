@@ -177,7 +177,6 @@ function StudentDashboard() {
                 const isActive = e.status === ExamStatus.PUBLISHED || e.status === ExamStatus.ACTIVE;
                 if (!isActive) return false;
 
-                // If the exam has an end time, ensure we haven't passed it
                 if (e.end_time) {
                     const endTime = new Date(e.end_time);
                     if (now > endTime) return false;

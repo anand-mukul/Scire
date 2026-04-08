@@ -5,8 +5,10 @@ import { useSessionStore, DialogueState } from '@/lib/store/session-store';
 import { vivaWebSocket } from '@/lib/network/websocket-client';
 import { audioManager } from '@/services/audioManager';
 import { integrityService } from '@/services/integrityService';
+import { faceVerificationService } from '@/services/biometrics/faceVerificationService';
 import { toast } from 'sonner';
 import { Logger } from '@/lib/logger';
+import { rtcConfig } from '@/lib/network/webrtc-config';
 
 interface MediaManagerProps {
     onStreamReady?: (stream: MediaStream) => void;
@@ -17,6 +19,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
     const setMicStatus = useSessionStore((state) => state.setMicStatus);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const monitoringVideoRef = useRef<HTMLVideoElement>(null);
     // Persistent video element for snapshot capture — avoids creating temp elements each time
     const snapshotVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -75,12 +78,31 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
     // Release stream on END/TERMINATED or unmount
     useEffect(() => {
         if (fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) {
+            faceVerificationService.stopMonitoring();
             if (stream) {
                 stream.getTracks().forEach(t => t.stop());
                 setStream(null);
             }
         }
     }, [fsmState]);
+
+    // Start face monitoring when stream is available
+    useEffect(() => {
+        const videoElement = monitoringVideoRef.current;
+        if (stream && videoElement) {
+            videoElement.srcObject = stream;
+            videoElement.play().then(() => {
+                // Ensure baseline was set from onboarding (which should have happened via backend or local state)
+                // Even without backend persistence hooked up locally yet, starting it allows the 'FACE_MISSING' logic
+                // to trigger if no face is detected at all (similarity=0).
+                faceVerificationService.startMonitoring(videoElement, 3000);
+            }).catch(e => console.error('Face monitoring play failed', e));
+
+            return () => {
+                faceVerificationService.stopMonitoring();
+            };
+        }
+    }, [stream]);
 
     // Lifecycle: Cleanup & Integrity Monitoring
     useEffect(() => {
@@ -110,6 +132,77 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
         return () => clearInterval(interval);
     }, [stream, fsmState]);
+
+    // Handle incoming WebRTC signals from Instructors
+    const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
+    useEffect(() => {
+        const handleWebRTCSignal = async (e: Event) => {
+            const customEvent = e as CustomEvent;
+            const message = customEvent.detail;
+            const { signalData, senderId, senderRole } = message;
+            
+            // Only respond to Instructor signals to avoid Echoing our own
+            if (!senderId || senderRole === 'STUDENT') return;
+
+            if (signalData.type === 'offer') {
+                try {
+                    const pc = new RTCPeerConnection(rtcConfig);
+                    peerConnections.current.set(senderId, pc);
+
+                    // Attach only video stream
+                    if (stream) {
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length > 0) {
+                            pc.addTrack(videoTracks[0], stream);
+                        }
+                    }
+
+                    pc.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            vivaWebSocket.send({
+                                type: 'WEBRTC_SIGNAL',
+                                signalData: { type: 'candidate', candidate: event.candidate },
+                                senderRole: 'STUDENT',
+                                senderId: senderId // reply to the specific instructor
+                            });
+                        }
+                    };
+
+                    await pc.setRemoteDescription(new RTCSessionDescription(signalData));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+
+                    vivaWebSocket.send({
+                        type: 'WEBRTC_SIGNAL',
+                        signalData: pc.localDescription,
+                        senderRole: 'STUDENT',
+                        senderId: senderId
+                    });
+                } catch (err) {
+                    Logger.error("WebRTC offer negotiation failed", err);
+                    peerConnections.current.get(senderId)?.close();
+                    peerConnections.current.delete(senderId);
+                }
+            } else if (signalData.type === 'candidate') {
+                const pc = peerConnections.current.get(senderId);
+                if (pc && signalData.candidate) {
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+                    } catch (err) {
+                        Logger.error("Failed to add ICE candidate", err);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('viva:webrtc_signal', handleWebRTCSignal);
+        return () => {
+            window.removeEventListener('viva:webrtc_signal', handleWebRTCSignal);
+            // Cleanup RTCPeerConnections on unmount/stream drop
+            peerConnections.current.forEach(pc => pc.close());
+            peerConnections.current.clear();
+        };
+    }, [stream]);
 
     // Manage Audio Transmission
     // IMPORTANT: Keep mic active at ALL TIMES during interactive phases.
@@ -200,7 +293,8 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
 
     return (
-        <div className="hidden">
+        <div className="absolute opacity-0 pointer-events-none w-1 h-1 overflow-hidden z-[-1]">
+            <video ref={monitoringVideoRef} autoPlay muted playsInline />
             <canvas ref={canvasRef} width={320} height={240} />
         </div>
     );

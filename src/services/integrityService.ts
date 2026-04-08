@@ -315,7 +315,7 @@ class IntegrityService {
 
             const metrics = this.getMetrics();
             sendFn({
-                type: 'integrity_snapshot',
+                type: 'INTEGRITY_SNAPSHOT',
                 data: metrics,
             });
         }, intervalMs);

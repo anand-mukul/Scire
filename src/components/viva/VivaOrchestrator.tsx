@@ -461,7 +461,7 @@ export const VivaOrchestrator: React.FC = () => {
             setNeedsResumeInteraction(false);
             
             // Un-suspend TTS player logic if needed or notify backend
-            vivaWebSocket.send({ type: 'session_resume' });
+            vivaWebSocket.send({ type: 'SESSION_RESUME' });
         } catch (err) {
             toast.error('Failed to initialize session. Please check your microphone permissions.');
         }
@@ -473,7 +473,7 @@ export const VivaOrchestrator: React.FC = () => {
         window.dispatchEvent(new CustomEvent('viva:stop_audio'));
         if (sessionId) {
             try {
-                vivaWebSocket.send({ type: 'session_leave' });
+                vivaWebSocket.send({ type: 'SESSION_LEAVE' });
             } catch {
                 // If WS send fails, backend will auto-abandon on disconnect
             }
