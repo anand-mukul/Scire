@@ -84,6 +84,7 @@ export interface ExamSettings {
     difficulty?: 'easy' | 'medium' | 'hard';
     max_tab_switches?: number;
     max_violations?: number;
+    require_fullscreen?: boolean;
     require_face_tracking?: boolean;
     record_ambient_audio?: boolean;
 }

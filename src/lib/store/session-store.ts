@@ -285,6 +285,13 @@ export const useSessionStore = create<SessionState>()(
                 state.expiryTime = null;
                 state.examSettings = {};
                 state.onboardingAccepted = false;
+                state.violation = {
+                    isWarning: false,
+                    type: null,
+                    remainingSeconds: 0,
+                    strikes: 0,
+                    maxStrikes: 3,
+                };
             }),
     }))
 );

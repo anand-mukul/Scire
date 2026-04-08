@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { SessionProvider } from "@/components/viva/SessionProvider";
@@ -21,21 +21,8 @@ const ExamSessionContent = () => {
     const fsmState = useSessionStore(s => s.fsmState);
     const isMicActive = useSessionStore(s => s.isMicActive);
 
-    // Integrity Monitoring
-    useEffect(() => {
-        let cleanup: (() => void) | undefined;
-        import("@/services/integrityService").then(({ integrityService }) => {
-            if (connectionState === 'CONNECTED') {
-                integrityService.startMonitoring();
-            } else {
-                integrityService.stopMonitoring();
-            }
-            cleanup = () => integrityService.stopMonitoring();
-        });
-        return () => {
-            if (cleanup) cleanup();
-        };
-    }, [connectionState]);
+    // NOTE: Integrity monitoring (integrityService.startMonitoring) is managed by MediaManager.tsx.
+    // DO NOT call startMonitoring here — duplicate listeners cause double tab-switch counting.
 
     if (error) {
         return (

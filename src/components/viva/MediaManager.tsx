@@ -121,17 +121,8 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
         };
     }, []);
 
-    // Periodic integrity snapshots
-    useEffect(() => {
-        if (!stream) return;
-        if (fsmState === DialogueState.END || fsmState === DialogueState.TERMINATED) return;
-
-        const interval = setInterval(() => {
-            captureAndSendSnapshot();
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [stream, fsmState]);
+    // NOTE: Periodic integrity snapshots are handled exclusively by use-exam-integrity.ts.
+    // DO NOT add a second snapshot timer here — it causes double violation counting.
 
     // Handle incoming WebRTC signals from Instructors
     const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
