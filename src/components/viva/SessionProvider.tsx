@@ -27,8 +27,10 @@ export function SessionProvider({ sessionId, token, children }: SessionProviderP
             initialized.current = true;
 
             // 1. Connect WS
-            const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:8000/api/v1/ws';
-            const fullUrl = `${wsUrl}/session/${sessionId}`;
+            // Handle both URL formats: base may or may not include '/session'
+            const rawWsUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:8000/api/v1/ws';
+            const wsBase = rawWsUrl.replace(/\/session\/?$/, '');
+            const fullUrl = `${wsBase}/session/${sessionId}`;
             vivaWebSocket.connect(fullUrl, token);
 
             // 2. Setup Audio (Mic is usually user-triggered, but we can pre-init)

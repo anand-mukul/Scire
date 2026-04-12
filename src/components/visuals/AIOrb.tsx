@@ -89,7 +89,7 @@ export default function AIOrb() {
 
                 {/* State Indicator Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 text-center pb-4 pointer-events-none">
-                    <span className="text-xs font-mono text-white/40 uppercase tracking-[0.2em] backdrop-blur-sm px-3 py-1 rounded-full bg-white/5 border border-white/5">
+                    <span className="text-xs font-mono text-foreground/40 uppercase tracking-[0.2em] backdrop-blur-sm px-3 py-1 rounded-full bg-foreground/5 border border-foreground/5">
                         {fsmState}
                     </span>
                 </div>

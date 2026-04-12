@@ -43,7 +43,8 @@ export class AudioManager {
         }
 
         // Load the AudioWorklet processor from a static file (CSP-compliant)
-        if (!this.isProcessorLoaded && this.audioContext) {
+        // Only attempt when context is running — addModule() will abort if suspended
+        if (!this.isProcessorLoaded && this.audioContext && this.audioContext.state === 'running') {
             try {
                 await this.audioContext.audioWorklet.addModule('/recorder-processor.js');
                 this.isProcessorLoaded = true;

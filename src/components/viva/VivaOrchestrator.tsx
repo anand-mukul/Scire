@@ -72,16 +72,16 @@ const MicToolbar = () => {
 
     return (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[80] animate-in slide-in-from-bottom fade-in duration-500">
-            <div className="flex items-center bg-black/80 backdrop-blur-xl border border-white/10 rounded-full p-2 shadow-2xl">
+            <div className="flex items-center bg-background/80 dark:bg-black/80 backdrop-blur-xl border border-border/50 rounded-full p-2 shadow-xl">
                 <button
                     onClick={handleMicToggle}
                     disabled={!canToggle}
                     className={cn(
-                        "relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black",
+                        "relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background",
                         canToggle ? "cursor-pointer" : "cursor-not-allowed opacity-40",
                         isMicUnmuted
                             ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/40 focus:ring-emerald-500"
-                            : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 focus:ring-neutral-500",
+                            : "bg-neutral-200 hover:bg-neutral-300 text-neutral-600 border border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-700 focus:ring-neutral-400 dark:focus:ring-neutral-500",
                         canToggle && !isMicUnmuted && "animate-pulse"
                     )}
                 >
@@ -156,15 +156,15 @@ const EndPhase: React.FC = () => {
                 <div className={cn(
                     "relative z-10 w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-2xl",
                     isTerminated
-                        ? "bg-red-950/50 border-red-500/50 text-red-400"
-                        : "bg-emerald-950/50 border-emerald-500/50 text-emerald-400"
+                        ? "bg-red-100/50 dark:bg-red-950/50 border-red-500/50 text-red-600 dark:text-red-400"
+                        : "bg-emerald-100/50 dark:bg-emerald-950/50 border-emerald-500/50 text-emerald-600 dark:text-emerald-400"
                 )}>
                     {isTerminated ? <AlertTriangle className="w-12 h-12" /> : <CheckCircle className="w-12 h-12" />}
                 </div>
             </div>
 
             <div className="space-y-2">
-                <h2 className="text-4xl font-extrabold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60">
+                <h2 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/60">
                     {isTerminated ? 'Session Terminated' : 'Session Completed'}
                 </h2>
 
@@ -177,7 +177,7 @@ const EndPhase: React.FC = () => {
 
             {!isTerminated && questionCount > 0 && (
                 <div className="flex justify-center gap-6 text-sm mt-8 animate-in slide-in-from-bottom-4 duration-500 delay-150">
-                    <div className="bg-muted/30 px-6 py-4 rounded-2xl border border-white/5 shadow-inner">
+                    <div className="bg-muted/30 px-6 py-4 rounded-2xl border border-border/50 shadow-inner">
                         <span className="block text-3xl font-mono font-black text-foreground mb-1">{questionCount}</span>
                         <span className="text-muted-foreground font-medium tracking-wide uppercase text-xs">Questions Answered</span>
                     </div>
@@ -187,7 +187,7 @@ const EndPhase: React.FC = () => {
             <Button
                 onClick={() => router.push('/student/history')}
                 variant="outline"
-                className="mt-8 border-white/10 hover:bg-white/5 hover:text-white rounded-full px-8 py-6 shadow-xl transition-all hover:scale-105 active:scale-95"
+                className="mt-8 border-border/50 hover:bg-muted hover:text-foreground rounded-full px-8 py-6 shadow-xl transition-all hover:scale-105 active:scale-95"
             >
                 Return to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

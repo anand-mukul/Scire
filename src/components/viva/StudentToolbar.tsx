@@ -41,7 +41,7 @@ interface MetricRowProps {
 const MetricRow = ({ icon, label, value, status, tooltip }: MetricRowProps) => (
     <Tooltip>
         <TooltipTrigger asChild>
-            <div className="flex items-center gap-2 py-1.5 px-1 rounded-md hover:bg-white/[0.03] transition-colors cursor-default">
+            <div className="flex items-center gap-2 py-1.5 px-1 rounded-md hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors cursor-default">
                 <span className="text-muted-foreground/60 shrink-0">{icon}</span>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium flex-1 truncate">{label}</span>
                 <span className="text-xs font-mono text-foreground/80 tabular-nums">{value}</span>
@@ -124,22 +124,22 @@ export const StudentToolbar: React.FC = () => {
             )}
         >
             <div className={cn(
-                'relative rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/40 overflow-hidden transition-all duration-300',
-                'bg-black/70 backdrop-blur-2xl backdrop-saturate-150'
+                'relative rounded-2xl border shadow-xl overflow-hidden transition-all duration-300',
+                'bg-background/80 md:bg-background/60 backdrop-blur-2xl backdrop-saturate-200 border-border/50 text-foreground'
             )}>
                 {/* Glass refraction line */}
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-black/10 dark:via-white/10 to-transparent" />
 
                 {/* Collapse toggle */}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center transition-colors"
+                    className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-black/[0.04] dark:bg-white/[0.04] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] flex items-center justify-center transition-colors"
                     aria-label={collapsed ? 'Expand toolbar' : 'Collapse toolbar'}
                 >
                     {collapsed ? (
-                        <ChevronRight className="w-3 h-3 text-muted-foreground/60" />
+                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
                     ) : (
-                        <ChevronLeft className="w-3 h-3 text-muted-foreground/60" />
+                        <ChevronLeft className="w-3 h-3 text-muted-foreground" />
                     )}
                 </button>
 
@@ -176,7 +176,7 @@ export const StudentToolbar: React.FC = () => {
                                 <div className="flex items-center gap-1.5">
                                     <span>{micLabel}</span>
                                     {isMicUnmuted && (
-                                        <div className="w-8 h-1 bg-neutral-800 rounded-full overflow-hidden">
+                                        <div className="w-8 h-1 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-emerald-400 rounded-full transition-all duration-100 ease-out"
                                                 style={{ width: `${volumePercent}%` }}
@@ -206,7 +206,7 @@ export const StudentToolbar: React.FC = () => {
                                 value={
                                     <div className="flex items-center gap-1.5">
                                         <span>{questionsAsked}/{totalQuestions}</span>
-                                        <div className="w-8 h-1 bg-neutral-800 rounded-full overflow-hidden">
+                                        <div className="w-8 h-1 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-cyan-400 rounded-full transition-all duration-300"
                                                 style={{ width: `${Math.min(100, (questionsAsked / totalQuestions) * 100)}%` }}
@@ -219,10 +219,10 @@ export const StudentToolbar: React.FC = () => {
                         )}
 
                         {/* Bottom separator + branding */}
-                        <div className="pt-2 mt-1 border-t border-white/[0.04]">
-                            <div className="flex items-center justify-center gap-1 opacity-30">
-                                <Shield className="w-2.5 h-2.5" />
-                                <span className="text-[8px] tracking-widest uppercase font-medium">Scire Proctored</span>
+                        <div className="pt-2 mt-1 border-t border-border/50">
+                            <div className="flex items-center justify-center gap-1 opacity-40 dark:opacity-30">
+                                <Shield className="w-2.5 h-2.5 text-foreground" />
+                                <span className="text-[8px] tracking-widest uppercase font-medium text-foreground">Exam Guard</span>
                             </div>
                         </div>
                     </div>

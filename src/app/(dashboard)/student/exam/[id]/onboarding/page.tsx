@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,12 +23,22 @@ import { faceVerificationService } from '@/services/biometrics/faceVerificationS
 export default function OnboardingPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
     const { id: sessionId } = React.use(params);
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+
+    // Use a callback ref to ensure the video stream is automatically attached 
+    // whenever React safely mounts the <video> element into the DOM.
+    const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
+        videoRef.current = node;
+        if (node && streamRef.current && streamRef.current.active) {
+            node.srcObject = streamRef.current;
+            node.play().catch(e => console.warn("Auto-play failed after remount:", e));
+        }
+    }, []);
 
     const [step, setStep] = useState(1);
     // Media State
     const [hasMediaAccess, setHasMediaAccess] = useState(false);
-    const streamRef = useRef<MediaStream | null>(null);
 
     // Capture State
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -97,13 +107,15 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
     const handleSmartRetry = () => {
         setError(null);
-        // Only restart media if the stream is actually active and not broken
-        if (streamRef.current && streamRef.current.active && videoRef.current) {
-            // Just resume
-            videoRef.current.play().catch(console.error);
-        } else {
+        setCapturedImage(null);
+        setScanStatus('idle');
+
+        // Only restart media if the stream is broken
+        if (!streamRef.current || !streamRef.current.active) {
             startMedia();
         }
+        // If it is active, dropping capturedImage will remount <video>
+        // and videoRefCallback will handle the play() automatically.
     };
 
     const handleCapture = async () => {
@@ -210,11 +222,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         setCapturedImage(null);
         setScanStatus('idle');
         setScanMessage("Position your face. Security checks active.");
-        // Re-attach stream if it was lost (though typically it stays Active)
-        if (videoRef.current && streamRef.current) {
-            videoRef.current.srcObject = streamRef.current;
-            videoRef.current.play().catch(console.error);
-        }
+        // React will remount <video>, the videoRefCallback handles stream re-attachment.
     };
 
     const handleSubmit = async () => {
@@ -480,7 +488,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
                                         <img src={capturedImage} alt="Captured" className="w-full h-full object-cover transform scale-x-[-1]" />
                                     ) : hasMediaAccess ? (
                                         <video
-                                            ref={videoRef}
+                                            ref={videoRefCallback}
                                             autoPlay
                                             muted
                                             playsInline

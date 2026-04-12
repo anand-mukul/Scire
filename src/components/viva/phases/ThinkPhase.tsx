@@ -17,7 +17,7 @@ export const ThinkPhase = () => {
                 </div>
 
                 {/* Mic hint */}
-                <div className="flex items-center gap-2 text-sm text-emerald-400/90 font-medium">
+                <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400/90 font-medium">
                     <Mic className="w-4 h-4 animate-pulse relative -top-px" />
                     <span>Click the microphone below when ready</span>
                 </div>

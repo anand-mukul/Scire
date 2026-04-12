@@ -56,7 +56,7 @@ export const TranscriptSheet: React.FC<TranscriptSheetProps> = ({ transcripts, c
     return (
         <Sheet>
             <SheetTrigger asChild>
-                <button className={`${className} flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm text-neutral-400 hover:text-white`}>
+                <button className={`${className} flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-all text-sm text-muted-foreground hover:text-foreground`}>
                     <MessageCircle className="w-4 h-4" />
                     <span className="hidden sm:inline">Transcript</span>
                     {transcripts.length > 0 && (

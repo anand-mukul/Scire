@@ -126,19 +126,37 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
 
     // Handle incoming WebRTC signals from Instructors
     const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
+    // Queue ICE candidates that arrive before remoteDescription is set (Safari fix)
+    const pendingCandidates = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+
     useEffect(() => {
+        const flushPendingCandidates = async (senderId: string, pc: RTCPeerConnection) => {
+            const pending = pendingCandidates.current.get(senderId);
+            if (pending && pending.length > 0) {
+                for (const candidate of pending) {
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (err) {
+                        Logger.error('Failed to flush queued ICE candidate', err);
+                    }
+                }
+                pendingCandidates.current.delete(senderId);
+            }
+        };
+
         const handleWebRTCSignal = async (e: Event) => {
             const customEvent = e as CustomEvent;
             const message = customEvent.detail;
             const { signalData, senderId, senderRole } = message;
             
-            // Only respond to Instructor signals to avoid Echoing our own
+            // Only respond to Instructor signals to avoid echoing our own
             if (!senderId || senderRole === 'STUDENT') return;
 
             if (signalData.type === 'offer') {
                 try {
                     const pc = new RTCPeerConnection(rtcConfig);
                     peerConnections.current.set(senderId, pc);
+                    pendingCandidates.current.set(senderId, []);
 
                     // Attach only video stream
                     if (stream) {
@@ -154,12 +172,15 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                                 type: 'WEBRTC_SIGNAL',
                                 signalData: { type: 'candidate', candidate: event.candidate },
                                 senderRole: 'STUDENT',
-                                senderId: senderId // reply to the specific instructor
+                                senderId: senderId,
                             });
                         }
                     };
 
                     await pc.setRemoteDescription(new RTCSessionDescription(signalData));
+                    // Flush any candidates that arrived before remote description was set
+                    await flushPendingCandidates(senderId, pc);
+
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
 
@@ -167,20 +188,28 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                         type: 'WEBRTC_SIGNAL',
                         signalData: pc.localDescription,
                         senderRole: 'STUDENT',
-                        senderId: senderId
+                        senderId: senderId,
                     });
                 } catch (err) {
-                    Logger.error("WebRTC offer negotiation failed", err);
+                    Logger.error('WebRTC offer negotiation failed', err);
                     peerConnections.current.get(senderId)?.close();
                     peerConnections.current.delete(senderId);
+                    pendingCandidates.current.delete(senderId);
                 }
             } else if (signalData.type === 'candidate') {
                 const pc = peerConnections.current.get(senderId);
                 if (pc && signalData.candidate) {
-                    try {
-                        await pc.addIceCandidate(new RTCIceCandidate(signalData.candidate));
-                    } catch (err) {
-                        Logger.error("Failed to add ICE candidate", err);
+                    if (pc.remoteDescription) {
+                        try {
+                            await pc.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+                        } catch (err) {
+                            Logger.error('Failed to add ICE candidate', err);
+                        }
+                    } else {
+                        // Queue candidate — will be flushed after setRemoteDescription
+                        const queue = pendingCandidates.current.get(senderId ?? '') || [];
+                        queue.push(signalData.candidate);
+                        if (senderId) pendingCandidates.current.set(senderId, queue);
                     }
                 }
             }
@@ -192,6 +221,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
             // Cleanup RTCPeerConnections on unmount/stream drop
             peerConnections.current.forEach(pc => pc.close());
             peerConnections.current.clear();
+            pendingCandidates.current.clear();
         };
     }, [stream]);
 

@@ -18,7 +18,7 @@ interface LiveMonitorDetailsProps {
 const EVENT_ICONS: Record<string, any> = {
     TAB_SWITCH: LayoutTemplate,
     FOCUS_LOSS: EyeOff,
-    FACE_MISSING: User, // Need to import User, wait, we'll use a local fallback
+    FACE_MISSING: User,
     VOICE_MISMATCH: MicOff,
     NOISE_SPIKE: VolumeX,
     SNAPSHOT_REUSE: AlertCircle,
@@ -133,7 +133,9 @@ export function LiveMonitorDetails({ session, open, onOpenChange }: LiveMonitorD
                                                     </div>
                                                     {event.metadata && Object.keys(event.metadata).length > 0 && (
                                                         <p className="text-xs text-muted-foreground line-clamp-1">
-                                                            {JSON.stringify(event.metadata)}
+                                                            {Object.entries(event.metadata)
+                                                                .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${typeof v === 'number' ? (v as number).toFixed(3) : String(v).slice(0, 50)}`)
+                                                                .join(' · ')}
                                                         </p>
                                                     )}
                                                 </Card>
