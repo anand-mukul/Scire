@@ -26,8 +26,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
     const streamRef = useRef<MediaStream | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    // Use a callback ref to ensure the video stream is automatically attached 
-    // whenever React safely mounts the <video> element into the DOM.
     const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
         videoRef.current = node;
         if (node && streamRef.current && streamRef.current.active) {
@@ -49,7 +47,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
     const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
     const [scanMessage, setScanMessage] = useState("Position your face. Security checks active.");
 
-    // --- Media Logic (Simplified) ---
     const startMedia = async () => {
         try {
             setError(null);
@@ -65,8 +62,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
 
             streamRef.current = stream;
             setHasMediaAccess(true);
-
-            // AudioContext access ensured
 
         } catch (err) {
             console.error('Media Access Error:', err);
@@ -91,9 +86,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         }
         return () => {
             if (streamRef.current && step !== 3) {
-                // Keep stream alive if we are just switching back and forth, 
-                // but actually we only mount local tracking on step 3. 
-                // For safety, cleanup on unmount.
                 streamRef.current.getTracks().forEach(t => t.stop());
                 streamRef.current = null;
             }
@@ -110,12 +102,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         setCapturedImage(null);
         setScanStatus('idle');
 
-        // Only restart media if the stream is broken
         if (!streamRef.current || !streamRef.current.active) {
             startMedia();
         }
-        // If it is active, dropping capturedImage will remount <video>
-        // and videoRefCallback will handle the play() automatically.
     };
 
     const handleCapture = async () => {
@@ -230,6 +219,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
         setIsLoading(true);
         setError(null);
 
+        // Provide visual feedback during the long-running AWS Rekognition/S3 process
+        setScanStatus('scanning');
+        setScanMessage("Uploading identity snapshot...");
+
         try {
             // Request full screen
             if (document.documentElement.requestFullscreen) {
@@ -244,12 +237,18 @@ export default function OnboardingPage({ params }: { params: Promise<{ id: strin
             // Get the descriptor if ML detection succeeded
             const descriptor = faceVerificationService.getBaseline() || undefined;
 
+            setScanMessage("Verifying identity via Rekognition...");
             await api.sessions.submitOnboarding(sessionId, blob, descriptor);
+
+            setScanStatus('success');
+            setScanMessage("Verification Complete");
             router.push(`/student/exam/${sessionId}/session`);
         } catch (err: unknown) {
             const error = err as AxiosError<{ detail: string }>;
             setError(error.response?.data?.detail || 'Submission failed.');
             setIsLoading(false);
+            setScanStatus('error');
+            setScanMessage("Verification Failed");
         }
     };
 

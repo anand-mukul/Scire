@@ -99,6 +99,18 @@ export const useExamIntegrity = (sessionId: string | null) => {
         // Clear warning state (the grace period is over)
         setViolationState(false, null, 0);
 
+        // Record the formal strike to the backend DB explicitly
+        const metrics = integrityService.getMetrics();
+        vivaWebSocket.send({
+            type: 'INTEGRITY_SNAPSHOT',
+            data: {
+                ...metrics,
+                reason: `Grace period expired. Strike ${newStrikeCount} recorded.`,
+                violation_type: 'STRIKE_RECORDED',
+                severity: 'high'
+            }
+        });
+
         if (newStrikeCount >= maxStrikesVal) {
             // FINAL STRIKE — TERMINATE
             Logger.error(`Integrity Violation: ${newStrikeCount}/${maxStrikesVal} strikes — Terminating Session`);

@@ -105,9 +105,22 @@ const MicToolbar = () => {
 
 // Interactive Auth Phase — Acts as user interaction gateway to start AudioContext
 const AuthPhase = () => {
+    const examSettings = useSessionStore((state) => state.examSettings);
+
     const handleStart = async () => {
         try {
             await audioManager.initialize();
+
+            // Request fullscreen BEFORE starting session if required by exam config
+            if (examSettings.require_fullscreen && !document.fullscreenElement) {
+                try {
+                    await document.documentElement.requestFullscreen();
+                } catch (fsErr) {
+                    console.warn("Fullscreen request denied:", fsErr);
+                    // Continue — the fullscreen enforcement overlay will catch this
+                }
+            }
+
             vivaWebSocket.startSession();
         } catch (error) {
             console.error("Failed to initialize audio:", error);
