@@ -180,6 +180,11 @@ export const useSessionStore = create<SessionState>()(
             set((state) => {
                 state.expiryTime = expiryTime;
                 state.examSettings = examSettings;
+                // Sync maxStrikes from exam settings to prevent desync
+                // (store defaults to 3, but exam may configure differently)
+                if (examSettings?.max_violations != null) {
+                    state.violation.maxStrikes = Number(examSettings.max_violations) || 3;
+                }
             }),
 
         setConnectionState: (connectionState) =>

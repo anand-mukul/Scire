@@ -500,6 +500,7 @@ export const VivaOrchestrator: React.FC = () => {
         if (isSubmitting) return;
 
         if (sessionId) {
+            const previousFsmState = fsmState; // Save for rollback on failure
             setIsSubmitting(true);
             setFsmState(DialogueState.END);
             // Stop all audio playback immediately
@@ -519,6 +520,8 @@ export const VivaOrchestrator: React.FC = () => {
                 } else {
                     console.error("Submission failed:", err);
                     toast.error("Submission Error. Please try again.");
+                    // Rollback FSM so student isn't trapped in EndPhase
+                    setFsmState(previousFsmState);
                     setIsSubmitting(false);
                 }
             }
@@ -685,7 +688,7 @@ export const VivaOrchestrator: React.FC = () => {
                 )}
 
                 {/* --- Top Bar --- */}
-                <header className={cn("flex justify-between items-center px-6 py-3 z-50 bg-gradient-to-b from-black/60 to-transparent", isVoiceUnavailable && "mt-8")}>
+                <header className={cn("flex justify-between items-center px-6 py-3 z-50 bg-gradient-to-b from-background/80 to-transparent", isVoiceUnavailable && "mt-8")}>
                     {/* Left: Exit */}
                     <AlertDialog>
                         <Tooltip>
@@ -733,7 +736,7 @@ export const VivaOrchestrator: React.FC = () => {
                     {/* Right: Status + Phase Timer + Transcript + Submit */}
                     <div className="flex items-center gap-2">
                         {/* Status Badge with Phase Timer */}
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/50 border text-xs font-mono transition-colors ${statusBadge.color}`}>
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 border text-xs font-mono transition-colors ${statusBadge.color}`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${statusBadge.dotColor}`} />
                             <span>{statusBadge.text}</span>
                             <PhaseTimer fsmState={fsmState} />

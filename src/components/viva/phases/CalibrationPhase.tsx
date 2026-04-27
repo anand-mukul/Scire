@@ -146,15 +146,15 @@ export const CalibrationPhase = ({ stream }: { stream: MediaStream | null }) => 
                         exit={{ opacity: 0, y: -20 }}
                         className="w-full max-w-2xl"
                     >
-                        <Card className="bg-card/60 backdrop-blur-xl border-white/10 shadow-2xl p-8 space-y-6">
+                        <Card className="bg-card/60 backdrop-blur-xl border-border/30 shadow-2xl p-8 space-y-6">
                             <div className="flex items-center gap-4 text-amber-500 mb-4">
                                 <ShieldCheck className="w-10 h-10" />
-                                <h2 className="text-2xl font-bold text-white">Exam Integrity Policy</h2>
+                                <h2 className="text-2xl font-bold text-foreground">Exam Integrity Policy</h2>
                             </div>
-                            <div className="prose prose-invert prose-sm bg-black/40 p-6 rounded-lg h-60 overflow-y-auto border border-white/5">
-                                <h3 className="text-white mt-0">Academic Honesty Agreement</h3>
+                            <div className="prose prose-neutral dark:prose-invert prose-sm bg-muted/50 p-6 rounded-lg h-60 overflow-y-auto border border-border/30">
+                                <h3 className="text-foreground mt-0">Academic Honesty Agreement</h3>
                                 <p>By proceeding, you agree to the following conditions:</p>
-                                <ul className="text-neutral-300 space-y-2">
+                                <ul className="text-muted-foreground space-y-2">
                                     <li>You are the registered student for this record.</li>
                                     <li>No external aids (phones, notes, secondary screens) are permitted.</li>
                                     <li>Your microphone and camera will be active for the duration of the session.</li>
@@ -162,9 +162,9 @@ export const CalibrationPhase = ({ stream }: { stream: MediaStream | null }) => 
                                     <li>Any detected malpractice will result in immediate termination of the session.</li>
                                 </ul>
                             </div>
-                            <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-                                <Checkbox id="tnc" checked={tncAccepted} onCheckedChange={(c) => setTncAccepted(c === true)} className="border-white/50 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500" />
-                                <label htmlFor="tnc" className="text-sm font-medium text-neutral-200 cursor-pointer select-none">
+                            <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors">
+                                <Checkbox id="tnc" checked={tncAccepted} onCheckedChange={(c) => setTncAccepted(c === true)} className="border-border data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500" />
+                                <label htmlFor="tnc" className="text-sm font-medium text-muted-foreground cursor-pointer select-none">
                                     I have read and accept the Terms & Conditions
                                 </label>
                             </div>
@@ -190,12 +190,12 @@ export const CalibrationPhase = ({ stream }: { stream: MediaStream | null }) => 
                         exit={{ opacity: 0, scale: 1.05 }}
                         className="w-full max-w-2xl"
                     >
-                        <Card className="bg-card/60 backdrop-blur-xl border-white/10 shadow-2xl p-8 space-y-6 flex flex-col items-center">
-                            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <Card className="bg-card/60 backdrop-blur-xl border-border/30 shadow-2xl p-8 space-y-6 flex flex-col items-center">
+                            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                                 <Camera className="w-6 h-6 text-blue-400" /> Camera & Audio Check
                             </h2>
 
-                            <div className="relative w-full max-w-md aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 group">
+                            <div className="relative w-full max-w-md aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-border/30 group">
                                 <video
                                     ref={videoRef}
                                     autoPlay
@@ -232,12 +232,12 @@ export const CalibrationPhase = ({ stream }: { stream: MediaStream | null }) => 
 
                             <div className="flex gap-4">
                                 {!snapshot ? (
-                                    <Button onClick={takeSnapshot} className="bg-white text-black hover:bg-neutral-200 rounded-full px-8">
+                                    <Button onClick={takeSnapshot} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8">
                                         <Camera className="w-4 h-4 mr-2" /> Take Photo
                                     </Button>
                                 ) : (
                                     <div className="flex gap-3">
-                                        <Button onClick={() => { setSnapshot(null); setDetectionError(null); }} variant="outline" className="border-white/20 hover:bg-white/10 text-white">
+                                        <Button onClick={() => { setSnapshot(null); setDetectionError(null); }} variant="outline" className="border-border hover:bg-muted text-foreground">
                                             <RefreshCw className="w-4 h-4 mr-2" /> Retake
                                         </Button>
                                         <Button onClick={confirmOnboarding} disabled={uploading} className="bg-emerald-600 hover:bg-emerald-500 text-white">
@@ -275,13 +275,12 @@ export const CalibrationPhase = ({ stream }: { stream: MediaStream | null }) => 
                         {/* Volume Bar Visualizer - Prominent */}
                         <div className="flex gap-2 h-16 items-end justify-center w-full max-w-[300px] mt-8">
                             {Array.from({ length: 12 }).map((_, i) => {
-                                const level = useSessionStore((state) => state.userVolume) || 0;
-                                const height = Math.max(15, level * 100 * (Math.random() * 0.5 + 0.8));
+                                const height = Math.max(15, (userVolume || 0) * 100 * (Math.random() * 0.5 + 0.8));
                                 return (
                                     <div
                                         key={i}
                                         className="w-3 bg-primary/80 rounded-full transition-all duration-75 ease-out"
-                                        style={{ height: `${height}%`, opacity: 0.5 + (level * 0.5) }}
+                                        style={{ height: `${height}%`, opacity: 0.5 + ((userVolume || 0) * 0.5) }}
                                     />
                                 );
                             })}

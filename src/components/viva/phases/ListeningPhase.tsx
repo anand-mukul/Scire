@@ -93,7 +93,7 @@ export const ListeningPhase = () => {
                                                 />
                                             ))}
                                             <Mic className="w-4 h-4 text-emerald-400 mx-1.5" />
-                                            {volumeBars.reverse().map((vol, i) => (
+                                            {[...volumeBars].reverse().map((vol, i) => (
                                                 <div
                                                     key={`r-${i}`}
                                                     className="w-1 bg-emerald-400 rounded-full transition-all duration-100 ease-out"

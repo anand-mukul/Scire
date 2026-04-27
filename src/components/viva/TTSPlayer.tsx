@@ -1,13 +1,23 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useSessionStore } from '@/lib/store/session-store';
 
 export const TTSPlayer = () => {
     const audioContextRef = useRef<AudioContext | null>(null);
     const nextStartTimeRef = useRef<number>(0);
-    const isAudioPlaying = useSessionStore((state) => state.isAudioPlaying);
+    // Use a ref instead of reactive state to avoid re-registering the event
+    // listener every time audio starts/stops (which causes audio chunk drops).
+    const isPlayingRef = useRef<boolean>(false);
     const setAudioStatus = useSessionStore((state) => state.setAudioStatus);
+
+    // Stable callback that reads from the ref, not from reactive state
+    const updatePlayingStatus = useCallback((playing: boolean) => {
+        if (isPlayingRef.current !== playing) {
+            isPlayingRef.current = playing;
+            setAudioStatus(playing);
+        }
+    }, [setAudioStatus]);
 
     useEffect(() => {
         const handleAudioChunk = async (event: Event) => {
@@ -66,11 +76,12 @@ export const TTSPlayer = () => {
                 source.start(startTime);
                 nextStartTimeRef.current = startTime + audioBuffer.duration;
 
-                if (!isAudioPlaying) setAudioStatus(true);
+                // Mark as playing via ref — no re-render dependency
+                updatePlayingStatus(true);
 
                 source.onended = () => {
                     if (ctx.currentTime >= nextStartTimeRef.current - 0.1) {
-                        setAudioStatus(false);
+                        updatePlayingStatus(false);
                     }
                 };
 
@@ -84,7 +95,7 @@ export const TTSPlayer = () => {
         // Stop all audio playback on session end
         const handleStopAudio = () => {
             nextStartTimeRef.current = 0;
-            setAudioStatus(false);
+            updatePlayingStatus(false);
             if (audioContextRef.current && audioContextRef.current.state === 'running') {
                 // Suspend stops all scheduled playback immediately
                 audioContextRef.current.suspend().catch(() => { });
@@ -103,7 +114,7 @@ export const TTSPlayer = () => {
             // It belongs to AudioAnalysisService.
             audioContextRef.current = null;
         };
-    }, [isAudioPlaying, setAudioStatus]);
+    }, [updatePlayingStatus]); // Stable dep — no more isAudioPlaying churn
 
     return null; // Headless component
 };
