@@ -565,42 +565,6 @@ export const VivaOrchestrator: React.FC = () => {
         );
     }
 
-    // --- Loading / Error States ---
-    if (connectionState === 'FAILED' || error) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-6 text-center p-8 relative overflow-hidden">
-                <div className="p-4 rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/50 relative z-10">
-                    <LogOut className="h-8 w-8" />
-                </div>
-                <div className="space-y-2 relative z-10">
-                    <h3 className="text-xl font-bold text-destructive">Connection Failed</h3>
-                    <p className="text-muted-foreground max-w-sm mx-auto">
-                        {error || "Unable to establish a secure connection to the proctor server."}
-                    </p>
-                </div>
-                <Button onClick={() => window.location.reload()} variant="outline" className="border-border hover:bg-muted text-foreground relative z-10">
-                    Retry Connection
-                </Button>
-            </div>
-        );
-    }
-
-    if (connectionState === 'IDLE' || connectionState === 'CONNECTING') {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen space-y-6 animate-in fade-in duration-700 relative overflow-hidden bg-background">
-                <PremiumLoader text="Establishing Secure Session..." />
-
-                <p className="text-sm text-muted-foreground relative z-10">Verifying integrity headers...</p>
-
-                {longConnect && (
-                    <div className="p-3 bg-muted/50 border border-border rounded-lg text-xs text-muted-foreground max-w-xs text-center relative z-10">
-                        Wait time is longer than usual. Please check your firewall settings.
-                    </div>
-                )}
-            </div>
-        );
-    }
-
     const statusBadge = getStatusBadge(fsmState, isAgentSpeaking);
 
     // --- Main UI ---
@@ -610,6 +574,39 @@ export const VivaOrchestrator: React.FC = () => {
                 "flex flex-col h-screen w-full bg-background overflow-hidden relative selection:bg-primary/30 transition-colors duration-500",
                 violation.isWarning ? 'border-[8px] border-destructive' : ''
             )}>
+                {/* ALWAYS MOUNTED: Functional Components */}
+                {/* Placing these here ensures they don't unmount on WS disconnects, avoiding stream drops */}
+                <TTSPlayer />
+                <MediaManager onStreamReady={setAudioStream} />
+
+                {/* --- Loading / Error States Overlays --- */}
+                {connectionState === 'FAILED' || error ? (
+                    <div className="absolute inset-0 z-[300] bg-background flex flex-col items-center justify-center space-y-6 text-center p-8">
+                        <div className="p-4 rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/50">
+                            <LogOut className="h-8 w-8" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-destructive">Connection Failed</h3>
+                            <p className="text-muted-foreground max-w-sm mx-auto">
+                                {error || "Unable to establish a secure connection to the proctor server."}
+                            </p>
+                        </div>
+                        <Button onClick={() => window.location.reload()} variant="outline" className="border-border hover:bg-muted text-foreground">
+                            Retry Connection
+                        </Button>
+                    </div>
+                ) : connectionState === 'IDLE' || connectionState === 'CONNECTING' ? (
+                    <div className="absolute inset-0 z-[300] bg-background flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-700">
+                        <PremiumLoader text="Establishing Secure Session..." />
+                        <p className="text-sm text-muted-foreground">Verifying integrity headers...</p>
+                        {longConnect && (
+                            <div className="p-3 bg-muted/50 border border-border rounded-lg text-xs text-muted-foreground max-w-xs text-center">
+                                Wait time is longer than usual. Please check your firewall settings.
+                            </div>
+                        )}
+                    </div>
+                ) : null}
+
                 {/* Fullscreen Alert Overlay (Initial & Reconnect) */}
                 {examSettings.require_fullscreen && (!isFullscreen || needsResumeInteraction) && fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && fsmState !== DialogueState.TERMINATED && !violation.isWarning && (
                     <div className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
@@ -820,11 +817,6 @@ export const VivaOrchestrator: React.FC = () => {
                     </div>
                 </div>
             </main>
-
-                {/* Functional Components */}
-                <TTSPlayer />
-                <MediaManager onStreamReady={setAudioStream} />
-
                 {/* Push-to-Talk Mic Toolbar — Fixed bottom center */}
                 {fsmState !== DialogueState.AUTH && fsmState !== DialogueState.END && fsmState !== DialogueState.TERMINATED && (
                     <>

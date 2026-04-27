@@ -5,13 +5,12 @@
  * Loaded by AudioManager via audioContext.audioWorklet.addModule('/recorder-processor.js')
  */
 class RecorderProcessor extends AudioWorkletProcessor {
-    _remainder = 0;
-    BUFFER_SIZE = 2048;
-    _buffer = new Float32Array(2048);
-    _bufferIdx = 0;
-
     constructor() {
         super();
+        this._remainder = 0;
+        this.BUFFER_SIZE = 2048;
+        this._buffer = new Float32Array(2048);
+        this._bufferIdx = 0;
         this.targetSampleRate = 16000;
         console.log("RecorderProcessor: Initialized. Context SampleRate:", sampleRate);
     }
