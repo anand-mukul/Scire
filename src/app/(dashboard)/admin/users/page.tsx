@@ -227,7 +227,7 @@ export default function AdminUsersPage() {
                                             <FormItem>
                                                 <FormLabel>Email</FormLabel>
                                                 <FormControl>
-                                                    <Input type="email" placeholder="john@example.com" className="bg-background/50" {...field} />
+                                                    <Input type="email" placeholder="akash@edu.in" className="bg-background/50" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
