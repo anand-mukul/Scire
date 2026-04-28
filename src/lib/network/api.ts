@@ -316,11 +316,38 @@ export const api = {
                 timeout: 60000,
             });
 
-            await apiClient.post(`/sessions/${sessionId}/media/confirm`, {
+            // Confirm upload with auto-retry for S3 propagation delays
+            const confirmPayload = {
                 purpose: 'identity_snapshot',
                 file_url: presignData.file_url,
                 ...(faceDescriptor && { face_descriptor: faceDescriptor })
-            });
+            };
+
+            const MAX_CONFIRM_RETRIES = 2;
+            for (let attempt = 0; attempt <= MAX_CONFIRM_RETRIES; attempt++) {
+                try {
+                    await apiClient.post(`/sessions/${sessionId}/media/confirm`, confirmPayload);
+                    break; // Success — exit retry loop
+                } catch (err: unknown) {
+                    const axiosErr = err as import('axios').AxiosError<{ detail: string }>;
+                    const status = axiosErr.response?.status;
+
+                    if (status === 503 && attempt < MAX_CONFIRM_RETRIES) {
+                        // S3 propagation delay — wait and retry
+                        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+                        continue;
+                    }
+                    if (status === 422) {
+                        // Photo quality rejected — surface the specific reason
+                        throw new Error(axiosErr.response?.data?.detail || 'Photo verification failed. Please retake your photo with better lighting.');
+                    }
+                    if (status === 409) {
+                        throw new Error(axiosErr.response?.data?.detail || 'This photo has been used before. Please take a new photo.');
+                    }
+                    // All other errors — throw as-is
+                    throw err;
+                }
+            }
 
             const { data } = await apiClient.post(`/sessions/${sessionId}/onboarding`, {
                 accepted: true

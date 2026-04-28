@@ -140,9 +140,14 @@ class FaceVerificationService {
 
   // ── Continuous Monitoring ───────────────────────────────────
 
+  // Consecutive failure counter — only emit violations after sustained failures
+  private _consecutiveFailures: number = 0;
+  private static readonly CONSECUTIVE_FAILURE_THRESHOLD = 3; // 3 checks × 3s = 9s
+
   /**
    * Start periodic face verification.
    * Silently checks every intervalMs that the same person is still present.
+   * Only flags a violation after 3+ consecutive failures (9+ seconds of missing/mismatched face).
    */
   public startMonitoring(
     videoElement: HTMLVideoElement,
@@ -157,6 +162,7 @@ class FaceVerificationService {
     console.log(`[FaceVerification] Monitoring started (every ${intervalMs / 1000}s)`);
 
     this.currentVideoElement = videoElement;
+    this._consecutiveFailures = 0; // Reset on start
 
     this.monitoringTimer = setInterval(async () => {
       try {
@@ -168,12 +174,28 @@ class FaceVerificationService {
         const { result, similarity } = await this.verifyFace(videoElement);
 
         if (similarity < FACE_SIMILARITY_THRESHOLD) {
-          window.dispatchEvent(new CustomEvent('viva:face_missing', { detail: { similarity } }));
+          this._consecutiveFailures++;
+
+          if (this._consecutiveFailures >= FaceVerificationService.CONSECUTIVE_FAILURE_THRESHOLD) {
+            // Sustained failure — fire violation event
+            window.dispatchEvent(new CustomEvent('viva:face_missing', {
+              detail: { similarity, consecutiveFailures: this._consecutiveFailures }
+            }));
+          } else {
+            // Transient failure — log but don't flag yet
+            console.debug(
+              `[FaceVerification] Transient miss (${this._consecutiveFailures}/${FaceVerificationService.CONSECUTIVE_FAILURE_THRESHOLD}), ` +
+              `similarity: ${similarity.toFixed(3)}`
+            );
+          }
         } else {
+          // Success — reset counter and broadcast presence
+          this._consecutiveFailures = 0;
           window.dispatchEvent(new CustomEvent('viva:face_present', { detail: { similarity } }));
         }
       } catch (error) {
         console.error('[FaceVerification] Monitoring check failed:', error);
+        // Don't increment failure counter on technical errors (model glitch, canvas error)
       }
     }, intervalMs);
   }
@@ -183,6 +205,7 @@ class FaceVerificationService {
     if (this.monitoringTimer) {
       clearInterval(this.monitoringTimer);
       this.monitoringTimer = null;
+      this._consecutiveFailures = 0;
       console.log('[FaceVerification] Monitoring stopped');
     }
   }

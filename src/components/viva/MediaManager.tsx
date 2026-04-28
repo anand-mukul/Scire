@@ -96,7 +96,10 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                 // Even without backend persistence hooked up locally yet, starting it allows the 'FACE_MISSING' logic
                 // to trigger if no face is detected at all (similarity=0).
                 faceVerificationService.startMonitoring(videoElement, 3000);
-            }).catch(e => console.error('Face monitoring play failed', e));
+            }).catch(e => {
+                // AbortError is benign — happens when srcObject changes before play() resolves
+                if (e?.name !== 'AbortError') console.error('Face monitoring play failed', e);
+            });
 
             return () => {
                 faceVerificationService.stopMonitoring();
@@ -309,7 +312,9 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ onStreamReady }) => 
                     ...metrics
                 } as any);
             }
-        }).catch(e => Logger.error("Snapshot failed", e));
+        }).catch(e => {
+            if (e?.name !== 'AbortError') Logger.error("Snapshot failed", e);
+        });
     }, [stream]);
 
 
